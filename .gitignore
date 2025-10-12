@@ -1,0 +1,137 @@
+# =============================================================================
+# PyFulmen .gitignore
+# =============================================================================
+
+# -----------------------------------------------------------------------------
+# Bootstrap Tools (Loose Coupling Pattern)
+# -----------------------------------------------------------------------------
+# Tools installed via bootstrap process should not be committed
+bin/
+# Keep bin/ directory structure documented in README
+
+# -----------------------------------------------------------------------------
+# Goneat Local Overrides (Development Only)
+# -----------------------------------------------------------------------------
+# Local configuration for development - points to local Crucible/goneat builds
+.goneat/*.local.yaml
+.goneat/tools.local.yaml
+.goneat/ssot-consumer.local.yaml
+
+# Legacy FulDX artifacts (deprecated)
+.crucible-version
+
+# -----------------------------------------------------------------------------
+# Planning and Work-in-Progress (Not for Production)
+# -----------------------------------------------------------------------------
+# Development plans, drafts, and working documents
+.plans/
+# Exception: Committed .plans/ may exist in some repos for tracking
+
+# -----------------------------------------------------------------------------
+# Python Runtime Artifacts
+# -----------------------------------------------------------------------------
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# -----------------------------------------------------------------------------
+# Python Virtual Environments
+# -----------------------------------------------------------------------------
+.venv/
+venv/
+env/
+ENV/
+env.bak/
+venv.bak/
+
+# uv lock file (commit this for reproducibility)
+# uv.lock - DO NOT IGNORE
+
+# -----------------------------------------------------------------------------
+# Testing Artifacts
+# -----------------------------------------------------------------------------
+.pytest_cache/
+.coverage
+.coverage.*
+htmlcov/
+.tox/
+.nox/
+.hypothesis/
+.pytype/
+
+# -----------------------------------------------------------------------------
+# Type Checking and Linting Caches
+# -----------------------------------------------------------------------------
+.mypy_cache/
+.dmypy.json
+dmypy.json
+.ruff_cache/
+
+# -----------------------------------------------------------------------------
+# IDE and Editor Files
+# -----------------------------------------------------------------------------
+.vscode/
+.idea/
+.claude/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+
+# -----------------------------------------------------------------------------
+# OS Files
+# -----------------------------------------------------------------------------
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# -----------------------------------------------------------------------------
+# Temporary Files
+# -----------------------------------------------------------------------------
+*.tmp
+*.temp
+*.log
+*.bak
+*.orig
+
+# -----------------------------------------------------------------------------
+# Security and Secrets
+# -----------------------------------------------------------------------------
+# Never commit secrets, even in test files
+*.key
+*.pem
+*.env.local
+.env.local
+secrets.yaml
+secrets.json
+
+# -----------------------------------------------------------------------------
+# Local Development Artifacts
+# -----------------------------------------------------------------------------
+scratch/
+tmp/
+temp/
