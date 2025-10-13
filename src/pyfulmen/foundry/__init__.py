@@ -8,6 +8,14 @@ This module provides:
 - Pattern catalog for regex, MIME types, HTTP statuses, country codes
 """
 
+from .catalog import (
+    FoundryCatalog,
+    HttpStatusCode,
+    HttpStatusGroup,
+    MimeType,
+    Pattern,
+    PatternAccessor,
+)
 from .models import (
     FulmenBaseModel,
     FulmenCatalogModel,
@@ -24,4 +32,10 @@ __all__ = [
     "FulmenCatalogModel",
     "utc_now_rfc3339nano",
     "generate_correlation_id",
+    "Pattern",
+    "MimeType",
+    "HttpStatusCode",
+    "HttpStatusGroup",
+    "FoundryCatalog",
+    "PatternAccessor",
 ]

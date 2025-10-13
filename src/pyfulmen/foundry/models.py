@@ -92,7 +92,7 @@ class FulmenDataModel(FulmenBaseModel):
         """
         # Get computed field names from class (not instance, to avoid deprecation warning)
         computed_fields = set(self.__class__.model_computed_fields.keys())
-        
+
         if include_computed:
             # Include computed fields
             return self.model_dump(
@@ -292,11 +292,7 @@ def utc_now_rfc3339nano() -> str:
         provides microsecond resolution. This is sufficient for log
         correlation and meets enterprise requirements.
     """
-    return (
-        datetime.now(UTC)
-        .isoformat(timespec="microseconds")
-        .replace("+00:00", "Z")
-    )
+    return datetime.now(UTC).isoformat(timespec="microseconds").replace("+00:00", "Z")
 
 
 def generate_correlation_id() -> str:

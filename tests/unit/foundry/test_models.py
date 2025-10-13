@@ -23,9 +23,9 @@ class TestUtilityFunctions:
         """RFC3339Nano timestamp should match expected format."""
         timestamp = utc_now_rfc3339nano()
         pattern = r"^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{6}Z$"
-        assert re.match(
-            pattern, timestamp
-        ), f"Timestamp {timestamp} doesn't match RFC3339Nano format"
+        assert re.match(pattern, timestamp), (
+            f"Timestamp {timestamp} doesn't match RFC3339Nano format"
+        )
 
     def test_utc_now_rfc3339nano_utc(self):
         """RFC3339Nano timestamp should end with Z (UTC indicator)."""
@@ -43,9 +43,9 @@ class TestUtilityFunctions:
         """Correlation ID should be valid UUID format."""
         corr_id = generate_correlation_id()
         uuid_pattern = r"^[0-9a-f]{8}-[0-9a-f]{4}-7[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$"
-        assert re.match(
-            uuid_pattern, corr_id
-        ), f"Correlation ID {corr_id} doesn't match UUIDv7 format"
+        assert re.match(uuid_pattern, corr_id), (
+            f"Correlation ID {corr_id} doesn't match UUIDv7 format"
+        )
 
     def test_generate_correlation_id_version_7(self):
         """Correlation ID should be UUIDv7 (version bit = 7)."""
@@ -152,7 +152,7 @@ class TestFulmenDataModel:
         assert '"message"' in json_str
         assert '"test"' in json_str
         assert '"count"' in json_str
-        assert '5' in json_str
+        assert "5" in json_str
 
     def test_data_model_strip_whitespace(self):
         """FulmenDataModel should strip whitespace from string fields."""
@@ -465,7 +465,7 @@ class TestComputedFields:
         # Included when requested
         json_str_with_computed = event.to_json_str(include_computed=True)
         assert "length" in json_str_with_computed
-        assert '"length"' in json_str_with_computed and '4' in json_str_with_computed
+        assert '"length"' in json_str_with_computed and "4" in json_str_with_computed
 
     def test_get_computed_field_names(self):
         """Should return all computed field names."""
