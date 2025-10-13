@@ -31,6 +31,7 @@ from abc import ABC, abstractmethod
 from typing import Any
 
 from ._models import LogEvent, LoggingConfig, LoggingPolicy, LoggingProfile
+from .context import get_context, get_correlation_id
 from .severity import Severity, to_numeric_level, to_python_level
 
 
@@ -265,6 +266,22 @@ class StructuredLogger(BaseLoggerImpl):
             if key in allowed_fields and value:
                 event_dict[key] = value
 
+        # Check thread-local context for correlation_id
+        if "correlation_id" not in event_dict:
+            context_correlation_id = get_correlation_id()
+            if context_correlation_id:
+                event_dict["correlation_id"] = context_correlation_id
+
+        # Merge thread-local context
+        thread_context = get_context()
+        if thread_context:
+            if "context" in event_dict:
+                # Merge with explicit context (explicit takes precedence)
+                merged_context = {**thread_context, **event_dict["context"]}
+                event_dict["context"] = merged_context
+            else:
+                event_dict["context"] = thread_context.copy()
+
         # Create LogEvent for timestamp generation
         event = LogEvent(
             severity=severity_str,
@@ -276,6 +293,7 @@ class StructuredLogger(BaseLoggerImpl):
 
         # Use event's timestamp
         event_dict["timestamp"] = event.timestamp
+        # Use LogEvent's auto-generated correlation_id if none provided
         if "correlation_id" not in event_dict:
             event_dict["correlation_id"] = event.correlation_id
 
@@ -345,13 +363,32 @@ class EnterpriseLogger(BaseLoggerImpl):
 
         severity_str = severity.value if isinstance(severity, Severity) else severity
 
+        # Merge thread-local context
+        merged_kwargs = kwargs.copy()
+
+        # Add correlation_id from context if not provided
+        if "correlation_id" not in merged_kwargs:
+            context_correlation_id = get_correlation_id()
+            if context_correlation_id:
+                merged_kwargs["correlation_id"] = context_correlation_id
+
+        # Merge thread-local context with explicit context
+        thread_context = get_context()
+        if thread_context:
+            if "context" in merged_kwargs:
+                # Merge with explicit context (explicit takes precedence)
+                merged_context = {**thread_context, **merged_kwargs["context"]}
+                merged_kwargs["context"] = merged_context
+            else:
+                merged_kwargs["context"] = thread_context.copy()
+
         # Create full LogEvent
         event = LogEvent(
             severity=severity_str,
             message=message,
             service=self.service,
             component=self.component,
-            **kwargs,
+            **merged_kwargs,
         )
 
         # Emit complete JSON structure with computed fields
