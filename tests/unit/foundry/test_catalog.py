@@ -7,9 +7,17 @@ from pyfulmen.foundry.catalog import (
     FoundryCatalog,
     HttpStatusCode,
     HttpStatusGroup,
+    HttpStatusHelper,
     MimeType,
     Pattern,
     PatternAccessor,
+    get_default_catalog,
+    get_mime_type,
+    get_mime_type_by_extension,
+    get_pattern,
+    is_client_error,
+    is_server_error,
+    is_success,
 )
 
 
@@ -447,3 +455,118 @@ class TestPatternMatching:
         assert not pattern.match("2025-13-01")
         assert not pattern.match("2025-10-32")
         assert not pattern.match("25-10-13")
+
+
+class TestHttpStatusHelper:
+    """Test HttpStatusHelper convenience methods."""
+
+    def test_helper_creation(self, catalog):
+        """HttpStatusHelper should be created with catalog."""
+        helper = HttpStatusHelper(catalog)
+        assert helper._catalog is catalog
+
+    def test_is_informational(self, catalog):
+        """Helper should identify informational responses."""
+        helper = HttpStatusHelper(catalog)
+        assert helper.is_informational(100)
+        assert helper.is_informational(101)
+        assert not helper.is_informational(200)
+
+    def test_is_success(self, catalog):
+        """Helper should identify successful responses."""
+        helper = HttpStatusHelper(catalog)
+        assert helper.is_success(200)
+        assert helper.is_success(201)
+        assert helper.is_success(204)
+        assert not helper.is_success(404)
+
+    def test_is_redirect(self, catalog):
+        """Helper should identify redirect responses."""
+        helper = HttpStatusHelper(catalog)
+        assert helper.is_redirect(301)
+        assert helper.is_redirect(302)
+        assert not helper.is_redirect(200)
+
+    def test_is_client_error(self, catalog):
+        """Helper should identify client errors."""
+        helper = HttpStatusHelper(catalog)
+        assert helper.is_client_error(400)
+        assert helper.is_client_error(404)
+        assert helper.is_client_error(422)
+        assert not helper.is_client_error(500)
+
+    def test_is_server_error(self, catalog):
+        """Helper should identify server errors."""
+        helper = HttpStatusHelper(catalog)
+        assert helper.is_server_error(500)
+        assert helper.is_server_error(503)
+        assert not helper.is_server_error(404)
+
+    def test_get_reason_phrase(self, catalog):
+        """Helper should return reason phrases."""
+        helper = HttpStatusHelper(catalog)
+        assert helper.get_reason_phrase(200) == "OK"
+        assert helper.get_reason_phrase(404) == "Not Found"
+        assert helper.get_reason_phrase(500) == "Internal Server Error"
+        assert helper.get_reason_phrase(999) is None
+
+
+class TestConvenienceFunctions:
+    """Test convenience functions with global catalog."""
+
+    def test_get_default_catalog(self):
+        """get_default_catalog should return singleton instance."""
+        catalog1 = get_default_catalog()
+        catalog2 = get_default_catalog()
+        assert catalog1 is catalog2
+        assert isinstance(catalog1, FoundryCatalog)
+
+    def test_get_pattern(self):
+        """get_pattern should retrieve pattern from default catalog."""
+        pattern = get_pattern("slug")
+        assert pattern is not None
+        assert pattern.id == "slug"
+
+    def test_get_pattern_not_found(self):
+        """get_pattern should return None for missing pattern."""
+        pattern = get_pattern("nonexistent")
+        assert pattern is None
+
+    def test_get_mime_type(self):
+        """get_mime_type should retrieve MIME type from default catalog."""
+        mime = get_mime_type("json")
+        assert mime is not None
+        assert mime.mime == "application/json"
+
+    def test_get_mime_type_by_extension(self):
+        """get_mime_type_by_extension should find MIME by extension."""
+        mime = get_mime_type_by_extension("json")
+        assert mime is not None
+        assert mime.id == "json"
+
+        mime = get_mime_type_by_extension(".yaml")
+        assert mime is not None
+        assert mime.id == "yaml"
+
+    def test_is_success(self):
+        """is_success should check 2xx status codes."""
+        assert is_success(200)
+        assert is_success(201)
+        assert is_success(204)
+        assert not is_success(404)
+        assert not is_success(500)
+
+    def test_is_client_error(self):
+        """is_client_error should check 4xx status codes."""
+        assert is_client_error(400)
+        assert is_client_error(404)
+        assert is_client_error(422)
+        assert not is_client_error(200)
+        assert not is_client_error(500)
+
+    def test_is_server_error(self):
+        """is_server_error should check 5xx status codes."""
+        assert is_server_error(500)
+        assert is_server_error(503)
+        assert not is_server_error(200)
+        assert not is_server_error(404)

@@ -646,6 +646,285 @@ class PatternAccessor:
         return self._catalog.get_all_patterns()
 
 
+class HttpStatusHelper:
+    """HTTP status code helper utilities.
+
+    Provides convenient methods for checking status code ranges and groups.
+
+    Example:
+        >>> helper = HttpStatusHelper(catalog)
+        >>> helper.is_success(200)
+        True
+        >>> helper.is_client_error(404)
+        True
+    """
+
+    def __init__(self, catalog: FoundryCatalog):
+        """Initialize helper with catalog.
+
+        Args:
+            catalog: FoundryCatalog instance
+        """
+        self._catalog = catalog
+
+    def is_informational(self, status_code: int) -> bool:
+        """Check if status code is informational (1xx).
+
+        Args:
+            status_code: HTTP status code
+
+        Returns:
+            True if code is in 100-199 range
+
+        Example:
+            >>> helper.is_informational(100)
+            True
+        """
+        group = self._catalog.get_http_status_group_for_code(status_code)
+        return group is not None and group.id == "informational"
+
+    def is_success(self, status_code: int) -> bool:
+        """Check if status code is successful (2xx).
+
+        Args:
+            status_code: HTTP status code
+
+        Returns:
+            True if code is in 200-299 range
+
+        Example:
+            >>> helper.is_success(200)
+            True
+            >>> helper.is_success(201)
+            True
+        """
+        group = self._catalog.get_http_status_group_for_code(status_code)
+        return group is not None and group.id == "success"
+
+    def is_redirect(self, status_code: int) -> bool:
+        """Check if status code is redirection (3xx).
+
+        Args:
+            status_code: HTTP status code
+
+        Returns:
+            True if code is in 300-399 range
+
+        Example:
+            >>> helper.is_redirect(301)
+            True
+        """
+        group = self._catalog.get_http_status_group_for_code(status_code)
+        return group is not None and group.id == "redirect"
+
+    def is_client_error(self, status_code: int) -> bool:
+        """Check if status code is client error (4xx).
+
+        Args:
+            status_code: HTTP status code
+
+        Returns:
+            True if code is in 400-499 range
+
+        Example:
+            >>> helper.is_client_error(404)
+            True
+            >>> helper.is_client_error(400)
+            True
+        """
+        group = self._catalog.get_http_status_group_for_code(status_code)
+        return group is not None and group.id == "client-error"
+
+    def is_server_error(self, status_code: int) -> bool:
+        """Check if status code is server error (5xx).
+
+        Args:
+            status_code: HTTP status code
+
+        Returns:
+            True if code is in 500-599 range
+
+        Example:
+            >>> helper.is_server_error(500)
+            True
+            >>> helper.is_server_error(503)
+            True
+        """
+        group = self._catalog.get_http_status_group_for_code(status_code)
+        return group is not None and group.id == "server-error"
+
+    def get_reason_phrase(self, status_code: int) -> str | None:
+        """Get reason phrase for status code.
+
+        Args:
+            status_code: HTTP status code
+
+        Returns:
+            Reason phrase or None if not found
+
+        Example:
+            >>> helper.get_reason_phrase(200)
+            'OK'
+            >>> helper.get_reason_phrase(404)
+            'Not Found'
+        """
+        group = self._catalog.get_http_status_group_for_code(status_code)
+        if group is None:
+            return None
+        return group.get_reason(status_code)
+
+
+_default_catalog: FoundryCatalog | None = None
+
+
+def get_default_catalog() -> FoundryCatalog:
+    """Get default Foundry catalog instance (singleton).
+
+    Lazily initializes catalog on first access using ConfigLoader
+    with 'fulmen' as app name.
+
+    Returns:
+        Singleton FoundryCatalog instance
+
+    Example:
+        >>> catalog = get_default_catalog()
+        >>> pattern = catalog.get_pattern("slug")
+    """
+    global _default_catalog
+    if _default_catalog is None:
+        from ..config.loader import ConfigLoader
+
+        loader = ConfigLoader(app_name="fulmen")
+        _default_catalog = FoundryCatalog(loader)
+    return _default_catalog
+
+
+def get_pattern(pattern_id: str) -> Pattern | None:
+    """Get pattern from default catalog by ID.
+
+    Convenience function that uses the default catalog singleton.
+
+    Args:
+        pattern_id: Pattern identifier (e.g., "ansi-email", "slug")
+
+    Returns:
+        Pattern instance or None if not found
+
+    Example:
+        >>> from pyfulmen.foundry import get_pattern
+        >>> email = get_pattern("ansi-email")
+        >>> if email and email.match("user@example.com"):
+        ...     print("Valid email")
+    """
+    catalog = get_default_catalog()
+    return catalog.get_pattern(pattern_id)
+
+
+def get_mime_type(mime_id: str) -> MimeType | None:
+    """Get MIME type from default catalog by ID.
+
+    Convenience function that uses the default catalog singleton.
+
+    Args:
+        mime_id: MIME type identifier (e.g., "json", "yaml")
+
+    Returns:
+        MimeType instance or None if not found
+
+    Example:
+        >>> from pyfulmen.foundry import get_mime_type
+        >>> json_mime = get_mime_type("json")
+        >>> print(json_mime.mime)
+        application/json
+    """
+    catalog = get_default_catalog()
+    return catalog.get_mime_type(mime_id)
+
+
+def get_mime_type_by_extension(extension: str) -> MimeType | None:
+    """Get MIME type from default catalog by file extension.
+
+    Convenience function that uses the default catalog singleton.
+
+    Args:
+        extension: File extension (with or without leading dot)
+
+    Returns:
+        MimeType instance or None if not found
+
+    Example:
+        >>> from pyfulmen.foundry import get_mime_type_by_extension
+        >>> mime = get_mime_type_by_extension("json")
+        >>> print(mime.mime)
+        application/json
+    """
+    catalog = get_default_catalog()
+    return catalog.get_mime_type_by_extension(extension)
+
+
+def is_success(status_code: int) -> bool:
+    """Check if HTTP status code is successful (2xx).
+
+    Convenience function that uses the default catalog singleton.
+
+    Args:
+        status_code: HTTP status code
+
+    Returns:
+        True if code is in 200-299 range
+
+    Example:
+        >>> from pyfulmen.foundry import is_success
+        >>> if is_success(200):
+        ...     print("Request succeeded")
+    """
+    catalog = get_default_catalog()
+    helper = HttpStatusHelper(catalog)
+    return helper.is_success(status_code)
+
+
+def is_client_error(status_code: int) -> bool:
+    """Check if HTTP status code is client error (4xx).
+
+    Convenience function that uses the default catalog singleton.
+
+    Args:
+        status_code: HTTP status code
+
+    Returns:
+        True if code is in 400-499 range
+
+    Example:
+        >>> from pyfulmen.foundry import is_client_error
+        >>> if is_client_error(404):
+        ...     print("Resource not found")
+    """
+    catalog = get_default_catalog()
+    helper = HttpStatusHelper(catalog)
+    return helper.is_client_error(status_code)
+
+
+def is_server_error(status_code: int) -> bool:
+    """Check if HTTP status code is server error (5xx).
+
+    Convenience function that uses the default catalog singleton.
+
+    Args:
+        status_code: HTTP status code
+
+    Returns:
+        True if code is in 500-599 range
+
+    Example:
+        >>> from pyfulmen.foundry import is_server_error
+        >>> if is_server_error(500):
+        ...     print("Server error occurred")
+    """
+    catalog = get_default_catalog()
+    helper = HttpStatusHelper(catalog)
+    return helper.is_server_error(status_code)
+
+
 __all__ = [
     "Pattern",
     "MimeType",
@@ -653,4 +932,12 @@ __all__ = [
     "HttpStatusGroup",
     "FoundryCatalog",
     "PatternAccessor",
+    "HttpStatusHelper",
+    "get_default_catalog",
+    "get_pattern",
+    "get_mime_type",
+    "get_mime_type_by_extension",
+    "is_success",
+    "is_client_error",
+    "is_server_error",
 ]

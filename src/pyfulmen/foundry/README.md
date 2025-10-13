@@ -8,7 +8,9 @@ The Foundry module provides:
 - **Base Pydantic Models** - Consistent patterns for data, config, and catalog models
 - **RFC3339Nano Timestamps** - Microsecond-precision UTC timestamps
 - **UUIDv7 Correlation IDs** - Time-sortable correlation tracking
-- **Pattern Catalogs** - (Future) Regex, MIME, HTTP, country code utilities
+- **Pattern Catalogs** - Curated regex/glob/literal patterns from Crucible
+- **MIME Type Detection** - File type identification by extension
+- **HTTP Status Helpers** - Status code groups and classification
 
 ## Base Models
 
@@ -241,13 +243,174 @@ Instead of everyone using `BaseModel` with slightly different `ConfigDict` setti
 - Better for log aggregation systems (Splunk, Datadog)
 - Crucible logging standard mandates UUIDv7
 
+## Pattern Catalogs
+
+### FoundryCatalog
+
+Lazy-loading catalog for accessing curated patterns, MIME types, and HTTP status groups from Crucible configuration.
+
+**Example:**
+```python
+from pyfulmen.config.loader import ConfigLoader
+from pyfulmen.foundry import FoundryCatalog
+
+loader = ConfigLoader(app_name="fulmen")
+catalog = FoundryCatalog(loader)
+
+# Get pattern by ID
+email_pattern = catalog.get_pattern("ansi-email")
+if email_pattern and email_pattern.match("user@example.com"):
+    print("Valid email")
+
+# Get MIME type by extension
+mime = catalog.get_mime_type_by_extension("json")
+print(mime.mime)  # "application/json"
+
+# Get HTTP status group for code
+group = catalog.get_http_status_group_for_code(404)
+print(group.id)  # "client-error"
+```
+
+### Pattern
+
+Immutable pattern definition with regex/glob/literal matching support.
+
+**Features:**
+- Regex, glob, and literal pattern types
+- Python-specific magic methods (`__call__` for direct invocation)
+- Lazy compilation and caching
+- Pattern description with examples
+
+**Example:**
+```python
+from pyfulmen.foundry import FoundryCatalog, PatternAccessor
+from pyfulmen.config.loader import ConfigLoader
+
+loader = ConfigLoader(app_name="fulmen")
+catalog = FoundryCatalog(loader)
+patterns = PatternAccessor(catalog)
+
+# Access common patterns by name
+email = patterns.email()
+slug = patterns.slug()
+uuid = patterns.uuid_v4()
+
+# Pattern matching
+if email.match("user@example.com"):
+    print("Valid email")
+
+# Direct invocation via __call__
+if email("user@example.com"):
+    print("Valid email")
+
+# Search within string
+if email.search("Contact: user@example.com for info"):
+    print("Email found")
+
+# Get pattern description
+print(slug.describe())
+```
+
+**Available Patterns:**
+- `email()` - Internationalized email (RFC 5322 with Unicode)
+- `slug()` - Kebab-case or snake_case slugs
+- `path_segment()` - URL path segments
+- `identifier()` - CamelCase/snake_case identifiers
+- `domain_name()` - Fully qualified domain names
+- `ipv6()` - IPv6 addresses (full and compressed)
+- `uuid_v4()` - RFC 4122 UUID v4
+- `semantic_version()` - SemVer 2.0.0 versions
+- `iso_date()` - ISO 8601 dates (YYYY-MM-DD)
+- `iso_timestamp_utc()` - ISO 8601 UTC timestamps
+
+### MimeType
+
+Immutable MIME type definition with extension matching.
+
+**Example:**
+```python
+mime = catalog.get_mime_type("json")
+print(mime.mime)  # "application/json"
+print(mime.extensions)  # ["json", "map"]
+
+# Check if extension matches
+if mime.matches_extension(".json"):
+    print("JSON file")
+```
+
+### HttpStatusGroup
+
+HTTP status code groups with lookup and classification.
+
+**Example:**
+```python
+# Get status group by ID
+success_group = catalog.get_http_status_group("success")
+print(success_group.contains(200))  # True
+print(success_group.get_reason(201))  # "Created"
+
+# Get group for specific status code
+group = catalog.get_http_status_group_for_code(404)
+print(group.id)  # "client-error"
+print(group.name)  # "Client Error Responses"
+```
+
+**Available Status Groups:**
+- `informational` - 1xx responses
+- `success` - 2xx responses
+- `redirect` - 3xx responses
+- `client-error` - 4xx responses
+- `server-error` - 5xx responses
+
+## Fulmen Library Requirements
+
+PyFulmen implements the Fulmen Helper Library Standard for cross-language consistency:
+
+### Correlation IDs (UUIDv7)
+All Fulmen libraries use UUIDv7 for correlation tracking:
+- **Time-sortable** - Embedded timestamp enables chronological ordering
+- **Cross-language** - Same format in gofulmen, tsfulmen, pyfulmen
+- **Log aggregation** - Better performance in Splunk, Datadog, ELK
+
+### Pattern Catalogs
+Centralized pattern definitions in Crucible ensure consistency:
+- **Single source of truth** - Patterns defined once, used everywhere
+- **Version controlled** - Pattern changes tracked in Crucible
+- **Language-specific flags** - Python, Go, TypeScript, Rust flags supported
+
+### Configuration Management
+Three-layer config loading pattern:
+1. **Crucible defaults** - Embedded standards from sync
+2. **User overrides** - `~/.config/fulmen/` customizations
+3. **Runtime config** - Application-provided settings (BYOC)
+
+## Python-Specific Features
+
+PyFulmen leverages Python's strengths for better developer experience:
+
+### Pydantic Foundation
+- **Type safety** - Runtime validation with static type hints
+- **Performance** - Pydantic v2 with Rust core
+- **FastAPI integration** - Models work directly in FastAPI endpoints
+- **Schema generation** - Automatic JSON Schema for API contracts
+
+### Magic Methods
+Python-specific enhancements for natural usage:
+- `Pattern.__call__()` - Use patterns as callables: `pattern(value)`
+- `FulmenConfigModel.merge_with()` - Intuitive config merging
+- `FulmenDataModel.to_json_dict()` - Clean serialization API
+
+### Computed Fields
+Pydantic v2.12+ computed fields with intelligent exclusion:
+- Excluded from serialization by default (safe roundtripping)
+- Explicit inclusion when needed (`include_computed=True`)
+- Full introspection support
+
 ## Future Extensions
 
-The Foundry module will expand to include:
-- Pattern catalog with compiled regex
-- MIME type detection from bytes/extensions
-- HTTP status code helpers
-- Country code lookups
+Planned enhancements for future versions:
+- Global catalog instance with convenience functions
+- HTTP status helper methods (is_success(), is_client_error(), etc.)
+- Country code lookups (ISO alpha-2/alpha-3/numeric)
+- MIME magic number detection from bytes
 - Additional domain-specific utilities
-
-See `foundry-module-feature-brief.md` in `.plans/` for roadmap.
