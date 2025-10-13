@@ -117,6 +117,20 @@ Before executing any operations, I will:
 4. **Document Decisions**: Maintain clear rationale for all major design choices
 5. **Test Thoroughly**: Ensure all changes pass comprehensive test suites
 
+### DO NOT Rules - Critical
+
+These rules must NEVER be violated:
+
+1. **NEVER commit .plans/ files**: The `.plans/` directory is in `.gitignore` for a reason. Planning documents contain work-in-progress information and internal notes not suitable for public repositories. DO NOT use `git add -f` or any force operations to override gitignore. If you need to preserve planning information, keep it in `.plans/` where it belongs.
+
+2. **NEVER override .gitignore**: If git warns about ignored files with messages like "The following paths are ignored by one of your .gitignore files", STOP immediately. Do not proceed with `-f`, `--force`, or any bypass flags. The gitignore rules exist for security, privacy, and repository hygiene reasons.
+
+3. **NEVER use force flags on git operations**: Do not use `git add -f`, `git commit --force`, `git push --force`, or similar force operations without explicit human authorization. Force operations bypass safety mechanisms and can cause irreversible damage.
+
+4. **Respect .gitignore warnings as hard stops**: Any git warning about ignored paths is a STOP signal. Consult `.gitignore` to understand why files are excluded, then verify the operation with human supervisor before proceeding. If in doubt, ask.
+
+If you encounter a situation where you believe a gitignored file should be committed, STOP and consult with @3leapsdave before taking any action.
+
 ### Development Philosophy
 
 - **Quality Over Speed**: Prioritize correctness and maintainability
