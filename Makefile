@@ -49,7 +49,8 @@ help:
 	@echo "  make release-build     - Build release artifacts"
 	@echo ""
 	@echo "SSOT:"
-	@echo "  make sync-crucible     - Sync Crucible schemas and docs"
+	@echo "  make sync              - Sync SSOT artifacts (Crucible schemas and docs)"
+	@echo "  make sync-crucible     - Alias for sync (deprecated, use sync)"
 
 # Bootstrap tools and Python environment
 .PHONY: bootstrap
@@ -77,6 +78,10 @@ tools: bin/goneat
 	@bin/goneat version > /dev/null && echo "✓ Goneat: $$(bin/goneat version)" || (echo "❌ Goneat not functional" && exit 1)
 	@uv --version > /dev/null && echo "✓ uv: $$(uv --version)" || (echo "❌ uv not found" && exit 1)
 	@echo "✓ All required tools present"
+
+# SSOT sync target (required by FulmenHQ Makefile Standard)
+.PHONY: sync
+sync: sync-crucible
 
 .PHONY: sync-crucible
 sync-crucible: bin/goneat
