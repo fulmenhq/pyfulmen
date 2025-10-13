@@ -451,7 +451,7 @@ class TestLoggerProfileComparison:
 
         assert structured_event["message"] == message
         assert structured_event["requestId"] == request_id
-        assert "severityLevel" not in structured_event
+        assert "severityLevel" in structured_event  # Now included for schema compliance
 
         assert enterprise_event["message"] == message
         assert enterprise_event["requestId"] == request_id

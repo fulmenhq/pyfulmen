@@ -74,12 +74,16 @@ class FulmenDataModel(FulmenBaseModel):
     )
 
     def to_json_dict(
-        self, exclude_none: bool = True, include_computed: bool = False
+        self,
+        exclude_none: bool = True,
+        exclude_defaults: bool = False,
+        include_computed: bool = False,
     ) -> dict[str, Any]:
         """Convert to JSON-serializable dict with Fulmen conventions.
 
         Args:
             exclude_none: If True, omit fields with None values
+            exclude_defaults: If True, omit fields with default values (empty strings, zeros, etc.)
             include_computed: If True, include computed fields in output
 
         Returns:
@@ -89,6 +93,25 @@ class FulmenDataModel(FulmenBaseModel):
             - Computed fields are EXCLUDED by default for safe roundtripping
             - Uses by_alias=True to support field aliases (e.g., camelCase API fields)
             - To include computed fields, use include_computed=True or to_json_dict_with_computed()
+
+            **exclude_defaults behavior:**
+            This parameter controls whether fields set to their default values are omitted
+            from output. This is useful for schema compliance (e.g., excluding empty strings
+            that violate minLength constraints) and reducing payload size.
+
+            Important: Pydantic's exclude_defaults cannot distinguish between:
+            - A field not set by the user (using its default)
+            - A field explicitly set by the user to the same value as its default
+
+            Both cases will be excluded when exclude_defaults=True. For logging and event
+            models, this is semantically correct (e.g., component="" and component not
+            present mean the same thing).
+
+            Alternative: If you need to preserve the distinction between "explicitly set to
+            default" vs "using default", use exclude_unset=True instead. However,
+            exclude_unset has different semantics: it excludes fields not mentioned at
+            construction time, even if they have defaults that would be populated. For most
+            Fulmen use cases, exclude_defaults is the correct choice.
         """
         # Get computed field names from class (not instance, to avoid deprecation warning)
         computed_fields = set(self.__class__.model_computed_fields.keys())
@@ -98,6 +121,7 @@ class FulmenDataModel(FulmenBaseModel):
             return self.model_dump(
                 mode="json",
                 exclude_none=exclude_none,
+                exclude_defaults=exclude_defaults,
                 by_alias=True,
             )
         else:
@@ -105,15 +129,22 @@ class FulmenDataModel(FulmenBaseModel):
             return self.model_dump(
                 mode="json",
                 exclude_none=exclude_none,
+                exclude_defaults=exclude_defaults,
                 by_alias=True,
                 exclude=computed_fields,
             )
 
-    def to_json_str(self, exclude_none: bool = True, include_computed: bool = False) -> str:
+    def to_json_str(
+        self,
+        exclude_none: bool = True,
+        exclude_defaults: bool = False,
+        include_computed: bool = False,
+    ) -> str:
         """Convert to JSON string.
 
         Args:
             exclude_none: If True, omit fields with None values
+            exclude_defaults: If True, omit fields with default values
             include_computed: If True, include computed fields in output
 
         Returns:
@@ -125,14 +156,21 @@ class FulmenDataModel(FulmenBaseModel):
         import json
 
         return json.dumps(
-            self.to_json_dict(exclude_none=exclude_none, include_computed=include_computed)
+            self.to_json_dict(
+                exclude_none=exclude_none,
+                exclude_defaults=exclude_defaults,
+                include_computed=include_computed,
+            )
         )
 
-    def to_json_dict_with_computed(self, exclude_none: bool = True) -> dict[str, Any]:
+    def to_json_dict_with_computed(
+        self, exclude_none: bool = True, exclude_defaults: bool = False
+    ) -> dict[str, Any]:
         """Convenience method to include computed fields in serialization.
 
         Args:
             exclude_none: If True, omit fields with None values
+            exclude_defaults: If True, omit fields with default values
 
         Returns:
             JSON-serializable dictionary with computed fields included
@@ -153,7 +191,9 @@ class FulmenDataModel(FulmenBaseModel):
             >>> event.to_json_dict_with_computed()  # Includes computed
             {'message': 'test', 'severity': 'INFO', 'severity_level': 20}
         """
-        return self.to_json_dict(exclude_none=exclude_none, include_computed=True)
+        return self.to_json_dict(
+            exclude_none=exclude_none, exclude_defaults=exclude_defaults, include_computed=True
+        )
 
     def get_computed_field_names(self) -> set[str]:
         """Get names of all computed fields on this model.

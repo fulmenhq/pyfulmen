@@ -267,8 +267,10 @@ class StructuredLogger(BaseLoggerImpl):
             **merged_kwargs,
         )
 
-        # Serialize with camelCase aliases (excluding computed fields for STRUCTURED)
-        event_dict = event.model_dump(by_alias=True, exclude_none=False, exclude={"severity_level"})
+        # Serialize with camelCase aliases including severityLevel for schema compliance
+        # Use to_json_dict_with_computed() to include severityLevel computed field
+        # Use exclude_defaults=True to omit empty strings, zeros, empty lists per schema
+        event_dict = event.to_json_dict_with_computed(exclude_none=True, exclude_defaults=True)
 
         # Process through middleware pipeline if configured
         if self._middleware:
@@ -378,7 +380,9 @@ class EnterpriseLogger(BaseLoggerImpl):
         )
 
         # Emit complete JSON structure with computed fields and camelCase aliases
-        event_dict = event.model_dump(by_alias=True, exclude_none=False)
+        # Use to_json_dict_with_computed() to include severityLevel computed field
+        # Use exclude_defaults=True to omit empty strings, zeros, empty lists per schema
+        event_dict = event.to_json_dict_with_computed(exclude_none=True, exclude_defaults=True)
 
         # Process through middleware pipeline if configured
         if self._middleware:
