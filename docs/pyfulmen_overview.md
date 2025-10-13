@@ -34,24 +34,24 @@ tags: ["python", "library", "fulmen", "enterprise"]
 
 PyFulmen implements the mandatory core modules defined in the [Module Manifest](config/crucible-py/library/v1.0.0/module-manifest.yaml). Each module follows the progressive interface pattern and targets 90%+ test coverage.
 
-| Module ID | Status | Coverage Target | Specification | Description |
-|-----------|--------|-----------------|---------------|-------------|
-| **crucible-shim** | ✅ Stable | 90% | [Spec](docs/crucible-py/standards/library/modules/crucible-shim.md) | Idiomatic Python access to Crucible schemas, docs, and config defaults |
-| **config-path-api** | ✅ Stable | 90% | [Spec](docs/crucible-py/standards/config/fulmen-config-paths.md) | Platform-aware config/data/cache paths (XDG-compliant on Linux/macOS, Windows-aware) |
-| **three-layer-config** | ✅ Stable | 90% | [Spec](docs/crucible-py/standards/library/modules/three-layer-config.md) | Crucible defaults → User overrides → Runtime config with YAML/JSON support |
-| **schema-validation** | ✅ Stable | 90% | [Spec](docs/crucible-py/standards/library/modules/schema-validation.md) | JSON Schema validation helpers using jsonschema library |
-| **observability-logging** | 🔄 Active | 95% | [Spec](docs/crucible-py/standards/observability/logging.md) | Progressive logging with SIMPLE/STRUCTURED/ENTERPRISE profiles, policy enforcement |
-| **goneat-bootstrap** | ✅ Stable | 90% | [Spec](docs/crucible-py/guides/bootstrap-goneat.md) | Goneat tool installation and SSOT sync automation |
-| **ssot-sync** | ✅ Stable | 90% | - | Automated sync of Crucible assets via goneat |
-| **foundry-patterns** | 📋 Planned | 90% | [Spec](docs/crucible-py/standards/library/foundry/interfaces.md) | Pattern catalogs, MIME detection, HTTP status helpers |
+| Module ID                 | Status     | Coverage Target | Specification                                                            | Description                                                                          |
+| ------------------------- | ---------- | --------------- | ------------------------------------------------------------------------ | ------------------------------------------------------------------------------------ |
+| **crucible-shim**         | ✅ Stable  | 90%             | [Spec](docs/crucible-py/standards/library/modules/crucible-shim.md)      | Idiomatic Python access to Crucible schemas, docs, and config defaults               |
+| **config-path-api**       | ✅ Stable  | 90%             | [Spec](docs/crucible-py/standards/config/fulmen-config-paths.md)         | Platform-aware config/data/cache paths (XDG-compliant on Linux/macOS, Windows-aware) |
+| **three-layer-config**    | ✅ Stable  | 90%             | [Spec](docs/crucible-py/standards/library/modules/three-layer-config.md) | Crucible defaults → User overrides → Runtime config with YAML/JSON support           |
+| **schema-validation**     | ✅ Stable  | 90%             | [Spec](docs/crucible-py/standards/library/modules/schema-validation.md)  | JSON Schema validation helpers using jsonschema library                              |
+| **observability-logging** | 🔄 Active  | 95%             | [Spec](docs/crucible-py/standards/observability/logging.md)              | Progressive logging with SIMPLE/STRUCTURED/ENTERPRISE profiles, policy enforcement   |
+| **goneat-bootstrap**      | ✅ Stable  | 90%             | [Spec](docs/crucible-py/guides/bootstrap-goneat.md)                      | Goneat tool installation and SSOT sync automation                                    |
+| **ssot-sync**             | ✅ Stable  | 90%             | -                                                                        | Automated sync of Crucible assets via goneat                                         |
+| **foundry-patterns**      | 📋 Planned | 90%             | [Spec](docs/crucible-py/standards/library/foundry/interfaces.md)         | Pattern catalogs, MIME detection, HTTP status helpers                                |
 
 ### Extension Modules (Optional)
 
-| Module ID | Status | Notes |
-|-----------|--------|-------|
-| **pathfinder** | 📋 Planned | Filesystem scanning with include/exclude patterns |
+| Module ID         | Status     | Notes                                                  |
+| ----------------- | ---------- | ------------------------------------------------------ |
+| **pathfinder**    | 📋 Planned | Filesystem scanning with include/exclude patterns      |
 | **ascii-helpers** | 📋 Planned | Console formatting utilities (tables, boxes, progress) |
-| **cloud-storage** | 📋 Planned | Unified S3/GCS/Azure Blob helpers |
+| **cloud-storage** | 📋 Planned | Unified S3/GCS/Azure Blob helpers                      |
 
 **Legend**: ✅ Stable | 🔄 Active Development | 📋 Planned | ⚠️ Deprecated
 
@@ -60,18 +60,21 @@ PyFulmen implements the mandatory core modules defined in the [Module Manifest](
 PyFulmen implements the **Progressive Logging Standard** with three profile levels designed to match application complexity:
 
 ### SIMPLE Profile
+
 - **Use Case**: CLI tools, scripts, local development
 - **Features**: Console-only output, minimal configuration
 - **Configuration**: Service name only (`service: mycli`)
 - **Output**: Human-readable text to stderr
 
 ### STRUCTURED Profile
+
 - **Use Case**: API services, background jobs, dev/staging workloads
 - **Features**: Multiple sinks (console, file, rolling-file), structured JSON output, correlation IDs
 - **Configuration**: Service name + sink definitions
 - **Output**: Newline-delimited JSON with full event envelope
 
 ### ENTERPRISE Profile
+
 - **Use Case**: Production services, workhorses, regulated environments
 - **Features**: Multiple sinks, middleware pipeline (redaction, correlation, throttling), policy enforcement, external log shipping
 - **Configuration**: Service + sinks + middleware + optional policy file
@@ -94,7 +97,7 @@ All structured log events emit JSON following the Crucible logging schema:
   "requestId": "req-abc123",
   "operation": "/api/v1/users",
   "durationMs": 45.2,
-  "context": {"userId": "user-123"}
+  "context": { "userId": "user-123" }
 }
 ```
 
@@ -137,27 +140,27 @@ ENTERPRISE profile supports pluggable middleware for log event processing:
 
 Crucible logging severity enum maps to Python logging levels:
 
-| Crucible | Numeric | Python | Usage |
-|----------|---------|--------|-------|
-| TRACE | 0 | DEBUG | Highly verbose diagnostics |
-| DEBUG | 10 | DEBUG | Debug-level details |
-| INFO | 20 | INFO | Core operational events |
-| WARN | 30 | WARNING | Unusual but non-breaking conditions |
-| ERROR | 40 | ERROR | Request/operation failure (recoverable) |
-| FATAL | 50 | CRITICAL | Unrecoverable failure, program exit expected |
-| NONE | 60 | - | Explicitly disable emission |
+| Crucible | Numeric | Python   | Usage                                        |
+| -------- | ------- | -------- | -------------------------------------------- |
+| TRACE    | 0       | DEBUG    | Highly verbose diagnostics                   |
+| DEBUG    | 10      | DEBUG    | Debug-level details                          |
+| INFO     | 20      | INFO     | Core operational events                      |
+| WARN     | 30      | WARNING  | Unusual but non-breaking conditions          |
+| ERROR    | 40      | ERROR    | Request/operation failure (recoverable)      |
+| FATAL    | 50      | CRITICAL | Unrecoverable failure, program exit expected |
+| NONE     | 60      | -        | Explicitly disable emission                  |
 
 ## Dependency Map
 
 PyFulmen's dependency structure follows the Fulmen ecosystem model to prevent circular dependencies:
 
-| Dependency Type | Packages | Notes |
-|----------------|----------|-------|
-| **Runtime** | `jsonschema>=4.25.1`, `pyyaml>=6.0.3` | Core validation and config parsing |
-| **Development** | `pytest>=8.0.0`, `pytest-cov>=4.1.0`, `ruff>=0.1.0` | Testing and quality tools |
-| **Python Runtime** | Python 3.12+ | Type hints, pattern matching, modern stdlib features |
-| **SSOT Assets** | Crucible (synced via goneat) | Schemas, docs, config defaults (committed to repo) |
-| **Tooling** | goneat (CLI tool) | SSOT sync, version management, bootstrap |
+| Dependency Type    | Packages                                            | Notes                                                |
+| ------------------ | --------------------------------------------------- | ---------------------------------------------------- |
+| **Runtime**        | `jsonschema>=4.25.1`, `pyyaml>=6.0.3`               | Core validation and config parsing                   |
+| **Development**    | `pytest>=8.0.0`, `pytest-cov>=4.1.0`, `ruff>=0.1.0` | Testing and quality tools                            |
+| **Python Runtime** | Python 3.12+                                        | Type hints, pattern matching, modern stdlib features |
+| **SSOT Assets**    | Crucible (synced via goneat)                        | Schemas, docs, config defaults (committed to repo)   |
+| **Tooling**        | goneat (CLI tool)                                   | SSOT sync, version management, bootstrap             |
 
 ### Dependency Flow
 
@@ -194,6 +197,7 @@ PyFulmen's dependency structure follows the Fulmen ecosystem model to prevent ci
 **Status**: Alpha - Core modules stable, observability under active development
 
 **Completed**:
+
 - ✅ Crucible shim with schema/doc/config access
 - ✅ Config path API (XDG-compliant, Windows-aware)
 - ✅ Three-layer config loading
@@ -202,6 +206,7 @@ PyFulmen's dependency structure follows the Fulmen ecosystem model to prevent ci
 - ✅ Basic logging implementation
 
 **In Progress**:
+
 - 🔄 Progressive logging profiles (SIMPLE/STRUCTURED/ENTERPRISE)
 - 🔄 Logging policy enforcement
 - 🔄 Middleware pipeline implementation
@@ -212,6 +217,7 @@ PyFulmen's dependency structure follows the Fulmen ecosystem model to prevent ci
 **Target**: Q4 2025
 
 **Planned Features**:
+
 - Foundry patterns module (pattern catalogs, MIME detection, HTTP status helpers)
 - Enhanced correlation ID propagation (HTTP headers, gRPC metadata)
 - Tracing integration (OpenTelemetry compatibility)
@@ -221,6 +227,7 @@ PyFulmen's dependency structure follows the Fulmen ecosystem model to prevent ci
 ### Future Releases
 
 **v0.3.0+**:
+
 - Pathfinder module (filesystem scanning)
 - ASCII helpers (console formatting)
 - Cloud storage helpers (S3/GCS/Azure)
@@ -229,17 +236,18 @@ PyFulmen's dependency structure follows the Fulmen ecosystem model to prevent ci
 
 ### Known Gaps
 
-| Gap | Priority | Target Version | Notes |
-|-----|----------|----------------|-------|
-| External sinks (HTTP/HTTPS) | High | v0.2.0 | Required for enterprise log aggregation |
-| Middleware plugin system | High | v0.1.0 | In active development |
-| Async logging support | Medium | v0.2.0 | For high-throughput services |
-| Windows path edge cases | Low | v0.2.0 | Best-effort Windows support |
-| Performance benchmarks | Medium | v0.2.0 | Establish baseline metrics |
+| Gap                         | Priority | Target Version | Notes                                   |
+| --------------------------- | -------- | -------------- | --------------------------------------- |
+| External sinks (HTTP/HTTPS) | High     | v0.2.0         | Required for enterprise log aggregation |
+| Middleware plugin system    | High     | v0.1.0         | In active development                   |
+| Async logging support       | Medium   | v0.2.0         | For high-throughput services            |
+| Windows path edge cases     | Low      | v0.2.0         | Best-effort Windows support             |
+| Performance benchmarks      | Medium   | v0.2.0         | Establish baseline metrics              |
 
 ### Breaking Changes Policy
 
 Following semantic versioning:
+
 - **Patch (0.1.x)**: Bug fixes, no breaking changes
 - **Minor (0.x.0)**: New features, backward compatible
 - **Major (x.0.0)**: Breaking API changes (rare, with migration guides)
@@ -295,4 +303,4 @@ logger.info('Application started')
 
 ---
 
-*Generated by PyFulmen Architect (@pyfulmen-architect) under supervision of @3leapsdave*
+_Generated by PyFulmen Architect (@pyfulmen-architect) under supervision of @3leapsdave_

@@ -119,10 +119,11 @@ class TestStructuredLogger:
         assert parsed["context"]["method"] == "GET"
 
     def test_structured_logger_all_severity_levels(self, capsys):
-        """Test StructuredLogger handles all severity levels."""
+        """StructuredLogger should support all severity levels."""
         config = LoggingConfig(
             profile=LoggingProfile.STRUCTURED,
             service="test-service",
+            default_level="TRACE",
         )
         logger = StructuredLogger(config)
 
@@ -346,7 +347,11 @@ class TestLogger:
 
     def test_logger_all_log_methods(self, capsys):
         """Test all Logger log methods."""
-        logger = Logger(service="test-service", profile=LoggingProfile.STRUCTURED)
+        logger = Logger(
+            service="test-service",
+            profile=LoggingProfile.STRUCTURED,
+            default_level="TRACE",
+        )
 
         logger.trace("Trace")
         logger.debug("Debug")

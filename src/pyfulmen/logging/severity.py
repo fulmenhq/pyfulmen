@@ -18,7 +18,7 @@ from enum import Enum
 
 class Severity(str, Enum):
     """Log severity levels from Crucible observability standards.
-    
+
     Severity Model (Crucible Logging Standard):
     - TRACE (0): Highly verbose diagnostics
     - DEBUG (10): Debug-level details
@@ -40,7 +40,7 @@ class Severity(str, Enum):
     @property
     def numeric_level(self) -> int:
         """Get numeric severity level for filtering and comparison.
-        
+
         Returns:
             Numeric severity level (0-60)
         """
@@ -49,7 +49,7 @@ class Severity(str, Enum):
     @property
     def python_level(self) -> int:
         """Get Python logging level constant.
-        
+
         Returns:
             Python logging level (logging.DEBUG, logging.INFO, etc.)
         """

@@ -64,9 +64,7 @@ def get_version_info() -> dict[str, Any]:
     semver_pattern = r"^\d+\.\d+\.\d+(-[a-zA-Z0-9.-]+)?$"
     calver_pattern = r"^\d{4}\.\d{1,2}\.\d+(-[a-zA-Z0-9.-]+)?$"
 
-    is_valid = bool(
-        re.match(semver_pattern, version) or re.match(calver_pattern, version)
-    )
+    is_valid = bool(re.match(semver_pattern, version) or re.match(calver_pattern, version))
 
     return {
         "version": version,

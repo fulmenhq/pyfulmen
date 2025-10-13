@@ -88,10 +88,12 @@ sync-crucible: bin/goneat
 sync-ssot: sync-crucible
 
 .PHONY: fmt
-fmt:
+fmt: bin/goneat
 	@echo "Formatting code..."
 	@uv run ruff format src/ tests/
-	@echo "✓ Code formatted"
+	@echo "Formatting docs and config..."
+	@bin/goneat format --types yaml,json,markdown
+	@echo "✓ All files formatted"
 
 .PHONY: lint
 lint:

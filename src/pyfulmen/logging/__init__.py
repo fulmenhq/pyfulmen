@@ -7,15 +7,15 @@ Provides unified Logger interface with three profiles:
 
 Example:
     >>> from pyfulmen.logging import Logger, LoggingProfile
-    >>> 
+    >>>
     >>> # Simple logging (default)
     >>> log = Logger(service="myapp")
     >>> log.info("Hello World")
-    >>> 
+    >>>
     >>> # Structured JSON logging
     >>> log = Logger(service="myapp", profile=LoggingProfile.STRUCTURED)
     >>> log.info("Request processed", request_id="req-123")
-    >>> 
+    >>>
     >>> # Enterprise logging
     >>> log = Logger(service="myapp", profile=LoggingProfile.ENTERPRISE)
     >>> log.info("Transaction completed", user_id="user-456", duration_ms=125.3)

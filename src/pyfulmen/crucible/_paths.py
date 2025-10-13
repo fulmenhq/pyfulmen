@@ -35,7 +35,7 @@ def get_config_dir() -> Path:
 
 def get_crucible_metadata_dir() -> Path:
     """Get .crucible/metadata directory path.
-    
+
     Contains sync metadata from goneat ssot sync.
     Future versions will include multi-SSOT tracking here.
     """

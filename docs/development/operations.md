@@ -11,18 +11,21 @@ This document provides operational guidance for PyFulmen maintainers and contrib
 ## 📚 Documentation Structure
 
 ### Core Documentation
+
 - **`README.md`**: Main project documentation with quick start guide
 - **`CHANGELOG.md`**: Version history and migration notes
 - **`CONTRIBUTING.md`**: Development guidelines and contribution process
 - **`LICENSE`**: MIT License for open source use
 
 ### API Documentation
+
 - **`docs/api/`**: Detailed API reference with examples
 - **`docs/guides/`**: Usage guides and tutorials
 - **`docs/examples/`**: Code examples and patterns
 - **`docs/migration/`**: Upgrade guides between versions
 
 ### Architecture Documentation
+
 - **`docs/architecture/`**: Design decisions and rationale
 - **`docs/performance/`**: Benchmarks and optimization guides
 - **`docs/integration/`**: Integration patterns with other libraries
@@ -30,6 +33,7 @@ This document provides operational guidance for PyFulmen maintainers and contrib
 ## 🛠️ Development Workflow
 
 ### Getting Started
+
 ```bash
 # Clone and setup
 git clone https://github.com/fulmenhq/pyfulmen
@@ -43,6 +47,7 @@ make dev-server  # If applicable
 ```
 
 ### Daily Development
+
 ```bash
 # Standard development cycle
 make fmt             # Format code
@@ -53,6 +58,7 @@ make build           # Build packages
 ```
 
 ### Quality Assurance
+
 ```bash
 # Pre-commit checks
 make fmt lint test
@@ -66,12 +72,14 @@ make docs            # Generate documentation
 ## 🚀 Release Process
 
 ### Version Management
+
 - **Semantic Versioning**: Follow MAJOR.MINOR.PATCH for API changes
 - **Changelog Maintenance**: Document all changes with impact notes
 - **Tagging**: Use Git tags with signed releases
 - **GitHub Releases**: Automated with comprehensive release notes
 
 ### Release Checklist
+
 ```bash
 # Complete release preparation
 make release-check   # Verify all requirements
@@ -83,6 +91,7 @@ make test-release   # Test release artifacts
 ## 🔧 Tooling and Commands
 
 ### Development Tools
+
 - **Bootstrap**: `make bootstrap` - Install dependencies and tools
 - **Testing**: `make test` - Run test suite
 - **Quality**: `make lint` - Code quality checks
@@ -90,6 +99,7 @@ make test-release   # Test release artifacts
 - **Documentation**: `make docs` - Generate documentation
 
 ### Make Targets Reference
+
 - **`make help`**: Show all available targets
 - **`make clean`**: Remove build artifacts
 - **`make install`**: Install package locally
@@ -98,12 +108,14 @@ make test-release   # Test release artifacts
 ## 🧪 Testing Strategy
 
 ### Test Coverage
+
 - **Unit Tests**: 95%+ coverage on public API
 - **Integration Tests**: Cross-module functionality
 - **Performance Tests**: Benchmarks for enterprise features
 - **Compatibility Tests**: Python version matrix testing
 
 ### Quality Gates
+
 - **Code Style**: Ruff formatting and linting
 - **Type Checking**: MyPy static analysis
 - **Security**: Bandit security scanning
@@ -112,12 +124,14 @@ make test-release   # Test release artifacts
 ## 📊 Monitoring and Analytics
 
 ### Development Metrics
+
 - **Test Coverage**: Track coverage trends over time
 - **Performance**: Monitor benchmark performance
 - **Quality**: Track lint and type check results
 - **Dependencies**: Monitor for security updates
 
 ### Release Analytics
+
 - **Download Stats**: PyPI download metrics
 - **Usage Analytics**: Error reports and telemetry (opt-in)
 - **Community Engagement**: GitHub stars, issues, PRs
@@ -125,6 +139,7 @@ make test-release   # Test release artifacts
 ## 🤝 Community Guidelines
 
 ### Contribution Process
+
 1. **Fork Repository**: Create personal fork for development
 2. **Create Branch**: Use descriptive branch names
 3. **Make Changes**: Implement with tests and documentation
@@ -133,6 +148,7 @@ make test-release   # Test release artifacts
 6. **Merge**: Maintainers merge after approval
 
 ### Code Standards
+
 - **Python PEP 8**: Follow Python style guidelines
 - **Type Hints**: Use type hints for all public APIs
 - **Documentation**: Comprehensive docstrings for all functions
@@ -140,6 +156,7 @@ make test-release   # Test release artifacts
 - **Error Handling**: Proper exception handling and logging
 
 ### Support Channels
+
 - **GitHub Issues**: Report bugs and request features
 - **Discussions**: Ask questions and share ideas
 - **Mattermost**: `#pyfulmen-development` for real-time discussion
@@ -148,12 +165,14 @@ make test-release   # Test release artifacts
 ## 🔐 Security
 
 ### Security Process
+
 1. **Vulnerability Reporting**: Private disclosure to maintainers
 2. **Security Reviews**: Regular dependency scanning
 3. **Patch Management**: Prioritized security updates
 4. **Security Documentation**: Security considerations and best practices
 
 ### Dependency Management
+
 - **Regular Updates**: Keep dependencies current
 - **Security Scanning**: Automated vulnerability scanning
 - **License Compliance**: Verify all dependency licenses
@@ -161,4 +180,4 @@ make test-release   # Test release artifacts
 
 ---
 
-*This documentation supports PyFulmen's mission to enable enterprise-grade Python development.*
+_This documentation supports PyFulmen's mission to enable enterprise-grade Python development._

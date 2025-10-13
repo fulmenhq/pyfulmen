@@ -29,9 +29,7 @@ def test_list_config_versions():
 def test_get_config_path():
     """Test getting path to a config file."""
     # Test with known config from sync
-    path = config.get_config_path(
-        "terminal", "v1.0.0", "terminal-overrides-defaults"
-    )
+    path = config.get_config_path("terminal", "v1.0.0", "terminal-overrides-defaults")
 
     assert path.exists()
     assert path.suffix in [".yaml", ".yml"]
@@ -46,9 +44,7 @@ def test_get_config_path_not_found():
 
 def test_load_config_defaults():
     """Test loading config defaults."""
-    defaults = config.load_config_defaults(
-        "terminal", "v1.0.0", "terminal-overrides-defaults"
-    )
+    defaults = config.load_config_defaults("terminal", "v1.0.0", "terminal-overrides-defaults")
 
     assert isinstance(defaults, dict)
     # Should contain terminal-related config

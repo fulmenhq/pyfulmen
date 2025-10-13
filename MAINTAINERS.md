@@ -2,7 +2,7 @@
 
 **Project**: pyfulmen  
 **Purpose**: Enterprise-grade Python helper library for FulmenHQ ecosystem  
-**Governance Model**: 3leaps Initiative  
+**Governance Model**: 3leaps Initiative
 
 ---
 
@@ -11,7 +11,7 @@
 ### @3leapsdave (Dave Thompson) – Project Lead
 
 - **Role**: Project Lead & Primary Maintainer
-- **Responsibilities**: 
+- **Responsibilities**:
   - Architecture oversight and design decisions
   - Release management and version strategy
   - Cross-language coordination (gofulmen, tsfulmen)
@@ -73,24 +73,27 @@
 2. **Human Oversight**: Tag @3leapsdave for significant architectural decisions
 3. **Safety Protocols**: Follow `REPOSITORY_SAFETY_PROTOCOLS.md` for all operations
 4. **Quality Focus**: Prioritize correctness over speed in all implementations
-5. **Ecosystem Thinking**: Consider impact on other *fulmen libraries
+5. **Ecosystem Thinking**: Consider impact on other \*fulmen libraries
 
 ---
 
 ## 📞 Communication Channels
 
 ### Primary Channels
+
 - **Development**: `#pyfulmen-development` (Mattermost)
 - **Architecture**: `#fulmen-architecture` (cross-language coordination)
 - **Releases**: `#fulmen-releases` (announcements)
 - **Incidents**: `#fulmen-incidents` (critical issues)
 
 ### Issue Management
+
 - **Bug Reports**: Use GitHub Issues with appropriate labels
 - **Feature Requests**: Discuss in `#pyfulmen-development` before creating issues
 - **Security Issues**: Report privately to maintainers@3leaps.net
 
 ### Review Process
+
 1. **All PRs**: Require review from at least one maintainer
 2. **Architecture Changes**: Must have approval from @3leapsdave
 3. **Standards Changes**: Require ecosystem coordination
@@ -101,12 +104,14 @@
 ## 🔄 Release Process
 
 ### Version Strategy
+
 - **Development**: Semantic versioning for API compatibility
 - **Documentation**: Always updated with release notes
 - **Quality Gates**: All tests must pass, linting clean
-- **Release Coordination**: Align with other *fulmen libraries when possible
+- **Release Coordination**: Align with other \*fulmen libraries when possible
 
 ### Release Authority
+
 - **Final Approval**: @3leapsdave has final release authority
 - **Emergency Releases**: Can be executed by any maintainer with proper justification
 - **Post-Release**: Monitor for issues and provide rapid response
@@ -116,16 +121,18 @@
 ## 📋 Decision Making
 
 ### Consensus Model
+
 - **Technical Decisions**: @3leapsdave makes final call with maintainer input
 - **Architecture Changes**: Require ecosystem-wide coordination
 - **Standards Changes**: Must align with FulmenHQ guidelines
 - **Process**: Document rationale in issues and commit messages
 
 ### Escalation
+
 - **Technical Disputes**: @3leapsdave mediates with technical input
 - **Process Issues**: Escalate to maintainers for resolution
 - **Security Issues**: Immediate response from all maintainers
 
 ---
 
-*Repository follows 3leaps governance model with human oversight and AI agent collaboration.*
+_Repository follows 3leaps governance model with human oversight and AI agent collaboration._

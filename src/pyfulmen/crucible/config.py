@@ -33,11 +33,7 @@ def list_config_categories() -> list[str]:
     if not config_dir.exists():
         return []
 
-    categories = [
-        d.name
-        for d in config_dir.iterdir()
-        if d.is_dir() and not d.name.startswith(".")
-    ]
+    categories = [d.name for d in config_dir.iterdir() if d.is_dir() and not d.name.startswith(".")]
 
     return sorted(categories)
 
@@ -62,9 +58,7 @@ def list_config_versions(category: str) -> list[str]:
         return []
 
     versions = [
-        d.name
-        for d in category_path.iterdir()
-        if d.is_dir() and not d.name.startswith(".")
+        d.name for d in category_path.iterdir() if d.is_dir() and not d.name.startswith(".")
     ]
 
     return sorted(versions)

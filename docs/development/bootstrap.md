@@ -1,6 +1,6 @@
 # PyFulmen Bootstrap Journal
 
-> **⚠️ HISTORICAL DOCUMENT**: This journal describes the original bootstrap process using FulDX. 
+> **⚠️ HISTORICAL DOCUMENT**: This journal describes the original bootstrap process using FulDX.
 > **FulDX has been succeeded by goneat**. For current setup instructions, see [setup-guide.md](./setup-guide.md).
 
 This document chronicles how the pyfulmen repository was bootstrapped from scratch using FulDX and the Fulmen ecosystem tools.
@@ -53,25 +53,25 @@ sources:
     repo: fulmenhq/crucible
     ref: main
     output: .
-    sync_path_base: 'lang/go'  # Temporary: lang/python not yet available
+    sync_path_base: "lang/go" # Temporary: lang/python not yet available
     assets:
       - type: doc
         paths:
-          - 'docs/architecture/**/*.md'
-          - 'docs/standards/**/*.md'
-          - 'docs/guides/**/*.md'
-          - 'docs/sop/**/*.md'
+          - "docs/architecture/**/*.md"
+          - "docs/standards/**/*.md"
+          - "docs/guides/**/*.md"
+          - "docs/sop/**/*.md"
         subdir: docs/crucible-py
       - type: schema
-        paths: ['schemas/**/*']
+        paths: ["schemas/**/*"]
         subdir: schemas/crucible-py
       - type: config
-        paths: ['config/**/*.yaml']
+        paths: ["config/**/*.yaml"]
         subdir: config/crucible-py
       - type: metadata
         paths:
-          - 'config/sync/**/*'
-          - 'schemas/config/sync-consumer-config.yaml'
+          - "config/sync/**/*"
+          - "schemas/config/sync-consumer-config.yaml"
         subdir: .crucible/metadata
 ```
 
@@ -89,6 +89,7 @@ sources:
 **Critical:** This file is **machine-specific and gitignored** (`.gitignore` includes `.fuldx/*.local.yaml`). It should **never be committed** to the repository. Each developer can create their own local override pointing to their Crucible clone location. The `.fuldx/sync-consumer.yaml` contains the canonical GitHub repo configuration that works for everyone, while `.fuldx/sync-consumer.local.yaml` overrides it for faster local development.
 
 This pattern enables:
+
 - Fast syncing from the sibling Crucible repository (filesystem copy vs GitHub API)
 - Machine-specific paths without polluting the repository
 - Team members can use different Crucible locations
@@ -142,6 +143,7 @@ tests/test_basic.py         # Initial smoke test
 Created `Makefile` based on the Fulmen template, **adapted for uv**:
 
 Key changes from standard pip-based approach:
+
 - `make bootstrap`: Uses `uv sync --all-extras` instead of `pip install -e .[dev]`
 - `make lint`: Uses `uv run ruff check` to run in virtual environment
 - `make test`: Uses `uv run pytest` to run in virtual environment
@@ -151,6 +153,7 @@ This leverages uv's speed and automatic virtual environment management.
 ### 6. Gitignore Configuration
 
 Updated `.gitignore` with:
+
 - FulDX binary exclusions (`/bin/fuldx`)
 - Crucible sync asset exclusions (regenerated from source)
 - FulDX local overrides (`.fuldx/*.local.yaml`)
@@ -164,6 +167,7 @@ make sync-crucible
 ```
 
 **Result:** Successfully synced 185 assets from local Crucible repository:
+
 - Standards documentation → `docs/crucible-py/`
 - Schemas → `schemas/crucible-py/`
 - Config files → `config/crucible-py/`
@@ -176,6 +180,7 @@ uv sync --all-extras
 ```
 
 **Result:**
+
 - Created virtual environment at `.venv/`
 - Installed dependencies: pytest, pytest-cov, ruff
 - Built and installed pyfulmen package in editable mode
@@ -277,6 +282,7 @@ Transform from bootstrapped skeleton into a proper Fulmen helper library followi
 ### Documentation Review
 
 **Read**:
+
 - ✅ `docs/crucible-py/architecture/fulmen-helper-library-standard.md`
 - ✅ `docs/crucible-py/guides/bootstrap-fuldx.md`
 - ✅ Reference implementation: `../gofulmen/`
@@ -288,6 +294,7 @@ Transform from bootstrapped skeleton into a proper Fulmen helper library followi
 **Current State**: We manually copied `bin/fuldx` from `../fuldx/dist/fuldx`
 
 **Should Be**:
+
 - `.crucible/tools.yaml` with FulDX download URLs + checksums
 - `.crucible/tools.local.yaml.example` as template
 - Bootstrap script that:
@@ -296,6 +303,7 @@ Transform from bootstrapped skeleton into a proper Fulmen helper library followi
   - Installs to `./bin/fuldx`
 
 **Reference**:
+
 - `../gofulmen/.crucible/tools.yaml` - Shows manifest structure
 - `../gofulmen/.crucible/tools.local.yaml` - Local override with `type: link`
 - Schema: `schemas/crucible-py/tooling/external-tools/v1.0.0/`
@@ -343,6 +351,7 @@ From helper library standard, we need:
 **bootstrap-fuldx.md** is helpful but could be enhanced:
 
 **✅ What's Clear**:
+
 - Local override pattern with `tools.local.yaml`
 - `type: link` for local binaries
 - Gitignore requirements
@@ -383,6 +392,7 @@ From helper library standard, we need:
 **Specific Requests for Crucible**:
 
 1. **Add to bootstrap-fuldx.md**:
+
    ```markdown
    ## Example: FulDX in tools.yaml
 
@@ -390,23 +400,25 @@ From helper library standard, we need:
    version: v1.0.0
    binDir: ./bin
    tools:
-     - id: fuldx
-       description: Fulmen Developer Experience CLI
-       required: true
-       install:
-         type: download
-         url: https://github.com/fulmenhq/fuldx/releases/download/v0.1.4/fuldx-{{os}}-{{arch}}
-         binName: fuldx
-         destination: ./bin
-         checksum:
-           darwin-arm64: <actual-sha256>
-           darwin-amd64: <actual-sha256>
-           linux-amd64: <actual-sha256>
-           linux-arm64: <actual-sha256>
-   \`\`\`
+
+   - id: fuldx
+     description: Fulmen Developer Experience CLI
+     required: true
+     install:
+     type: download
+     url: https://github.com/fulmenhq/fuldx/releases/download/v0.1.4/fuldx-{{os}}-{{arch}}
+     binName: fuldx
+     destination: ./bin
+     checksum:
+     darwin-arm64: <actual-sha256>
+     darwin-amd64: <actual-sha256>
+     linux-amd64: <actual-sha256>
+     linux-arm64: <actual-sha256>
+     \`\`\`
    ```
 
 2. **Add Python bootstrap script template** to guides:
+
    ```markdown
    ## Python Bootstrap Script Example
 
@@ -425,6 +437,7 @@ From helper library standard, we need:
    import yaml
 
    # ... implementation ...
+
    \`\`\`
    ```
 
@@ -439,6 +452,7 @@ From helper library standard, we need:
 Created comprehensive plan: `.plans/active/v0.1.0/bootstrap.md`
 
 **10 Phases**:
+
 1. FulDX Bootstrap Pattern ← **STARTING HERE**
 2. Version Management
 3. Crucible Shim
@@ -489,12 +503,14 @@ Created comprehensive plan: `.plans/active/v0.1.0/bootstrap.md`
 ### Documentation Dogfooding Success
 
 ✅ **What Worked**:
+
 - Helper library standard is comprehensive and clear
 - bootstrap-fuldx.md gives good overview
 - gofulmen provides excellent reference implementation
 - Schema location is documented
 
 ⚠️ **What Could Be Better**:
+
 - More Python-specific examples
 - Complete tools.yaml example with FulDX
 - Bootstrap script template/skeleton

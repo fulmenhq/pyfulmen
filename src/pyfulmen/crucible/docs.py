@@ -46,9 +46,7 @@ def list_available_docs(category: str | None = None) -> list[str]:
     md_files = search_dir.rglob("*.md")
 
     # Return paths relative to docs/crucible-py/
-    relative_paths = [
-        str(f.relative_to(docs_dir)) for f in md_files
-    ]
+    relative_paths = [str(f.relative_to(docs_dir)) for f in md_files]
 
     return sorted(relative_paths)
 

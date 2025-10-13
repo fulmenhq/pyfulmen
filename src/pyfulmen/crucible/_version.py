@@ -13,7 +13,7 @@ from . import _paths
 
 def get_crucible_metadata_path() -> Path:
     """Get path to Crucible metadata directory.
-    
+
     Returns:
         Path to .crucible/metadata/ directory
     """
@@ -22,14 +22,14 @@ def get_crucible_metadata_path() -> Path:
 
 def get_crucible_info() -> dict[str, str]:
     """Get Crucible asset information.
-    
+
     Returns:
         Dictionary with Crucible metadata:
         - schemas_dir: Path to schemas directory
         - docs_dir: Path to docs directory
         - config_dir: Path to config directory
         - metadata_dir: Path to sync metadata directory
-    
+
     Note: Version tracking will be added in future goneat releases.
     """
     return {

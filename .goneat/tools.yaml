@@ -10,7 +10,7 @@ tools:
       binName: goneat
       destination: ./bin
       checksum:
-        darwin-arm64: "0"  # TODO: Replace with actual checksums from goneat release
-        darwin-amd64: "0"  # TODO: Replace with actual checksums from goneat release
-        linux-amd64: "0"   # TODO: Replace with actual checksums from goneat release
-        linux-arm64: "0"   # TODO: Replace with actual checksums from goneat release
+        darwin-arm64: "0" # TODO: Replace with actual checksums from goneat release
+        darwin-amd64: "0" # TODO: Replace with actual checksums from goneat release
+        linux-amd64: "0" # TODO: Replace with actual checksums from goneat release
+        linux-arm64: "0" # TODO: Replace with actual checksums from goneat release

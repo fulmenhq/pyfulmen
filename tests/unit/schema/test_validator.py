@@ -34,9 +34,7 @@ def test_validate_against_schema_valid():
     import contextlib
 
     with contextlib.suppress(SchemaValidationError):
-        validate_against_schema(
-            valid_data, "observability/logging", "v1.0.0", "logger-config"
-        )
+        validate_against_schema(valid_data, "observability/logging", "v1.0.0", "logger-config")
 
 
 def test_validate_against_schema_invalid():
@@ -45,9 +43,7 @@ def test_validate_against_schema_invalid():
     # We'll use a simple schema that we know exists
     from pyfulmen import crucible
 
-    schema = crucible.schemas.load_schema(
-        "observability/logging", "v1.0.0", "logger-config"
-    )
+    schema = crucible.schemas.load_schema("observability/logging", "v1.0.0", "logger-config")
 
     # If schema has required properties, test with missing data
     if "required" in schema and schema["required"]:

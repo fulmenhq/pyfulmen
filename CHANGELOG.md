@@ -94,4 +94,4 @@ No unreleased changes.
 
 ---
 
-*Note: This changelog tracks the progressive upscaling of PyFulmen through v0.1.x releases.*
+_Note: This changelog tracks the progressive upscaling of PyFulmen through v0.1.x releases._

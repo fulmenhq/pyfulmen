@@ -17,7 +17,6 @@ Options:
 
 import argparse
 import hashlib
-import os
 import platform
 import shutil
 import sys
@@ -119,13 +118,11 @@ def install_via_download(
                 actual = compute_sha256(temp_file)
                 if actual != expected:
                     raise ValueError(
-                        f"Checksum mismatch!\n"
-                        f"  Expected: {expected}\n"
-                        f"  Got:      {actual}"
+                        f"Checksum mismatch!\n  Expected: {expected}\n  Got:      {actual}"
                     )
-                print(f"  ✓ Checksum verified")
+                print("  ✓ Checksum verified")
             else:
-                print(f"  ⚠️  Skipping checksum (provisional placeholder)")
+                print("  ⚠️  Skipping checksum (provisional placeholder)")
 
         # Move to final location and make executable
         shutil.move(temp_file, dest_file)
@@ -201,7 +198,7 @@ def bootstrap_tools(force: bool = False) -> None:
             if install_type == "link":
                 source = install_config.get("source")
                 if not source:
-                    print(f"  ❌ Missing 'source' for type: link")
+                    print("  ❌ Missing 'source' for type: link")
                     continue
                 install_via_link(source, dest_path, bin_name)
 
@@ -209,7 +206,7 @@ def bootstrap_tools(force: bool = False) -> None:
                 url = install_config.get("url")
                 checksum = install_config.get("checksum")
                 if not url:
-                    print(f"  ❌ Missing 'url' for type: download")
+                    print("  ❌ Missing 'url' for type: download")
                     continue
                 install_via_download(url, dest_path, bin_name, checksum)
 

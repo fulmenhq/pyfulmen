@@ -5,14 +5,18 @@ This directory contains documentation for PyFulmen maintainers and contributors.
 ## 📁 Documentation Index
 
 ### [Bootstrap Guide](bootstrap.md)
+
 Complete guide to bootstrapping PyFulmen development environment, including:
+
 - Tool installation (goneat, uv, Python)
 - Dependency management
 - SSOT sync setup
 - Initial development workflow
 
 ### [Operations Guide](operations.md)
+
 Development operations documentation covering:
+
 - Development workflow and daily commands
 - Testing strategy and quality gates
 - Release process and version management
@@ -49,4 +53,4 @@ See [operations.md](operations.md) for detailed contribution guidelines and deve
 
 ---
 
-*Part of the FulmenHQ ecosystem - standardized across all helper libraries*
+_Part of the FulmenHQ ecosystem - standardized across all helper libraries_

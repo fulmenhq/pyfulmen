@@ -8,7 +8,7 @@ from pyfulmen.crucible import get_crucible_info, get_crucible_metadata_path
 def test_get_crucible_metadata_path():
     """Test getting Crucible metadata directory path."""
     metadata_path = get_crucible_metadata_path()
-    
+
     assert isinstance(metadata_path, Path)
     assert metadata_path.name == "metadata"
     assert metadata_path.parent.name == ".crucible"
@@ -29,6 +29,6 @@ def test_get_crucible_info():
     assert "crucible" in info["docs_dir"]
     assert "crucible" in info["config_dir"]
     assert "crucible" in info["metadata_dir"]
-    
+
     # metadata_dir should point to actual metadata location
     assert info["metadata_dir"].endswith(".crucible/metadata")

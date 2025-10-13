@@ -146,9 +146,7 @@ def get_app_cache_dir(app_name: str) -> Path:
     return base_dirs["cache"] / app_name
 
 
-def get_app_config_paths(
-    app_name: str, legacy_names: list[str] | None = None
-) -> list[Path]:
+def get_app_config_paths(app_name: str, legacy_names: list[str] | None = None) -> list[Path]:
     """Get ordered list of config search paths for an application.
 
     Returns paths in priority order: current name first, then legacy names.

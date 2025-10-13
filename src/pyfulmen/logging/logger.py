@@ -7,15 +7,15 @@ Provides Logger class with three profiles:
 
 Example:
     >>> from pyfulmen.logging import Logger, LoggingProfile
-    >>> 
+    >>>
     >>> # Simple logging (default)
     >>> log = Logger(service="myapp")
     >>> log.info("Hello World")
-    >>> 
+    >>>
     >>> # Structured JSON logging
     >>> log = Logger(service="myapp", profile=LoggingProfile.STRUCTURED)
     >>> log.info("Request processed", request_id="req-123")
-    >>> 
+    >>>
     >>> # Enterprise logging with policy
     >>> log = Logger(
     ...     service="myapp",
@@ -31,7 +31,7 @@ from abc import ABC, abstractmethod
 from typing import Any
 
 from ._models import LogEvent, LoggingConfig, LoggingPolicy, LoggingProfile
-from .severity import Severity, to_python_level
+from .severity import Severity, to_numeric_level, to_python_level
 
 
 class BaseLoggerImpl(ABC):
@@ -39,7 +39,7 @@ class BaseLoggerImpl(ABC):
 
     def __init__(self, config: LoggingConfig):
         """Initialize logger implementation.
-        
+
         Args:
             config: Logging configuration model
         """
@@ -47,6 +47,26 @@ class BaseLoggerImpl(ABC):
         self.service = config.service
         self.component = config.component
         self.default_level = config.default_level
+        self._min_level = to_numeric_level(self.default_level)
+
+    def _should_log(self, severity: Severity | str) -> bool:
+        """Check if message should be logged based on configured level.
+
+        Args:
+            severity: Severity level to check
+
+        Returns:
+            True if message should be logged, False otherwise
+
+        Example:
+            >>> logger._min_level = to_numeric_level("INFO")  # 20
+            >>> logger._should_log(Severity.DEBUG)  # 10 < 20
+            False
+            >>> logger._should_log(Severity.INFO)   # 20 >= 20
+            True
+        """
+        severity_obj = Severity(severity) if isinstance(severity, str) else severity
+        return to_numeric_level(severity_obj) >= self._min_level
 
     @abstractmethod
     def log(
@@ -56,7 +76,7 @@ class BaseLoggerImpl(ABC):
         **kwargs: Any,
     ) -> None:
         """Log a message at the specified severity level.
-        
+
         Args:
             severity: Severity level (TRACE, DEBUG, INFO, WARN, ERROR, FATAL)
             message: Log message
@@ -88,34 +108,46 @@ class BaseLoggerImpl(ABC):
         """Log FATAL level message."""
         self.log(Severity.FATAL, message, **kwargs)
 
+    def set_level(self, level: Severity | str) -> None:
+        """Dynamically change the minimum logging level.
+
+        Args:
+            level: New minimum severity level
+
+        Example:
+            >>> logger.set_level(Severity.DEBUG)
+            >>> logger.set_level("ERROR")
+        """
+        level_obj = Severity(level) if isinstance(level, str) else level
+        self._min_level = to_numeric_level(level_obj)
+        self.default_level = level_obj.value
+
 
 class SimpleLogger(BaseLoggerImpl):
     """Simple console-only logger with basic formatting.
-    
+
     Zero-complexity default for rapid development and debugging.
     Uses Python's stdlib logging with minimal configuration.
     """
 
     def __init__(self, config: LoggingConfig):
         """Initialize simple logger.
-        
+
         Args:
             config: Logging configuration
         """
         super().__init__(config)
-        
+
         # Set up stdlib logger
-        logger_name = (
-            f"{self.service}.{self.component}" if self.component else self.service
-        )
+        logger_name = f"{self.service}.{self.component}" if self.component else self.service
         self._logger = logging.getLogger(logger_name)
         self._logger.setLevel(to_python_level(self.default_level))
-        
+
         # Add console handler if none exist
         if not self._logger.handlers:
             handler = logging.StreamHandler(sys.stdout)
             handler.setLevel(to_python_level(self.default_level))
-            
+
             formatter = logging.Formatter(
                 fmt="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
                 datefmt="%Y-%m-%d %H:%M:%S",
@@ -130,31 +162,52 @@ class SimpleLogger(BaseLoggerImpl):
         **kwargs: Any,
     ) -> None:
         """Log message using stdlib logging.
-        
+
         Args:
             severity: Severity level
             message: Log message
             **kwargs: Ignored for SIMPLE profile
         """
+        # Check level before logging
+        if not self._should_log(severity):
+            return
+
         severity_obj = Severity(severity) if isinstance(severity, str) else severity
         python_level = to_python_level(severity_obj)
-        
+
         self._logger.log(python_level, message)
+
+    def set_level(self, level: Severity | str) -> None:
+        """Dynamically change the minimum logging level.
+
+        Args:
+            level: New minimum severity level
+        """
+        super().set_level(level)
+
+        # Update underlying Python logger level
+        level_obj = Severity(level) if isinstance(level, str) else level
+        python_level = to_python_level(level_obj)
+        self._logger.setLevel(python_level)
+
+        # Update handler levels
+        for handler in self._logger.handlers:
+            handler.setLevel(python_level)
 
 
 class StructuredLogger(BaseLoggerImpl):
     """Structured JSON logger with core envelope fields.
-    
+
     Emits single-line JSON to stdout with:
     - timestamp, severity, message, service
     - Optional: component, context, request_id, correlation_id
-    
+
     Suitable for cloud-native deployments with log aggregation.
     """
 
     def __init__(self, config: LoggingConfig):
         """Initialize structured logger.
-        
+
         Args:
             config: Logging configuration
         """
@@ -168,70 +221,83 @@ class StructuredLogger(BaseLoggerImpl):
         **kwargs: Any,
     ) -> None:
         """Log structured JSON message.
-        
+
         Args:
             severity: Severity level
             message: Log message
             **kwargs: Additional context fields (context, request_id, correlation_id, etc.)
         """
+        # Check level before creating event
+        if not self._should_log(severity):
+            return
+
         severity_str = severity.value if isinstance(severity, Severity) else severity
-        
+
         # Build core envelope
         event_dict = {
             "severity": severity_str,
             "message": message,
             "service": self.service,
         }
-        
+
         # Add optional identification fields
         if self.component:
             event_dict["component"] = self.component
-        
+
         # Add allowed kwargs (subset of LogEvent fields)
         allowed_fields = {
-            "context", "context_id", "request_id", "correlation_id",
-            "trace_id", "span_id", "parent_span_id",
-            "operation", "duration_ms", "user_id",
-            "error", "tags", "event_id",
+            "context",
+            "context_id",
+            "request_id",
+            "correlation_id",
+            "trace_id",
+            "span_id",
+            "parent_span_id",
+            "operation",
+            "duration_ms",
+            "user_id",
+            "error",
+            "tags",
+            "event_id",
         }
-        
+
         for key, value in kwargs.items():
             if key in allowed_fields and value:
                 event_dict[key] = value
-        
+
         # Create LogEvent for timestamp generation
         event = LogEvent(
             severity=severity_str,
             message=message,
             service=self.service,
             component=self.component,
-            **{k: v for k, v in kwargs.items() if k in allowed_fields}
+            **{k: v for k, v in kwargs.items() if k in allowed_fields},
         )
-        
+
         # Use event's timestamp
         event_dict["timestamp"] = event.timestamp
         if "correlation_id" not in event_dict:
             event_dict["correlation_id"] = event.correlation_id
-        
+
         # Emit single-line JSON
-        json_line = json.dumps(event_dict, ensure_ascii=False, separators=(',', ':'))
+        json_line = json.dumps(event_dict, ensure_ascii=False, separators=(",", ":"))
         print(json_line, file=self._output, flush=True)
 
 
 class EnterpriseLogger(BaseLoggerImpl):
     """Enterprise logger with full 20+ field envelope.
-    
+
     Emits complete LogEvent structures with:
     - All envelope fields (identification, context, tracing, metadata)
     - Policy enforcement
     - Middleware pipeline support (future: Phase 3)
-    
+
     Suitable for production systems requiring audit, compliance, and observability.
     """
 
     def __init__(self, config: LoggingConfig, policy: LoggingPolicy | None = None):
         """Initialize enterprise logger.
-        
+
         Args:
             config: Logging configuration
             policy: Optional policy for enforcement
@@ -239,20 +305,20 @@ class EnterpriseLogger(BaseLoggerImpl):
         super().__init__(config)
         self.policy = policy
         self._output = sys.stdout
-        
+
         # Validate against policy if provided
         if self.policy:
             self._enforce_policy()
 
     def _enforce_policy(self) -> None:
         """Enforce policy constraints on configuration.
-        
+
         Raises:
             ValueError: If configuration violates policy
         """
         if not self.policy:
             return
-        
+
         # Check if ENTERPRISE profile is allowed
         if self.config.profile not in self.policy.allowed_profiles:
             raise ValueError(
@@ -267,46 +333,50 @@ class EnterpriseLogger(BaseLoggerImpl):
         **kwargs: Any,
     ) -> None:
         """Log full enterprise event.
-        
+
         Args:
             severity: Severity level
             message: Log message
             **kwargs: All LogEvent fields supported
         """
+        # Check level before creating event
+        if not self._should_log(severity):
+            return
+
         severity_str = severity.value if isinstance(severity, Severity) else severity
-        
+
         # Create full LogEvent
         event = LogEvent(
             severity=severity_str,
             message=message,
             service=self.service,
             component=self.component,
-            **kwargs
+            **kwargs,
         )
-        
+
         # Emit complete JSON structure with computed fields
         event_dict = event.to_json_dict_with_computed()
-        json_line = json.dumps(event_dict, ensure_ascii=False, separators=(',', ':'))
+        json_line = json.dumps(event_dict, ensure_ascii=False, separators=(",", ":"))
         print(json_line, file=self._output, flush=True)
 
 
 class Logger:
     """Progressive logger with profile-based delegation.
-    
+
     Provides unified interface across three logging profiles:
     - SIMPLE: Console-only, basic formatting (default)
     - STRUCTURED: JSON output, core envelope fields
     - ENTERPRISE: Full envelope, policy enforcement
-    
+
     Example:
         >>> # Simple logging (zero-complexity default)
         >>> log = Logger(service="myapp")
         >>> log.info("Hello World")
-        
+
         >>> # Structured logging
         >>> log = Logger(service="myapp", profile=LoggingProfile.STRUCTURED)
         >>> log.info("Request received", request_id="req-123")
-        
+
         >>> # Enterprise logging with policy
         >>> log = Logger(
         ...     service="myapp",
@@ -326,7 +396,7 @@ class Logger:
         config: LoggingConfig | None = None,
     ):
         """Initialize logger with profile-based delegation.
-        
+
         Args:
             service: Service name (required for all profiles)
             profile: Logging profile (SIMPLE, STRUCTURED, ENTERPRISE)
@@ -334,7 +404,7 @@ class Logger:
             default_level: Default severity level (default: INFO)
             policy_file: Path to policy YAML file (for ENTERPRISE profile)
             config: Optional pre-built LoggingConfig (overrides other params)
-        
+
         Raises:
             ValueError: If profile is invalid or violates policy
         """
@@ -349,27 +419,27 @@ class Logger:
                 default_level=default_level,
                 policy_file=policy_file,
             )
-        
+
         # Load policy if specified
         self.policy: LoggingPolicy | None = None
         if policy_file:
             self.policy = self._load_policy(policy_file)
-        
+
         # Validate profile
         self._validate_profile()
-        
+
         # Create implementation based on profile
         self._impl = self._create_implementation()
 
     def _load_policy(self, policy_file: str) -> LoggingPolicy:
         """Load policy from YAML file.
-        
+
         Args:
             policy_file: Path to policy file
-        
+
         Returns:
             LoggingPolicy instance
-        
+
         Note:
             Implementation placeholder - will use ConfigLoader in future
         """
@@ -379,7 +449,7 @@ class Logger:
 
     def _validate_profile(self) -> None:
         """Validate profile against policy constraints.
-        
+
         Raises:
             ValueError: If profile is invalid or violates policy
         """
@@ -389,13 +459,12 @@ class Logger:
             LoggingProfile.ENTERPRISE,
             LoggingProfile.CUSTOM,
         }
-        
+
         if self.config.profile not in valid_profiles:
             raise ValueError(
-                f"Invalid profile '{self.config.profile}'. "
-                f"Valid profiles: {valid_profiles}"
+                f"Invalid profile '{self.config.profile}'. Valid profiles: {valid_profiles}"
             )
-        
+
         # Check policy if loaded
         if self.policy and self.config.profile not in self.policy.allowed_profiles:
             raise ValueError(
@@ -405,10 +474,10 @@ class Logger:
 
     def _create_implementation(self) -> BaseLoggerImpl:
         """Create logger implementation based on profile.
-        
+
         Returns:
             Logger implementation instance
-        
+
         Raises:
             ValueError: If profile is CUSTOM (not yet implemented)
         """
@@ -430,7 +499,7 @@ class Logger:
         **kwargs: Any,
     ) -> None:
         """Log message at specified severity level.
-        
+
         Args:
             severity: Severity level (TRACE, DEBUG, INFO, WARN, ERROR, FATAL)
             message: Log message
@@ -461,6 +530,24 @@ class Logger:
     def fatal(self, message: str, **kwargs: Any) -> None:
         """Log FATAL level message."""
         self._impl.fatal(message, **kwargs)
+
+    def set_level(self, level: Severity | str) -> None:
+        """Dynamically change the minimum logging level.
+
+        Allows runtime adjustment of log filtering without recreating logger.
+
+        Args:
+            level: New minimum severity level (TRACE, DEBUG, INFO, WARN, ERROR, FATAL, NONE)
+
+        Example:
+            >>> logger = Logger(service="myapp", default_level="INFO")
+            >>> logger.debug("Not logged")  # Below INFO level
+            >>> logger.set_level("DEBUG")
+            >>> logger.debug("Now logged")  # At or above DEBUG level
+            >>> logger.set_level(Severity.ERROR)
+            >>> logger.info("Not logged")  # Below ERROR level
+        """
+        self._impl.set_level(level)
 
 
 __all__ = [

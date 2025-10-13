@@ -13,6 +13,7 @@ PyFulmen is part of the Fulmen ecosystem, providing templates, processes, and to
 > **Alpha Status**: Early adopters; rapidly evolving features. Minimum coverage: 30%. See [Repository Lifecycle Standard](docs/crucible-py/standards/repository-lifecycle.md) for quality expectations.
 
 **Key Features:**
+
 - **Crucible Shim** - Idiomatic Python access to Crucible schemas, docs, and config defaults
 - **Config Path API** - XDG-compliant, platform-aware configuration paths
 - **Three-Layer Config Loading** - Crucible defaults → User overrides → App config
@@ -108,6 +109,7 @@ sync = version.validate_version_sync()
 ## Development
 
 This repository uses:
+
 - **uv** for Python package management (fast, modern alternative to pip/virtualenv)
 - **goneat** for version management and SSOT sync (successor to FulDX)
 - **Crucible** for standards and schemas
@@ -199,18 +201,18 @@ make version-bump-patch  # or -minor, -major
 
 See `make help` for all available targets. Key commands:
 
-| Target | Description |
-|--------|-------------|
-| `make bootstrap` | Install tools and dependencies |
-| `make tools` | Verify external tools |
-| `make test` | Run full test suite |
-| `make lint` | Run linting checks |
-| `make fmt` | Apply code formatting |
-| `make check-all` | Run all checks |
-| `make build` | Build distributable package |
-| `make release-build` | Build with checksums |
-| `make version` | Print current version |
-| `make version-bump-*` | Bump version |
+| Target                | Description                    |
+| --------------------- | ------------------------------ |
+| `make bootstrap`      | Install tools and dependencies |
+| `make tools`          | Verify external tools          |
+| `make test`           | Run full test suite            |
+| `make lint`           | Run linting checks             |
+| `make fmt`            | Apply code formatting          |
+| `make check-all`      | Run all checks                 |
+| `make build`          | Build distributable package    |
+| `make release-build`  | Build with checksums           |
+| `make version`        | Print current version          |
+| `make version-bump-*` | Bump version                   |
 
 ## Project Structure
 
@@ -266,6 +268,7 @@ We provide opinionated `.vscode/settings.json` configuration to eliminate false 
 - `make check-all` - All quality checks
 
 The `.vscode/` configuration:
+
 - Points Python interpreter to `.venv/bin/python`
 - Configures Ruff as the formatter
 - Enables format-on-save
@@ -273,6 +276,7 @@ The `.vscode/` configuration:
 - Hides build artifacts and cache directories
 
 **Recommended VS Code Extensions** (see `.vscode/extensions.json`):
+
 - `ms-python.python` - Python language support
 - `ms-python.vscode-pylance` - Fast, feature-rich language server
 - `charliermarsh.ruff` - Ruff linting and formatting
@@ -300,6 +304,7 @@ make prepush          # Runs check-all
 ### Quality Gates
 
 **All contributions must pass**:
+
 1. ✅ `make lint` - No linting errors
 2. ✅ `make test` - All tests passing
 3. ✅ `make test-cov` - Minimum coverage maintained (30% alpha, target 93%)

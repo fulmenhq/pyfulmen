@@ -39,9 +39,7 @@ def test_load_with_user_config():
 
     user_config = {"custom": {"setting": "value"}}
 
-    config = loader.load(
-        "terminal/v1.0.0/terminal-overrides-defaults", user_config=user_config
-    )
+    config = loader.load("terminal/v1.0.0/terminal-overrides-defaults", user_config=user_config)
 
     # Should include user config
     assert "custom" in config
@@ -100,9 +98,7 @@ def test_three_layer_merge():
         # Layer 3: App config
         app_config = {"app_layer": {"value": 3}}
 
-        config = loader.load(
-            "terminal/v1.0.0/terminal-overrides-defaults", user_config=app_config
-        )
+        config = loader.load("terminal/v1.0.0/terminal-overrides-defaults", user_config=app_config)
 
         # Should have all layers
         assert "user_layer" in config  # Layer 2

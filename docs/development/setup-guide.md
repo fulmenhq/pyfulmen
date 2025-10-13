@@ -54,6 +54,7 @@ The `.venv/` directory is created automatically by `uv sync` (no manual `uv venv
 ```
 
 **Using the environment:**
+
 ```bash
 # Automatic (recommended)
 uv run pytest tests/

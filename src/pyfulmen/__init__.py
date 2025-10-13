@@ -6,10 +6,10 @@ development in Python, following the Fulmen ecosystem standards.
 Example:
     >>> import pyfulmen
     >>> print(pyfulmen.__version__)
-    0.1.0
+    0.1.1
 """
 
-__version__ = "0.1.0"
+__version__ = "0.1.1"
 
 # Export public API
 __all__ = [

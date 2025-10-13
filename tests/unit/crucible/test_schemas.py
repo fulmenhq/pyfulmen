@@ -29,9 +29,7 @@ def test_list_schema_versions():
 def test_get_schema_path():
     """Test getting path to a schema file."""
     # Test with known schema from sync
-    path = schemas.get_schema_path(
-        "observability/logging", "v1.0.0", "logger-config"
-    )
+    path = schemas.get_schema_path("observability/logging", "v1.0.0", "logger-config")
 
     assert path.exists()
     assert path.suffix in [".json", ".yaml"]
@@ -46,9 +44,7 @@ def test_get_schema_path_not_found():
 
 def test_load_schema():
     """Test loading a JSON schema."""
-    schema = schemas.load_schema(
-        "observability/logging", "v1.0.0", "logger-config"
-    )
+    schema = schemas.load_schema("observability/logging", "v1.0.0", "logger-config")
 
     assert isinstance(schema, dict)
     # JSON schemas should have $schema property

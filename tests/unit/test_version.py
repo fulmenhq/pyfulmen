@@ -1,6 +1,5 @@
 """Tests for pyfulmen.version module."""
 
-
 from pyfulmen.version import (
     get_version_info,
     read_version,
@@ -40,9 +39,7 @@ def test_validate_version_sync():
     assert "mismatches" in sync_info
 
     # All versions should match
-    assert sync_info["synced"] is True, (
-        f"Version mismatch detected: {sync_info['mismatches']}"
-    )
+    assert sync_info["synced"] is True, f"Version mismatch detected: {sync_info['mismatches']}"
 
     # All versions should be identical
     version_file = sync_info["version_file"]

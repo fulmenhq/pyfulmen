@@ -19,11 +19,11 @@ from .severity import to_numeric_level
 
 class LogEvent(FulmenDataModel):
     """Enterprise log event with full 20+ field envelope.
-    
+
     Implements the Crucible logging standard with all required and optional
     fields for structured JSON output. Computed fields are excluded by default
     for safe roundtripping.
-    
+
     Example:
         >>> event = LogEvent(
         ...     message="Request processed",
@@ -141,7 +141,7 @@ class LogEvent(FulmenDataModel):
     @property
     def severity_level(self) -> int:
         """Numeric severity level for filtering and comparison.
-        
+
         Returns:
             Numeric level (0-60): TRACE=0, DEBUG=10, INFO=20, WARN=30, ERROR=40, FATAL=50, NONE=60
         """
@@ -159,10 +159,10 @@ class LoggingProfile(str):
 
 class LoggingConfig(FulmenConfigModel):
     """Progressive logging configuration model.
-    
+
     Supports profile-based configuration with optional detailed customization.
     Follows three-layer merge pattern (Crucible defaults → user → runtime).
-    
+
     Example:
         >>> config = LoggingConfig(
         ...     profile=LoggingProfile.ENTERPRISE,
@@ -216,10 +216,10 @@ class LoggingConfig(FulmenConfigModel):
 
 class LoggingPolicy(FulmenConfigModel):
     """Policy enforcement for logging profiles and features.
-    
+
     Organizations can define policies to enforce appropriate logging patterns
     across different application types and environments.
-    
+
     Example:
         >>> policy = LoggingPolicy(
         ...     allowed_profiles=["STRUCTURED", "ENTERPRISE"],
@@ -242,8 +242,7 @@ class LoggingPolicy(FulmenConfigModel):
     profile_requirements: dict[str, dict[str, Any]] = Field(
         default_factory=dict,
         description=(
-            "Feature requirements per profile "
-            "(e.g., ENTERPRISE: {requiredFeatures: [correlation]})"
+            "Feature requirements per profile (e.g., ENTERPRISE: {requiredFeatures: [correlation]})"
         ),
     )
     audit_settings: dict[str, Any] = Field(

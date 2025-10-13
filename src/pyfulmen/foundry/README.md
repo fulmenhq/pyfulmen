@@ -5,6 +5,7 @@ Foundation utilities and base models for pyfulmen following Fulmen conventions.
 ## Overview
 
 The Foundry module provides:
+
 - **Base Pydantic Models** - Consistent patterns for data, config, and catalog models
 - **RFC3339Nano Timestamps** - Microsecond-precision UTC timestamps
 - **UUIDv7 Correlation IDs** - Time-sortable correlation tracking
@@ -19,11 +20,13 @@ The Foundry module provides:
 Immutable data model for events, messages, and structured data.
 
 **Features:**
+
 - Immutable (`frozen=True`) - prevents accidental mutation
 - Strict schema (`extra='forbid'`) - rejects unknown fields
 - JSON serialization helpers
 
 **Use Cases:**
+
 - Log events
 - Trace events and spans
 - Metric events
@@ -31,6 +34,7 @@ Immutable data model for events, messages, and structured data.
 - Domain events and messages
 
 **Example:**
+
 ```python
 from pyfulmen.foundry import FulmenDataModel, generate_correlation_id
 from pydantic import Field, computed_field
@@ -39,7 +43,7 @@ class LogEvent(FulmenDataModel):
     message: str
     correlation_id: str = Field(default_factory=generate_correlation_id)
     timestamp: str = Field(default_factory=utc_now_rfc3339nano)
-    
+
     @computed_field
     @property
     def message_length(self) -> int:
@@ -62,17 +66,20 @@ print(event.to_json_dict_with_computed())
 Flexible configuration model for three-layer config loading.
 
 **Features:**
+
 - Mutable (`frozen=False`) - supports merge operations
 - Flexible schema (`extra='allow'`) - accepts unknown fields
 - Supports both camelCase and snake_case
 - Deep merge helper
 
 **Use Cases:**
+
 - Application configuration
 - Service configuration with environment overrides
 - Three-layer merged configs (Crucible defaults → user → runtime)
 
 **Example:**
+
 ```python
 from pyfulmen.foundry import FulmenConfigModel
 
@@ -92,17 +99,20 @@ merged = base.merge_with(override)
 Immutable catalog entry for reference data from Crucible.
 
 **Features:**
+
 - Immutable (`frozen=True`) - catalog entries never change
 - Ignores unknown fields (`extra='ignore'`) - forward compatible
 - Optimized for lookups and caching
 
 **Use Cases:**
+
 - Pattern definitions (regex, glob, literal)
 - MIME type catalog entries
 - HTTP status code definitions
 - Country code mappings
 
 **Example:**
+
 ```python
 from pyfulmen.foundry import FulmenCatalogModel
 
@@ -135,7 +145,7 @@ from pyfulmen.foundry import FulmenDataModel
 class LogEvent(FulmenDataModel):
     message: str
     severity: str
-    
+
     @computed_field
     @property
     def severity_level(self) -> int:
@@ -224,6 +234,7 @@ correlation_id = generate_correlation_id()
 ### Why Custom Base Classes?
 
 Instead of everyone using `BaseModel` with slightly different `ConfigDict` settings, we provide:
+
 - **Consistency** - Same configuration across all modules
 - **Maintainability** - Change settings once, apply everywhere
 - **Documentation** - Clear guidance on which base to use when
@@ -250,6 +261,7 @@ Instead of everyone using `BaseModel` with slightly different `ConfigDict` setti
 Lazy-loading catalog for accessing curated patterns, MIME types, and HTTP status groups from Crucible configuration.
 
 **Example:**
+
 ```python
 from pyfulmen.config.loader import ConfigLoader
 from pyfulmen.foundry import FoundryCatalog
@@ -276,12 +288,14 @@ print(group.id)  # "client-error"
 Immutable pattern definition with regex/glob/literal matching support.
 
 **Features:**
+
 - Regex, glob, and literal pattern types
 - Python-specific magic methods (`__call__` for direct invocation)
 - Lazy compilation and caching
 - Pattern description with examples
 
 **Example:**
+
 ```python
 from pyfulmen.foundry import FoundryCatalog, PatternAccessor
 from pyfulmen.config.loader import ConfigLoader
@@ -312,6 +326,7 @@ print(slug.describe())
 ```
 
 **Available Patterns:**
+
 - `email()` - Internationalized email (RFC 5322 with Unicode)
 - `slug()` - Kebab-case or snake_case slugs
 - `path_segment()` - URL path segments
@@ -328,6 +343,7 @@ print(slug.describe())
 Immutable MIME type definition with extension matching.
 
 **Example:**
+
 ```python
 mime = catalog.get_mime_type("json")
 print(mime.mime)  # "application/json"
@@ -343,6 +359,7 @@ if mime.matches_extension(".json"):
 HTTP status code groups with lookup and classification.
 
 **Example:**
+
 ```python
 # Get status group by ID
 success_group = catalog.get_http_status_group("success")
@@ -356,6 +373,7 @@ print(group.name)  # "Client Error Responses"
 ```
 
 **Available Status Groups:**
+
 - `informational` - 1xx responses
 - `success` - 2xx responses
 - `redirect` - 3xx responses
@@ -367,19 +385,25 @@ print(group.name)  # "Client Error Responses"
 PyFulmen implements the Fulmen Helper Library Standard for cross-language consistency:
 
 ### Correlation IDs (UUIDv7)
+
 All Fulmen libraries use UUIDv7 for correlation tracking:
+
 - **Time-sortable** - Embedded timestamp enables chronological ordering
 - **Cross-language** - Same format in gofulmen, tsfulmen, pyfulmen
 - **Log aggregation** - Better performance in Splunk, Datadog, ELK
 
 ### Pattern Catalogs
+
 Centralized pattern definitions in Crucible ensure consistency:
+
 - **Single source of truth** - Patterns defined once, used everywhere
 - **Version controlled** - Pattern changes tracked in Crucible
 - **Language-specific flags** - Python, Go, TypeScript, Rust flags supported
 
 ### Configuration Management
+
 Three-layer config loading pattern:
+
 1. **Crucible defaults** - Embedded standards from sync
 2. **User overrides** - `~/.config/fulmen/` customizations
 3. **Runtime config** - Application-provided settings (BYOC)
@@ -389,19 +413,24 @@ Three-layer config loading pattern:
 PyFulmen leverages Python's strengths for better developer experience:
 
 ### Pydantic Foundation
+
 - **Type safety** - Runtime validation with static type hints
 - **Performance** - Pydantic v2 with Rust core
 - **FastAPI integration** - Models work directly in FastAPI endpoints
 - **Schema generation** - Automatic JSON Schema for API contracts
 
 ### Magic Methods
+
 Python-specific enhancements for natural usage:
+
 - `Pattern.__call__()` - Use patterns as callables: `pattern(value)`
 - `FulmenConfigModel.merge_with()` - Intuitive config merging
 - `FulmenDataModel.to_json_dict()` - Clean serialization API
 
 ### Computed Fields
+
 Pydantic v2.12+ computed fields with intelligent exclusion:
+
 - Excluded from serialization by default (safe roundtripping)
 - Explicit inclusion when needed (`include_computed=True`)
 - Full introspection support
@@ -409,6 +438,7 @@ Pydantic v2.12+ computed fields with intelligent exclusion:
 ## Future Extensions
 
 Planned enhancements for future versions:
+
 - Global catalog instance with convenience functions
 - HTTP status helper methods (is_success(), is_client_error(), etc.)
 - Country code lookups (ISO alpha-2/alpha-3/numeric)

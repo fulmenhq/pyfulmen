@@ -5,6 +5,7 @@ This directory contains opinionated IDE configuration to provide a smooth develo
 ## What's Configured
 
 ### `settings.json`
+
 - **Python Interpreter**: Points to `.venv/bin/python` (managed by `uv`)
 - **Type Checking**: Basic type checking enabled via Pylance
 - **Testing**: pytest integration configured
@@ -14,14 +15,17 @@ This directory contains opinionated IDE configuration to provide a smooth develo
 - **File Exclusions**: Hides `__pycache__`, `.pytest_cache`, build artifacts
 
 ### `extensions.json`
+
 Recommended extensions for the best experience:
+
 - `ms-python.python` - Python language support
-- `ms-python.vscode-pylance` - Fast, feature-rich language server  
+- `ms-python.vscode-pylance` - Fast, feature-rich language server
 - `charliermarsh.ruff` - Ruff linting and formatting
 
 ## Why We Commit This
 
 **Problem**: Library developers see false positive import errors like:
+
 ```
 Import "pydantic" could not be resolved
 ```
@@ -33,7 +37,9 @@ Import "pydantic" could not be resolved
 ## Important Notes
 
 ### 1. These Are IDE Settings Only
+
 The **actual quality gates** are enforced via Makefile targets:
+
 - `make test` - All tests must pass
 - `make lint` - Ruff linting must pass
 - `make test-cov` - Coverage requirements must be met
@@ -41,14 +47,18 @@ The **actual quality gates** are enforced via Makefile targets:
 IDE warnings are just **developer experience improvements**, not authoritative.
 
 ### 2. You Can Override
+
 VS Code supports user settings and workspace settings. If you prefer different configuration:
+
 - User settings (global): `~/.config/Code/User/settings.json`
 - Workspace settings (project-specific): `.vscode/settings.json` (this file)
 
 Your user settings will override these workspace settings.
 
 ### 3. Not Required
+
 You don't need VS Code to develop pyfulmen. The repository works with:
+
 - Any IDE (PyCharm, Sublime, Vim, Emacs, etc.)
 - Command line only (`make test`, `make lint`, etc.)
 - CI/CD environments
@@ -58,6 +68,7 @@ You don't need VS Code to develop pyfulmen. The repository works with:
 ### "Import could not be resolved" Errors Persist
 
 1. **Create Virtual Environment** (if missing):
+
    ```bash
    make bootstrap  # Creates .venv/ and installs dependencies
    ```
@@ -66,7 +77,7 @@ You don't need VS Code to develop pyfulmen. The repository works with:
 
 3. **Verify Virtual Environment**: Check status bar shows `.venv` (bottom right)
 
-4. **Select Interpreter Manually**: 
+4. **Select Interpreter Manually**:
    - `Cmd+Shift+P` → "Python: Select Interpreter"
    - Choose `.venv/bin/python`
 
@@ -78,11 +89,13 @@ You don't need VS Code to develop pyfulmen. The repository works with:
 ### Ruff Not Found
 
 Install Ruff in the virtual environment:
+
 ```bash
 uv sync --all-extras
 ```
 
 Or install globally:
+
 ```bash
 pipx install ruff
 ```
@@ -90,11 +103,13 @@ pipx install ruff
 ### Tests Not Discovered
 
 Ensure pytest is installed:
+
 ```bash
 uv run pytest --version
 ```
 
 If missing:
+
 ```bash
 uv sync --all-extras
 ```
