@@ -32,6 +32,7 @@ from typing import Any
 
 from ._models import LogEvent, LoggingConfig, LoggingPolicy, LoggingProfile
 from .context import get_context, get_correlation_id
+from .middleware import Middleware, MiddlewarePipeline
 from .severity import Severity, to_numeric_level, to_python_level
 
 
@@ -202,18 +203,21 @@ class StructuredLogger(BaseLoggerImpl):
     Emits single-line JSON to stdout with:
     - timestamp, severity, message, service
     - Optional: component, context, request_id, correlation_id
+    - Optional: middleware pipeline for redaction and enrichment
 
     Suitable for cloud-native deployments with log aggregation.
     """
 
-    def __init__(self, config: LoggingConfig):
+    def __init__(self, config: LoggingConfig, middleware: list[Middleware] | None = None):
         """Initialize structured logger.
 
         Args:
             config: Logging configuration
+            middleware: Optional middleware pipeline for event processing
         """
         super().__init__(config)
         self._output = sys.stdout
+        self._middleware = MiddlewarePipeline(middleware) if middleware else None
 
     def log(
         self,
@@ -297,6 +301,12 @@ class StructuredLogger(BaseLoggerImpl):
         if "correlation_id" not in event_dict:
             event_dict["correlation_id"] = event.correlation_id
 
+        # Process through middleware pipeline if configured
+        if self._middleware:
+            event_dict = self._middleware.process(event_dict)
+            if event_dict is None:
+                return
+
         # Emit single-line JSON
         json_line = json.dumps(event_dict, ensure_ascii=False, separators=(",", ":"))
         print(json_line, file=self._output, flush=True)
@@ -308,21 +318,28 @@ class EnterpriseLogger(BaseLoggerImpl):
     Emits complete LogEvent structures with:
     - All envelope fields (identification, context, tracing, metadata)
     - Policy enforcement
-    - Middleware pipeline support (future: Phase 3)
+    - Middleware pipeline for redaction and enrichment
 
     Suitable for production systems requiring audit, compliance, and observability.
     """
 
-    def __init__(self, config: LoggingConfig, policy: LoggingPolicy | None = None):
+    def __init__(
+        self,
+        config: LoggingConfig,
+        policy: LoggingPolicy | None = None,
+        middleware: list[Middleware] | None = None,
+    ):
         """Initialize enterprise logger.
 
         Args:
             config: Logging configuration
             policy: Optional policy for enforcement
+            middleware: Optional middleware pipeline for event processing
         """
         super().__init__(config)
         self.policy = policy
         self._output = sys.stdout
+        self._middleware = MiddlewarePipeline(middleware) if middleware else None
 
         # Validate against policy if provided
         if self.policy:
@@ -393,6 +410,13 @@ class EnterpriseLogger(BaseLoggerImpl):
 
         # Emit complete JSON structure with computed fields
         event_dict = event.to_json_dict_with_computed()
+
+        # Process through middleware pipeline if configured
+        if self._middleware:
+            event_dict = self._middleware.process(event_dict)
+            if event_dict is None:
+                return
+
         json_line = json.dumps(event_dict, ensure_ascii=False, separators=(",", ":"))
         print(json_line, file=self._output, flush=True)
 
@@ -431,6 +455,7 @@ class Logger:
         default_level: str = "INFO",
         policy_file: str | None = None,
         config: LoggingConfig | None = None,
+        middleware: list[Middleware] | None = None,
     ):
         """Initialize logger with profile-based delegation.
 
@@ -441,6 +466,7 @@ class Logger:
             default_level: Default severity level (default: INFO)
             policy_file: Path to policy YAML file (for ENTERPRISE profile)
             config: Optional pre-built LoggingConfig (overrides other params)
+            middleware: Optional middleware pipeline (for STRUCTURED/ENTERPRISE profiles)
 
         Raises:
             ValueError: If profile is invalid or violates policy
@@ -456,6 +482,9 @@ class Logger:
                 default_level=default_level,
                 policy_file=policy_file,
             )
+
+        # Store middleware for implementation creation
+        self.middleware = middleware
 
         # Load policy if specified
         self.policy: LoggingPolicy | None = None
@@ -521,9 +550,9 @@ class Logger:
         if self.config.profile == LoggingProfile.SIMPLE:
             return SimpleLogger(self.config)
         elif self.config.profile == LoggingProfile.STRUCTURED:
-            return StructuredLogger(self.config)
+            return StructuredLogger(self.config, middleware=self.middleware)
         elif self.config.profile == LoggingProfile.ENTERPRISE:
-            return EnterpriseLogger(self.config, self.policy)
+            return EnterpriseLogger(self.config, policy=self.policy, middleware=self.middleware)
         elif self.config.profile == LoggingProfile.CUSTOM:
             raise ValueError("CUSTOM profile not yet implemented (Phase 5)")
         else:

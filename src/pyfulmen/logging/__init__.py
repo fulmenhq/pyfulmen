@@ -41,6 +41,13 @@ from .logger import (
     SimpleLogger,
     StructuredLogger,
 )
+from .middleware import (
+    Middleware,
+    MiddlewarePipeline,
+    MiddlewareRegistry,
+    RedactPIIMiddleware,
+    RedactSecretsMiddleware,
+)
 from .severity import Severity
 
 __all__ = [
@@ -54,6 +61,11 @@ __all__ = [
     "SimpleLogger",
     "StructuredLogger",
     "EnterpriseLogger",
+    "Middleware",
+    "MiddlewarePipeline",
+    "MiddlewareRegistry",
+    "RedactSecretsMiddleware",
+    "RedactPIIMiddleware",
     "correlation_context",
     "get_correlation_id",
     "set_correlation_id",
