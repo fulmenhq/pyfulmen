@@ -52,31 +52,31 @@ class LogEvent(FulmenDataModel):
     )
 
     # Optional identification fields
-    component: str = Field(
-        default="",
+    component: str | None = Field(
+        default=None,
         description="Subsystem/component name",
     )
-    logger: str = Field(
-        default="",
+    logger: str | None = Field(
+        default=None,
         description="Logger instance identifier (e.g., 'gofulmen.pathfinder')",
     )
-    environment: str = Field(
-        default="",
+    environment: str | None = Field(
+        default=None,
         description="Deployment environment (e.g., 'production', 'staging')",
     )
 
     # Context and correlation fields
-    context: dict[str, Any] = Field(
-        default_factory=dict,
+    context: dict[str, Any] | None = Field(
+        default=None,
         description="Arbitrary key/value map for structured context",
     )
-    context_id: str = Field(
-        default="",
+    context_id: str | None = Field(
+        default=None,
         description="Execution context identifier (job, pipeline, CLI invocation)",
         serialization_alias="contextId",
     )
-    request_id: str = Field(
-        default="",
+    request_id: str | None = Field(
+        default=None,
         description="Per-request identifier (HTTP X-Request-ID header)",
         serialization_alias="requestId",
     )
@@ -87,34 +87,34 @@ class LogEvent(FulmenDataModel):
     )
 
     # Tracing fields
-    trace_id: str = Field(
-        default="",
+    trace_id: str | None = Field(
+        default=None,
         description="OpenTelemetry trace identifier",
         serialization_alias="traceId",
     )
-    span_id: str = Field(
-        default="",
+    span_id: str | None = Field(
+        default=None,
         description="Span identifier",
         serialization_alias="spanId",
     )
-    parent_span_id: str = Field(
-        default="",
+    parent_span_id: str | None = Field(
+        default=None,
         description="Parent span identifier for nested operations",
         serialization_alias="parentSpanId",
     )
 
     # Operation metadata
-    operation: str = Field(
-        default="",
+    operation: str | None = Field(
+        default=None,
         description="Logical operation or handler name (CLI command, HTTP route, job step)",
     )
-    duration_ms: float = Field(
-        default=0.0,
+    duration_ms: float | None = Field(
+        default=None,
         description="Operation duration in milliseconds",
         serialization_alias="durationMs",
     )
-    user_id: str = Field(
-        default="",
+    user_id: str | None = Field(
+        default=None,
         description="Authenticated user identifier when available",
         serialization_alias="userId",
     )
@@ -126,24 +126,24 @@ class LogEvent(FulmenDataModel):
     )
 
     # Additional metadata
-    tags: list[str] = Field(
-        default_factory=list,
+    tags: list[str] | None = Field(
+        default=None,
         description="Optional string array for ad-hoc filtering",
     )
-    event_id: str = Field(
-        default="",
+    event_id: str | None = Field(
+        default=None,
         description="Optional unique identifier assigned by the producer",
         serialization_alias="eventId",
     )
 
     # Middleware metadata
-    throttle_bucket: str = Field(
-        default="",
+    throttle_bucket: str | None = Field(
+        default=None,
         description="Set when throttling drops are applied",
         serialization_alias="throttleBucket",
     )
-    redaction_flags: list[str] = Field(
-        default_factory=list,
+    redaction_flags: list[str] | None = Field(
+        default=None,
         description="Redaction indicators emitted by middleware (e.g., ['pii'])",
         serialization_alias="redactionFlags",
     )

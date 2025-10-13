@@ -259,18 +259,20 @@ class StructuredLogger(BaseLoggerImpl):
                 merged_kwargs["context"] = thread_context.copy()
 
         # Create LogEvent for structured output
+        # Convert empty string component to None for proper exclusion
         event = LogEvent(
             severity=severity_str,
             message=message,
             service=self.service,
-            component=self.component,
+            component=self.component or None,
             **merged_kwargs,
         )
 
         # Serialize with camelCase aliases including severityLevel for schema compliance
         # Use to_json_dict_with_computed() to include severityLevel computed field
-        # Use exclude_defaults=True to omit empty strings, zeros, empty lists per schema
-        event_dict = event.to_json_dict_with_computed(exclude_none=True, exclude_defaults=True)
+        # Use exclude_none=True to omit unset optional fields (None defaults)
+        # Explicit zeros, empty strings, and empty lists ARE preserved
+        event_dict = event.to_json_dict_with_computed(exclude_none=True, exclude_defaults=False)
 
         # Process through middleware pipeline if configured
         if self._middleware:
@@ -371,18 +373,20 @@ class EnterpriseLogger(BaseLoggerImpl):
                 merged_kwargs["context"] = thread_context.copy()
 
         # Create full LogEvent
+        # Convert empty string component to None for proper exclusion
         event = LogEvent(
             severity=severity_str,
             message=message,
             service=self.service,
-            component=self.component,
+            component=self.component or None,
             **merged_kwargs,
         )
 
         # Emit complete JSON structure with computed fields and camelCase aliases
         # Use to_json_dict_with_computed() to include severityLevel computed field
-        # Use exclude_defaults=True to omit empty strings, zeros, empty lists per schema
-        event_dict = event.to_json_dict_with_computed(exclude_none=True, exclude_defaults=True)
+        # Use exclude_none=True to omit unset optional fields (None defaults)
+        # Explicit zeros, empty strings, and empty lists ARE preserved
+        event_dict = event.to_json_dict_with_computed(exclude_none=True, exclude_defaults=False)
 
         # Process through middleware pipeline if configured
         if self._middleware:
