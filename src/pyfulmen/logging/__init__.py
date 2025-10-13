@@ -34,6 +34,7 @@ from .context import (
     set_context_value,
     set_correlation_id,
 )
+from .formatter import ConsoleFormatter, Formatter, JSONFormatter, TextFormatter
 from .logger import (
     BaseLoggerImpl,
     EnterpriseLogger,
@@ -48,7 +49,9 @@ from .middleware import (
     RedactPIIMiddleware,
     RedactSecretsMiddleware,
 )
+from .policy import enforce_policy, load_policy, validate_config_against_policy
 from .severity import Severity
+from .sinks import ConsoleSink, FileSink, Sink
 from .throttling import ThrottleController, ThrottlingMiddleware
 
 __all__ = [
@@ -69,6 +72,16 @@ __all__ = [
     "RedactPIIMiddleware",
     "ThrottleController",
     "ThrottlingMiddleware",
+    "Formatter",
+    "JSONFormatter",
+    "TextFormatter",
+    "ConsoleFormatter",
+    "Sink",
+    "ConsoleSink",
+    "FileSink",
+    "load_policy",
+    "validate_config_against_policy",
+    "enforce_policy",
     "correlation_context",
     "get_correlation_id",
     "set_correlation_id",

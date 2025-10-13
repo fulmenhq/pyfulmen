@@ -25,6 +25,8 @@ from collections import deque
 from threading import Lock
 from typing import Any
 
+from .middleware import Middleware
+
 
 class ThrottleController:
     """Rate limiting controller with burst support and drop policies.
@@ -222,11 +224,11 @@ class ThrottleController:
             self._events.popleft()
 
 
-class ThrottlingMiddleware:
+class ThrottlingMiddleware(Middleware):
     """Middleware that applies throttling to log events.
 
-    Alternative to controller-based throttling. Can be used in middleware
-    pipeline to drop events based on rate limits.
+    Integrates with middleware pipeline to drop events based on rate limits.
+    Supports burst capacity and multiple drop policies.
 
     Example:
         >>> from pyfulmen.logging import Logger, LoggingProfile
@@ -249,6 +251,7 @@ class ThrottlingMiddleware:
         burst_size: int = 0,
         window_size: float = 1.0,
         drop_policy: str = "drop-oldest",
+        config: dict[str, Any] | None = None,
         order: int = 50,
     ):
         """Initialize throttling middleware.
@@ -258,21 +261,28 @@ class ThrottlingMiddleware:
             burst_size: Maximum burst capacity (0 = use max_rate)
             window_size: Time window in seconds
             drop_policy: Drop policy for excess events
+            config: Optional configuration dictionary (for registry instantiation)
             order: Middleware execution order (default: 50)
         """
+        # Initialize base Middleware with combined config
+        throttle_config = config or {}
+        throttle_config.update(
+            {
+                "max_rate": max_rate,
+                "burst_size": burst_size,
+                "window_size": window_size,
+                "drop_policy": drop_policy,
+            }
+        )
+        super().__init__(config=throttle_config, order=order)
+
+        # Create throttle controller
         self.controller = ThrottleController(
             max_rate=max_rate,
             burst_size=burst_size,
             window_size=window_size,
             drop_policy=drop_policy,
         )
-        self.order = order
-        self.config = {
-            "max_rate": max_rate,
-            "burst_size": burst_size,
-            "window_size": window_size,
-            "drop_policy": drop_policy,
-        }
 
     def process(self, event: dict[str, Any]) -> dict[str, Any] | None:
         """Process event through throttle controller.

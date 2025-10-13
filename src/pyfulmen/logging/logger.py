@@ -33,6 +33,7 @@ from typing import Any
 from ._models import LogEvent, LoggingConfig, LoggingPolicy, LoggingProfile
 from .context import get_context, get_correlation_id
 from .middleware import Middleware, MiddlewarePipeline
+from .policy import load_policy as _load_policy_impl
 from .severity import Severity, to_numeric_level, to_python_level
 
 
@@ -145,9 +146,9 @@ class SimpleLogger(BaseLoggerImpl):
         self._logger = logging.getLogger(logger_name)
         self._logger.setLevel(to_python_level(self.default_level))
 
-        # Add console handler if none exist
+        # Add console handler if none exist (emit to stderr per progressive logging standard)
         if not self._logger.handlers:
-            handler = logging.StreamHandler(sys.stdout)
+            handler = logging.StreamHandler(sys.stderr)
             handler.setLevel(to_python_level(self.default_level))
 
             formatter = logging.Formatter(
@@ -216,7 +217,7 @@ class StructuredLogger(BaseLoggerImpl):
             middleware: Optional middleware pipeline for event processing
         """
         super().__init__(config)
-        self._output = sys.stdout
+        self._output = sys.stderr
         self._middleware = MiddlewarePipeline(middleware) if middleware else None
 
     def log(
@@ -238,68 +239,36 @@ class StructuredLogger(BaseLoggerImpl):
 
         severity_str = severity.value if isinstance(severity, Severity) else severity
 
-        # Build core envelope
-        event_dict = {
-            "severity": severity_str,
-            "message": message,
-            "service": self.service,
-        }
+        # Merge thread-local context with explicit kwargs
+        merged_kwargs = kwargs.copy()
 
-        # Add optional identification fields
-        if self.component:
-            event_dict["component"] = self.component
-
-        # Add allowed kwargs (subset of LogEvent fields)
-        allowed_fields = {
-            "context",
-            "context_id",
-            "request_id",
-            "correlation_id",
-            "trace_id",
-            "span_id",
-            "parent_span_id",
-            "operation",
-            "duration_ms",
-            "user_id",
-            "error",
-            "tags",
-            "event_id",
-        }
-
-        for key, value in kwargs.items():
-            if key in allowed_fields and value:
-                event_dict[key] = value
-
-        # Check thread-local context for correlation_id
-        if "correlation_id" not in event_dict:
+        # Add correlation_id from context if not provided
+        if "correlation_id" not in merged_kwargs:
             context_correlation_id = get_correlation_id()
             if context_correlation_id:
-                event_dict["correlation_id"] = context_correlation_id
+                merged_kwargs["correlation_id"] = context_correlation_id
 
-        # Merge thread-local context
+        # Merge thread-local context with explicit context
         thread_context = get_context()
         if thread_context:
-            if "context" in event_dict:
+            if "context" in merged_kwargs:
                 # Merge with explicit context (explicit takes precedence)
-                merged_context = {**thread_context, **event_dict["context"]}
-                event_dict["context"] = merged_context
+                merged_context = {**thread_context, **merged_kwargs["context"]}
+                merged_kwargs["context"] = merged_context
             else:
-                event_dict["context"] = thread_context.copy()
+                merged_kwargs["context"] = thread_context.copy()
 
-        # Create LogEvent for timestamp generation
+        # Create LogEvent for structured output
         event = LogEvent(
             severity=severity_str,
             message=message,
             service=self.service,
             component=self.component,
-            **{k: v for k, v in kwargs.items() if k in allowed_fields},
+            **merged_kwargs,
         )
 
-        # Use event's timestamp
-        event_dict["timestamp"] = event.timestamp
-        # Use LogEvent's auto-generated correlation_id if none provided
-        if "correlation_id" not in event_dict:
-            event_dict["correlation_id"] = event.correlation_id
+        # Serialize with camelCase aliases (excluding computed fields for STRUCTURED)
+        event_dict = event.model_dump(by_alias=True, exclude_none=False, exclude={"severity_level"})
 
         # Process through middleware pipeline if configured
         if self._middleware:
@@ -338,7 +307,7 @@ class EnterpriseLogger(BaseLoggerImpl):
         """
         super().__init__(config)
         self.policy = policy
-        self._output = sys.stdout
+        self._output = sys.stderr
         self._middleware = MiddlewarePipeline(middleware) if middleware else None
 
         # Validate against policy if provided
@@ -408,8 +377,8 @@ class EnterpriseLogger(BaseLoggerImpl):
             **merged_kwargs,
         )
 
-        # Emit complete JSON structure with computed fields
-        event_dict = event.to_json_dict_with_computed()
+        # Emit complete JSON structure with computed fields and camelCase aliases
+        event_dict = event.model_dump(by_alias=True, exclude_none=False)
 
         # Process through middleware pipeline if configured
         if self._middleware:
@@ -506,12 +475,11 @@ class Logger:
         Returns:
             LoggingPolicy instance
 
-        Note:
-            Implementation placeholder - will use ConfigLoader in future
+        Raises:
+            FileNotFoundError: If policy file cannot be found
+            ValueError: If policy file is invalid
         """
-        # TODO: Load from YAML using ConfigLoader
-        # For now, return permissive default
-        return LoggingPolicy()
+        return _load_policy_impl(policy_file)
 
     def _validate_profile(self) -> None:
         """Validate profile against policy constraints.

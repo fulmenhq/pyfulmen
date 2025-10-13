@@ -1,0 +1,9 @@
+allowed_profiles:
+  - SIMPLE
+  - STRUCTURED
+  - ENTERPRISE
+  - CUSTOM
+environment_rules: {}
+required_profiles: {}
+profile_requirements: {}
+audit_settings: {}

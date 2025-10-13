@@ -30,7 +30,7 @@ class TestLevelFiltering:
         logger.error("Should appear")
 
         captured = capsys.readouterr()
-        result = captured.out
+        result = captured.err
         assert "Should not appear" not in result
         assert "Should appear" in result
 
@@ -43,7 +43,7 @@ class TestLevelFiltering:
         logger.error("Should appear")
 
         captured = capsys.readouterr()
-        result = captured.out
+        result = captured.err
         assert "Should not appear" not in result
 
         lines = [line for line in result.strip().split("\n") if line]
@@ -61,7 +61,7 @@ class TestLevelFiltering:
         logger.info("Logged")
 
         captured = capsys.readouterr()
-        result = captured.out
+        result = captured.err
         assert "Not logged" not in result
         assert "Logged" in result
 
@@ -80,7 +80,7 @@ class TestLevelFiltering:
         logger.debug("Now logged too")
 
         captured = capsys.readouterr()
-        result = captured.out
+        result = captured.err
         assert "Not logged initially" not in result
         assert "Logged at ERROR" in result
         assert "Now logged" in result
@@ -116,7 +116,7 @@ class TestLevelFiltering:
         logger.info("Info message")
 
         captured = capsys.readouterr()
-        result = captured.out
+        result = captured.err
         assert "Trace message" in result
         assert "Debug message" in result
         assert "Info message" in result
@@ -133,7 +133,7 @@ class TestLevelFiltering:
         logger.fatal("Not logged")
 
         captured = capsys.readouterr()
-        result = captured.out
+        result = captured.err
         assert result == ""
 
     def test_fatal_level_only_logs_fatal(self, capsys):
@@ -144,7 +144,7 @@ class TestLevelFiltering:
         logger.fatal("Logged")
 
         captured = capsys.readouterr()
-        result = captured.out
+        result = captured.err
         assert "Not logged" not in result
         assert "Logged" in result
 
@@ -160,7 +160,7 @@ class TestLevelFilteringPerformance:
         logger.error("Logged", user_id="user-123")
 
         captured = capsys.readouterr()
-        result = captured.out
+        result = captured.err
         assert "Filtered out" not in result
         assert "Logged" in result
 
@@ -174,7 +174,7 @@ class TestLevelFilteringPerformance:
         logger.warn("Logged", context={"small": "data"})
 
         captured = capsys.readouterr()
-        result = captured.out
+        result = captured.err
         assert "Filtered" not in result
         assert "Logged" in result
 
@@ -200,7 +200,7 @@ class TestProfileDefaultLevels:
         logger.info("Logged")
 
         captured = capsys.readouterr()
-        result = captured.out
+        result = captured.err
         assert "Not logged" not in result
         assert "Logged" in result
 
@@ -212,6 +212,6 @@ class TestProfileDefaultLevels:
         logger.info("Logged")
 
         captured = capsys.readouterr()
-        result = captured.out
+        result = captured.err
         assert "Not logged" not in result
         assert "Logged" in result

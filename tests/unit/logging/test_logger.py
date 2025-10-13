@@ -86,7 +86,7 @@ class TestStructuredLogger:
         logger.info("Test message")
 
         captured = capsys.readouterr()
-        output_line = captured.out.strip()
+        output_line = captured.err.strip()
 
         parsed = json.loads(output_line)
 
@@ -94,7 +94,7 @@ class TestStructuredLogger:
         assert parsed["message"] == "Test message"
         assert parsed["service"] == "test-service"
         assert "timestamp" in parsed
-        assert "correlation_id" in parsed
+        assert "correlationId" in parsed
 
     def test_structured_logger_with_context(self, capsys):
         """Test StructuredLogger includes context fields."""
@@ -112,10 +112,10 @@ class TestStructuredLogger:
         )
 
         captured = capsys.readouterr()
-        parsed = json.loads(captured.out.strip())
+        parsed = json.loads(captured.err.strip())
 
-        assert parsed["request_id"] == "req-123"
-        assert parsed["user_id"] == "user-456"
+        assert parsed["requestId"] == "req-123"
+        assert parsed["userId"] == "user-456"
         assert parsed["context"]["method"] == "GET"
 
     def test_structured_logger_all_severity_levels(self, capsys):
@@ -135,7 +135,7 @@ class TestStructuredLogger:
         logger.fatal("Fatal")
 
         captured = capsys.readouterr()
-        lines = captured.out.strip().split("\n")
+        lines = captured.err.strip().split("\n")
 
         assert len(lines) == 6
 
@@ -176,22 +176,22 @@ class TestEnterpriseLogger:
         )
 
         captured = capsys.readouterr()
-        parsed = json.loads(captured.out.strip())
+        parsed = json.loads(captured.err.strip())
 
         assert parsed["severity"] == "INFO"
         assert parsed["message"] == "Transaction completed"
         assert parsed["service"] == "test-service"
         assert parsed["component"] == "payment-processor"
-        assert parsed["user_id"] == "user-789"
+        assert parsed["userId"] == "user-789"
         assert parsed["operation"] == "charge"
-        assert parsed["duration_ms"] == 152.3
-        assert parsed["trace_id"] == "trace-abc"
-        assert parsed["span_id"] == "span-def"
+        assert parsed["durationMs"] == 152.3
+        assert parsed["traceId"] == "trace-abc"
+        assert parsed["spanId"] == "span-def"
         assert parsed["tags"] == ["payment", "success"]
         assert "timestamp" in parsed
-        assert "correlation_id" in parsed
-        assert "severity_level" in parsed
-        assert parsed["severity_level"] == 20
+        assert "correlationId" in parsed
+        assert "severityLevel" in parsed
+        assert parsed["severityLevel"] == 20
 
     def test_enterprise_logger_with_error_details(self, capsys):
         """Test EnterpriseLogger includes error details."""
@@ -211,7 +211,7 @@ class TestEnterpriseLogger:
         )
 
         captured = capsys.readouterr()
-        parsed = json.loads(captured.out.strip())
+        parsed = json.loads(captured.err.strip())
 
         assert parsed["severity"] == "ERROR"
         assert parsed["error"]["message"] == "Connection timeout"
@@ -270,11 +270,11 @@ class TestLogger:
         logger.info("Structured log", request_id="req-123")
 
         captured = capsys.readouterr()
-        parsed = json.loads(captured.out.strip())
+        parsed = json.loads(captured.err.strip())
 
         assert parsed["severity"] == "INFO"
         assert parsed["message"] == "Structured log"
-        assert parsed["request_id"] == "req-123"
+        assert parsed["requestId"] == "req-123"
 
     def test_logger_enterprise_profile(self, capsys):
         """Test Logger with ENTERPRISE profile."""
@@ -283,12 +283,12 @@ class TestLogger:
         logger.info("Enterprise log", user_id="user-123", operation="login")
 
         captured = capsys.readouterr()
-        parsed = json.loads(captured.out.strip())
+        parsed = json.loads(captured.err.strip())
 
         assert parsed["severity"] == "INFO"
-        assert parsed["user_id"] == "user-123"
+        assert parsed["userId"] == "user-123"
         assert parsed["operation"] == "login"
-        assert "severity_level" in parsed
+        assert "severityLevel" in parsed
 
     def test_logger_with_component(self, capsys):
         """Test Logger with component identification."""
@@ -301,7 +301,7 @@ class TestLogger:
         logger.info("Auth event")
 
         captured = capsys.readouterr()
-        parsed = json.loads(captured.out.strip())
+        parsed = json.loads(captured.err.strip())
 
         assert parsed["component"] == "auth-handler"
 
@@ -316,7 +316,7 @@ class TestLogger:
         logger.debug("Debug message")
 
         captured = capsys.readouterr()
-        parsed = json.loads(captured.out.strip())
+        parsed = json.loads(captured.err.strip())
 
         assert parsed["severity"] == "DEBUG"
 
@@ -361,7 +361,7 @@ class TestLogger:
         logger.fatal("Fatal")
 
         captured = capsys.readouterr()
-        lines = captured.out.strip().split("\n")
+        lines = captured.err.strip().split("\n")
 
         assert len(lines) == 6
 
@@ -376,7 +376,7 @@ class TestLogger:
         logger.log("ERROR", "Error via log() with string")
 
         captured = capsys.readouterr()
-        lines = captured.out.strip().split("\n")
+        lines = captured.err.strip().split("\n")
 
         parsed1 = json.loads(lines[0])
         parsed2 = json.loads(lines[1])
@@ -442,7 +442,7 @@ class TestLoggerProfileComparison:
         enterprise_logger.info(message, request_id=request_id)
 
         captured = capsys.readouterr()
-        json_lines = [line for line in captured.out.strip().split("\n") if line.startswith("{")]
+        json_lines = [line for line in captured.err.strip().split("\n") if line.startswith("{")]
 
         assert len(json_lines) == 2
 
@@ -450,12 +450,12 @@ class TestLoggerProfileComparison:
         enterprise_event = json.loads(json_lines[1])
 
         assert structured_event["message"] == message
-        assert structured_event["request_id"] == request_id
-        assert "severity_level" not in structured_event
+        assert structured_event["requestId"] == request_id
+        assert "severityLevel" not in structured_event
 
         assert enterprise_event["message"] == message
-        assert enterprise_event["request_id"] == request_id
-        assert "severity_level" in enterprise_event
+        assert enterprise_event["requestId"] == request_id
+        assert "severityLevel" in enterprise_event
 
     def test_field_availability_by_profile(self, capsys):
         """Test which fields are available in each profile."""
@@ -474,13 +474,13 @@ class TestLoggerProfileComparison:
         )
 
         captured = capsys.readouterr()
-        lines = captured.out.strip().split("\n")
+        lines = captured.err.strip().split("\n")
 
         structured_event = json.loads(lines[0])
         enterprise_event = json.loads(lines[1])
 
-        assert structured_event["request_id"] == "req-1"
+        assert structured_event["requestId"] == "req-1"
         assert "throttle_bucket" not in structured_event
 
-        assert enterprise_event["request_id"] == "req-2"
-        assert enterprise_event["throttle_bucket"] == "bucket-2"
+        assert enterprise_event["requestId"] == "req-2"
+        assert enterprise_event["throttleBucket"] == "bucket-2"

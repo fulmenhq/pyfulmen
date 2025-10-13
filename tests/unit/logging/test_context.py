@@ -210,9 +210,9 @@ class TestLoggerCorrelationIntegration:
             logger.info("Test message")
 
         captured = capsys.readouterr()
-        log_line = json.loads(captured.out.strip())
+        log_line = json.loads(captured.err.strip())
 
-        assert log_line["correlation_id"] == "ctx-correlation-123"
+        assert log_line["correlationId"] == "ctx-correlation-123"
         assert log_line["message"] == "Test message"
 
     def test_enterprise_logger_uses_context_correlation_id(self, capsys):
@@ -223,9 +223,9 @@ class TestLoggerCorrelationIntegration:
             logger.info("Enterprise log")
 
         captured = capsys.readouterr()
-        log_line = json.loads(captured.out.strip())
+        log_line = json.loads(captured.err.strip())
 
-        assert log_line["correlation_id"] == "ent-correlation-456"
+        assert log_line["correlationId"] == "ent-correlation-456"
         assert log_line["message"] == "Enterprise log"
 
     def test_explicit_correlation_id_overrides_context(self, capsys):
@@ -236,10 +236,10 @@ class TestLoggerCorrelationIntegration:
             logger.info("Message", correlation_id="explicit-id")
 
         captured = capsys.readouterr()
-        log_line = json.loads(captured.out.strip())
+        log_line = json.loads(captured.err.strip())
 
         # Explicit should win
-        assert log_line["correlation_id"] == "explicit-id"
+        assert log_line["correlationId"] == "explicit-id"
 
     def test_logger_with_context_values(self, capsys):
         """Logger should include context values in logs."""
@@ -249,7 +249,7 @@ class TestLoggerCorrelationIntegration:
             logger.info("Processing request")
 
         captured = capsys.readouterr()
-        log_line = json.loads(captured.out.strip())
+        log_line = json.loads(captured.err.strip())
 
         assert "context" in log_line
         assert log_line["context"]["user_id"] == "user-789"
@@ -263,7 +263,7 @@ class TestLoggerCorrelationIntegration:
             logger.info("Message", context={"request_id": "req-222"})
 
         captured = capsys.readouterr()
-        log_line = json.loads(captured.out.strip())
+        log_line = json.loads(captured.err.strip())
 
         # Should have both
         assert log_line["context"]["user_id"] == "user-111"
@@ -277,7 +277,7 @@ class TestLoggerCorrelationIntegration:
             logger.info("Message", context={"key": "explicit-value"})
 
         captured = capsys.readouterr()
-        log_line = json.loads(captured.out.strip())
+        log_line = json.loads(captured.err.strip())
 
         # Explicit should win
         assert log_line["context"]["key"] == "explicit-value"
@@ -292,13 +292,13 @@ class TestLoggerCorrelationIntegration:
             logger.error("Third message")
 
         captured = capsys.readouterr()
-        lines = [json.loads(line) for line in captured.out.strip().split("\n")]
+        lines = [json.loads(line) for line in captured.err.strip().split("\n")]
 
         assert len(lines) == 3
         # All should have same correlation_id
-        assert lines[0]["correlation_id"] == corr_id
-        assert lines[1]["correlation_id"] == corr_id
-        assert lines[2]["correlation_id"] == corr_id
+        assert lines[0]["correlationId"] == corr_id
+        assert lines[1]["correlationId"] == corr_id
+        assert lines[2]["correlationId"] == corr_id
 
 
 class TestHeaderExtraction:
