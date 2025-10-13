@@ -21,7 +21,9 @@ classifiers = [
 
 dependencies = [
     "jsonschema>=4.25.1",
+    "pydantic>=2.12.0",
     "pyyaml>=6.0.3",
+    "uuid6>=2025.0.1",
 ]
 
 [project.optional-dependencies]

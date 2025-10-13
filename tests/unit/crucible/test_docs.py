@@ -28,11 +28,11 @@ def test_list_available_docs_with_category():
 def test_get_doc_path():
     """Test getting path to a documentation file."""
     # Test with known doc from sync
-    path = docs.get_doc_path("guides/bootstrap-fuldx.md")
+    path = docs.get_doc_path("guides/bootstrap-goneat.md")
 
     assert path.exists()
     assert path.suffix == ".md"
-    assert "bootstrap-fuldx" in path.name
+    assert "bootstrap-goneat" in path.name
 
 
 def test_get_doc_path_not_found():
@@ -43,9 +43,9 @@ def test_get_doc_path_not_found():
 
 def test_read_doc():
     """Test reading documentation content."""
-    content = docs.read_doc("guides/bootstrap-fuldx.md")
+    content = docs.read_doc("guides/bootstrap-goneat.md")
 
     assert isinstance(content, str)
     assert len(content) > 0
     # Should contain typical markdown elements
-    assert "#" in content or "FulDX" in content
+    assert "#" in content or "Goneat" in content or "goneat" in content

@@ -1,9 +1,14 @@
 # PyFulmen Bootstrap Journal
 
+> **⚠️ HISTORICAL DOCUMENT**: This journal describes the original bootstrap process using FulDX. 
+> **FulDX has been succeeded by goneat**. For current setup instructions, see [setup-guide.md](./setup-guide.md).
+
 This document chronicles how the pyfulmen repository was bootstrapped from scratch using FulDX and the Fulmen ecosystem tools.
 
-**Date:** 2025-10-08
-**Bootstrap Guide:** [Fulmen Library Bootstrap Guide](../crucible-py/guides/fulmen-library-bootstrap-guide.md)
+**Date:** 2025-10-08  
+**Status:** Historical reference only  
+**Current Bootstrap Guide:** [setup-guide.md](./setup-guide.md)  
+**Original Bootstrap Guide:** [Fulmen Library Bootstrap Guide](../crucible-py/guides/fulmen-library-bootstrap-guide.md)
 
 ## Overview
 

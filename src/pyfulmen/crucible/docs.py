@@ -7,7 +7,7 @@ Example:
     >>> from pyfulmen.crucible import docs
     >>> docs.list_available_docs()
     ['architecture', 'guides', 'sop', 'standards']
-    >>> content = docs.read_doc('guides/bootstrap-fuldx.md')
+    >>> content = docs.read_doc('guides/bootstrap-goneat.md')
 """
 
 from pathlib import Path
@@ -28,7 +28,7 @@ def list_available_docs(category: str | None = None) -> list[str]:
         >>> list_available_docs()
         ['architecture/fulmen-helper-library-standard.md', ...]
         >>> list_available_docs('guides')
-        ['guides/bootstrap-fuldx.md', 'guides/integration-guide.md', ...]
+        ['guides/bootstrap-goneat.md', 'guides/integration-guide.md', ...]
     """
     docs_dir = _paths.get_docs_dir()
 
@@ -67,8 +67,8 @@ def get_doc_path(path: str) -> Path:
         FileNotFoundError: If documentation file doesn't exist
 
     Example:
-        >>> get_doc_path('guides/bootstrap-fuldx.md')
-        PosixPath('.../docs/crucible-py/guides/bootstrap-fuldx.md')
+        >>> get_doc_path('guides/bootstrap-goneat.md')
+        PosixPath('.../docs/crucible-py/guides/bootstrap-goneat.md')
     """
     docs_dir = _paths.get_docs_dir()
     doc_path = docs_dir / path
@@ -97,8 +97,8 @@ def read_doc(path: str) -> str:
         FileNotFoundError: If documentation file doesn't exist
 
     Example:
-        >>> content = read_doc('guides/bootstrap-fuldx.md')
-        >>> 'FulDX Bootstrap Guide' in content
+        >>> content = read_doc('guides/bootstrap-goneat.md')
+        >>> 'Goneat Bootstrap Guide' in content
         True
     """
     doc_path = get_doc_path(path)

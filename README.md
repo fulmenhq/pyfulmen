@@ -66,7 +66,7 @@ from pyfulmen import crucible, config, schema, logging
 
 # Access Crucible assets
 schemas = crucible.schemas.list_available_schemas()
-doc = crucible.docs.read_doc('guides/bootstrap-fuldx.md')
+doc = crucible.docs.read_doc('guides/bootstrap-goneat.md')
 
 # Get platform-aware config paths
 config_dir = config.paths.get_fulmen_config_dir()
@@ -108,31 +108,76 @@ sync = version.validate_version_sync()
 ## Development
 
 This repository uses:
-- **uv** for Python package management
-- **FulDX** for version management and SSOT sync
+- **uv** for Python package management (fast, modern alternative to pip/virtualenv)
+- **goneat** for version management and SSOT sync (successor to FulDX)
 - **Crucible** for standards and schemas
+
+### Prerequisites
+
+Install `uv` (Python package manager):
+
+```bash
+# macOS/Linux
+curl -LsSf https://astral.sh/uv/install.sh | sh
+
+# Or via Homebrew
+brew install uv
+
+# Or via pipx
+pipx install uv
+```
+
+See [uv installation docs](https://github.com/astral-sh/uv#installation) for other platforms.
 
 ### Quick Start
 
 ```bash
-# Bootstrap development environment
+# 1. Clone the repository
+git clone https://github.com/fulmenhq/pyfulmen.git
+cd pyfulmen
+
+# 2. Bootstrap development environment (creates .venv, installs tools and dependencies)
 make bootstrap
 
-# Sync Crucible assets
-make sync-crucible
+# This command:
+# - Creates .venv/ virtual environment (if not exists)
+# - Installs goneat CLI tool
+# - Installs all Python dependencies via uv
+# - Syncs Crucible assets
 
-# Run tests
-make test
+# 3. Verify setup
+make tools  # Check that goneat and other tools are available
+make test   # Run test suite (should see 136 tests passing)
 
-# Run linter
-make lint
-
-# Format code
-make fmt
-
-# Run all checks
-make check-all
+# 4. Development cycle
+make fmt              # Format code with Ruff
+make lint             # Check linting
+make test             # Run tests
+make check-all        # Run all checks (lint + test)
 ```
+
+### Manual Virtual Environment Setup (Optional)
+
+The `make bootstrap` command handles this automatically, but if you need to create the virtual environment manually:
+
+```bash
+# Create virtual environment with uv
+uv venv
+
+# Activate virtual environment
+source .venv/bin/activate  # Linux/macOS
+# or
+.venv\Scripts\activate     # Windows
+
+# Install dependencies
+uv sync --all-extras
+
+# Verify installation
+uv run pytest --version
+uv run ruff --version
+```
+
+**Note**: `uv` manages the virtual environment automatically when you run `uv run <command>`, so you typically don't need to activate it manually.
 
 ### Building & Releasing
 
@@ -183,11 +228,109 @@ pyfulmen/
 ├── .crucible/             # Crucible integration
 │   ├── tools.yaml         # Tool definitions
 │   └── tools.local.yaml.example
-├── .fuldx/                # FulDX configuration
-│   └── sync-consumer.yaml # SSOT sync config
+├── .goneat/               # Goneat configuration
+│   ├── tools.yaml         # Tool definitions
+│   └── ssot-consumer.yaml # SSOT sync config
 └── docs/                  # Documentation
     └── crucible-py/       # Synced Crucible docs
 ```
+
+## Library Developers
+
+**Note**: This section is for developers working on pyfulmen itself. Library users can skip this section.
+
+### First-Time Setup
+
+```bash
+# 1. Install uv (if not already installed)
+curl -LsSf https://astral.sh/uv/install.sh | sh
+
+# 2. Clone and bootstrap
+git clone https://github.com/fulmenhq/pyfulmen.git
+cd pyfulmen
+make bootstrap
+
+# 3. Verify setup
+make test  # Should see 136 tests passing
+```
+
+The `.venv/` virtual environment is created automatically by `make bootstrap` (via `uv sync`).
+
+### IDE Setup (VS Code / VSCodium)
+
+We provide opinionated `.vscode/settings.json` configuration to eliminate false positive linter errors and configure the development environment optimally. This is a **convenience only** - the actual quality gates are enforced via:
+
+- `make test` - Test suite (currently 143 tests, 93% coverage)
+- `make lint` - Ruff linting
+- `make fmt` - Code formatting
+- `make check-all` - All quality checks
+
+The `.vscode/` configuration:
+- Points Python interpreter to `.venv/bin/python`
+- Configures Ruff as the formatter
+- Enables format-on-save
+- Sets up pytest integration
+- Hides build artifacts and cache directories
+
+**Recommended VS Code Extensions** (see `.vscode/extensions.json`):
+- `ms-python.python` - Python language support
+- `ms-python.vscode-pylance` - Fast, feature-rich language server
+- `charliermarsh.ruff` - Ruff linting and formatting
+
+### Development Workflow
+
+```bash
+# 1. Bootstrap environment (first time only)
+make bootstrap
+
+# 2. Sync Crucible assets (when schemas/docs update)
+make sync-crucible
+
+# 3. Development cycle
+make fmt              # Format code
+make lint             # Check linting
+make test             # Run tests
+make check-all        # Run all checks (lint + test)
+
+# 4. Before commit
+make precommit        # Runs fmt + lint
+make prepush          # Runs check-all
+```
+
+### Quality Gates
+
+**All contributions must pass**:
+1. ✅ `make lint` - No linting errors
+2. ✅ `make test` - All tests passing
+3. ✅ `make test-cov` - Minimum coverage maintained (30% alpha, target 93%)
+4. ✅ Type hints present for public APIs
+5. ✅ Docstrings for all public functions/classes
+
+**Note**: IDE linter warnings (e.g., "Import could not be resolved") are often false positives. The actual quality gate is `make lint` and `make test` passing.
+
+### Testing
+
+```bash
+# Run all tests
+make test
+
+# Run with coverage report
+make test-cov
+
+# Run specific test file
+uv run pytest tests/unit/foundry/test_models.py -v
+
+# Run specific test class
+uv run pytest tests/unit/logging/test_severity.py::TestSeverityComparison -v
+```
+
+### Code Style
+
+- **Formatter**: Ruff (line length: 100)
+- **Linter**: Ruff with pyproject.toml configuration
+- **Type Hints**: Required for public APIs (Python 3.12+)
+- **Docstrings**: Google style
+- **Imports**: Organized automatically by Ruff
 
 ## Contributing
 
@@ -195,9 +338,10 @@ Contributions are welcome! Please follow these steps:
 
 1. Fork the repository.
 2. Create a feature branch (`git checkout -b feature/AmazingFeature`).
-3. Commit your changes (`git commit -m 'Add some AmazingFeature'`).
-4. Push to the branch (`git push origin feature/AmazingFeature`).
-5. Open a Pull Request.
+3. Ensure all quality gates pass (`make check-all`).
+4. Commit your changes (`git commit -m 'Add some AmazingFeature'`).
+5. Push to the branch (`git push origin feature/AmazingFeature`).
+6. Open a Pull Request.
 
 PyFulmen follows the [Fulmen Helper Library Standard](docs/crucible-py/architecture/fulmen-helper-library-standard.md).
 

@@ -9,28 +9,54 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- **Initial Foundation Release**: Complete PyFulmen library structure with enterprise-grade capabilities
-  - Progressive logging interface design (SIMPLE → STRUCTURED → ENTERPRISE → CUSTOM)
-  - Policy-driven configuration for organizational governance
-  - Cross-language standards coordination with gofulmen and tsfulmen
-  - Bootstrap implementation using Goneat tooling
-  - Comprehensive documentation and development operations guide
-  - AI agent framework with PyFulmen Architect identity
-  - Repository safety protocols and governance structure
+- **Foundry Module (Phase 0)**: Base Pydantic models for PyFulmen ecosystem
+  - `FulmenDataModel`: Immutable data models (frozen, strict schema) for events and messages
+  - `FulmenConfigModel`: Mutable config models with deep merge support for three-layer config pattern
+  - `FulmenCatalogModel`: Immutable catalog entries for pattern/MIME/country data
+  - `utc_now_rfc3339nano()`: RFC3339 timestamps with microsecond precision
+  - `generate_correlation_id()`: UUIDv7 generation for time-sortable correlation tracking
+  - Computed field handling with exclusion by default for safe roundtripping
+  - 41 comprehensive tests with 98% coverage
+
+- **Logging Module (Phase 1)**: Progressive logger interface with profile-based delegation
+  - `Logger` class with unified interface across three profiles
+  - `SimpleLogger`: Console-only, basic formatting (zero-complexity default)
+  - `StructuredLogger`: JSON output with core envelope fields (cloud-native ready)
+  - `EnterpriseLogger`: Full 20+ field envelope with policy enforcement
+  - Enhanced `Severity` enum: TRACE, DEBUG, INFO, WARN, ERROR, FATAL, NONE
+  - `LogEvent`: Complete Pydantic model with 20+ enterprise fields
+  - `LoggingConfig`, `LoggingPolicy`: Profile-based configuration and policy enforcement
+  - 48 comprehensive tests (20 new logger tests + 28 severity tests) with 96-100% coverage
 
 ### Changed
 
-- **Repository Structure**: Established src/ layout with proper Python packaging
-- **Configuration Management**: Three-layer config loading with schema validation
-- **Testing Infrastructure**: Comprehensive test suite with pytest and coverage
-- **Documentation**: Complete README, API docs, and development guides
-- **Tooling**: Makefile with standard targets and bootstrap scripts
+- **Pydantic Adoption**: Standardized on Pydantic v2.12+ for all data models (not dataclasses)
+  - Better validation and error messages
+  - Schema generation and cross-validation support
+  - Computed fields with proper exclusion handling
+  - Built-in serialization control
+
+- **UUIDv7 Implementation**: Using `uuid6` library for Python 3.12+ compatibility
+  - Python 3.13+ stdlib uuid7 support with fallback to uuid6 library
+  - Consistent time-sortable correlation IDs across ecosystem
+
+- **Documentation Updates**:
+  - Updated Foundry feature brief with Phase 0 complete status and Pydantic clarification
+  - Removed dataclass references, standardized on Pydantic models
+  - Added VS Code configuration for better developer experience
+  - Updated bootstrap documentation with FulDX → Goneat migration notes
 
 ### Fixed
 
-- **Bootstrap Alignment**: Corrected from FulDX to Goneat-based approach
-- **Sync Configuration**: Fixed language path from `lang/py` to `lang/python`
-- **Schema Integration**: Proper integration with Crucible SSOT synchronization
+- **VS Code Configuration**: Committed `.vscode/` directory for out-of-the-box developer experience
+  - Python interpreter, Ruff, pytest integration
+  - Configuration philosophy documented in `.vscode/README.md`
+
+- **Code Quality**: All linting and type checking passing
+  - Fixed line length issues (100 character limit)
+  - Simplified comparison expressions
+  - Removed outdated version blocks
+  - 156 tests passing, 95% overall coverage
 
 ---
 

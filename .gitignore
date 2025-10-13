@@ -89,7 +89,8 @@ dmypy.json
 # -----------------------------------------------------------------------------
 # IDE and Editor Files
 # -----------------------------------------------------------------------------
-.vscode/
+# We commit .vscode/ with opinionated settings to help library developers
+# Users can override with their own workspace settings if needed
 .idea/
 .claude/
 *.swp
