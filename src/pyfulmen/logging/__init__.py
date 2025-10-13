@@ -49,6 +49,7 @@ from .middleware import (
     RedactSecretsMiddleware,
 )
 from .severity import Severity
+from .throttling import ThrottleController, ThrottlingMiddleware
 
 __all__ = [
     "Logger",
@@ -66,6 +67,8 @@ __all__ = [
     "MiddlewareRegistry",
     "RedactSecretsMiddleware",
     "RedactPIIMiddleware",
+    "ThrottleController",
+    "ThrottlingMiddleware",
     "correlation_context",
     "get_correlation_id",
     "set_correlation_id",
