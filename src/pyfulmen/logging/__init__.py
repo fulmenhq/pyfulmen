@@ -36,11 +36,8 @@ from .context import (
 )
 from .formatter import ConsoleFormatter, Formatter, JSONFormatter, TextFormatter
 from .logger import (
-    BaseLoggerImpl,
-    EnterpriseLogger,
     Logger,
-    SimpleLogger,
-    StructuredLogger,
+    ProgressiveLogger,
 )
 from .middleware import (
     Middleware,
@@ -56,15 +53,12 @@ from .throttling import ThrottleController, ThrottlingMiddleware
 
 __all__ = [
     "Logger",
+    "ProgressiveLogger",
     "LoggingProfile",
     "LoggingConfig",
     "LoggingPolicy",
     "LogEvent",
     "Severity",
-    "BaseLoggerImpl",
-    "SimpleLogger",
-    "StructuredLogger",
-    "EnterpriseLogger",
     "Middleware",
     "MiddlewarePipeline",
     "MiddlewareRegistry",

@@ -9,7 +9,7 @@ from pyfulmen.logging.severity import Severity
 class TestLevelFiltering:
     """Test level filtering in all logger profiles."""
 
-    def test_simple_logger_filters_below_level(self, caplog):
+    def test_simple_logger_filters_below_level(self, capsys):
         """SimpleLogger should filter messages below configured level."""
         logger = Logger(service="test", profile="SIMPLE", default_level="WARN")
 
@@ -18,8 +18,10 @@ class TestLevelFiltering:
         logger.warn("Should appear")
         logger.error("Should appear")
 
-        assert "Should not appear" not in caplog.text
-        assert "Should appear" in caplog.text
+        captured = capsys.readouterr()
+        result = captured.err
+        assert "Should not appear" not in result
+        assert "Should appear" in result
 
     def test_structured_logger_filters_below_level(self, capsys):
         """StructuredLogger should filter messages below configured level."""
@@ -87,7 +89,7 @@ class TestLevelFiltering:
         assert "Still not logged" not in result
         assert "Now logged too" in result
 
-    def test_set_level_accepts_severity_enum(self, caplog):
+    def test_set_level_accepts_severity_enum(self, capsys):
         """set_level() should accept Severity enum."""
         logger = Logger(service="test", profile="SIMPLE", default_level="INFO")
 
@@ -95,17 +97,21 @@ class TestLevelFiltering:
         logger.info("Not logged")
         logger.warn("Logged")
 
-        assert "Not logged" not in caplog.text
-        assert "Logged" in caplog.text
+        captured = capsys.readouterr()
+        result = captured.err
+        assert "Not logged" not in result
+        assert "Logged" in result
 
-    def test_set_level_accepts_string(self, caplog):
+    def test_set_level_accepts_string(self, capsys):
         """set_level() should accept string level."""
         logger = Logger(service="test", profile="SIMPLE", default_level="ERROR")
 
         logger.set_level("DEBUG")
         logger.debug("Logged")
 
-        assert "Logged" in caplog.text
+        captured = capsys.readouterr()
+        result = captured.err
+        assert "Logged" in result
 
     def test_trace_level_logs_everything(self, capsys):
         """TRACE level should log all messages."""
@@ -182,15 +188,17 @@ class TestLevelFilteringPerformance:
 class TestProfileDefaultLevels:
     """Test that profiles have appropriate default levels."""
 
-    def test_simple_logger_default_is_info(self, caplog):
+    def test_simple_logger_default_is_info(self, capsys):
         """SimpleLogger default level should be INFO."""
         logger = Logger(service="test", profile="SIMPLE")
 
         logger.debug("Not logged")
         logger.info("Logged")
 
-        assert "Not logged" not in caplog.text
-        assert "Logged" in caplog.text
+        captured = capsys.readouterr()
+        result = captured.err
+        assert "Not logged" not in result
+        assert "Logged" in result
 
     def test_structured_logger_default_is_info(self, capsys):
         """StructuredLogger default level should be INFO."""

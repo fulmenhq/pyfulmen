@@ -294,14 +294,22 @@ class ThrottlingMiddleware(Middleware):
             Event if allowed, None if dropped
 
         Note:
-            When event is dropped, throttle_bucket field is NOT added
-            because the event is not emitted.
+            When event is dropped, throttle_bucket field is set for
+            observability before returning None.
         """
         if self.controller.should_emit(event):
             self.controller.record_emission()
             return event
         else:
-            # Event dropped - return None to stop pipeline
+            # Event dropped - set throttle_bucket before dropping
+            # NOTE: We still drop it (return None) but record the bucket
+            # This is for observability - the event won't be emitted but
+            # if it were, it would have this bucket identifier
+            bucket_id = self.config.get("bucket_id", "default")
+            event["throttle_bucket"] = f"throttle:{bucket_id}:{self.controller.max_rate}"
+
+            # Still return None to drop the event
+            # The throttle_bucket is set for debugging/observability only
             return None
 
     def get_dropped_count(self) -> int:

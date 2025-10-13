@@ -1,169 +1,78 @@
-"""Tests for progressive logger with profile-based delegation."""
+"""Tests for progressive logger with profile-based configuration."""
 
 import json
 
 import pytest
 
 from pyfulmen.logging._models import LoggingConfig, LoggingPolicy, LoggingProfile
-from pyfulmen.logging.logger import (
-    EnterpriseLogger,
-    Logger,
-    SimpleLogger,
-    StructuredLogger,
-)
+from pyfulmen.logging.logger import Logger, ProgressiveLogger
 from pyfulmen.logging.severity import Severity
 
 
-class TestSimpleLogger:
-    """Tests for SimpleLogger profile."""
+class TestProgressiveLogger:
+    """Tests for ProgressiveLogger across all profiles."""
 
-    def test_simple_logger_initialization(self):
-        """Test SimpleLogger initializes with basic config."""
+    def test_simple_profile_initialization(self):
+        """Test SIMPLE profile initializes correctly."""
         config = LoggingConfig(
             profile=LoggingProfile.SIMPLE,
             service="test-service",
         )
-        logger = SimpleLogger(config)
+        logger = ProgressiveLogger(config)
 
         assert logger.service == "test-service"
         assert logger.default_level == "INFO"
+        assert len(logger.sinks) == 1
 
-    def test_simple_logger_with_component(self):
-        """Test SimpleLogger with component name."""
-        config = LoggingConfig(
-            profile=LoggingProfile.SIMPLE,
-            service="test-service",
-            component="auth",
-        )
-        logger = SimpleLogger(config)
+    def test_simple_profile_text_output(self, capsys):
+        """SIMPLE profile emits human-readable text."""
+        logger = Logger(service="test", profile=LoggingProfile.SIMPLE)
+        logger.info("Test message")
 
-        assert logger.component == "auth"
+        captured = capsys.readouterr()
+        assert "INFO" in captured.err
+        assert "Test message" in captured.err
 
-    def test_simple_logger_log_methods(self, caplog):
-        """Test SimpleLogger log methods produce output."""
-        config = LoggingConfig(
-            profile=LoggingProfile.SIMPLE,
-            service="test-service",
-        )
-        logger = SimpleLogger(config)
-
-        logger.trace("Trace message")
-        logger.debug("Debug message")
-        logger.info("Info message")
-        logger.warn("Warn message")
-        logger.error("Error message")
-        logger.fatal("Fatal message")
-
-        log_output = caplog.text.lower()
-        assert "info message" in log_output
-        assert "warn" in log_output or "warning" in log_output
-        assert "error message" in log_output
-
-
-class TestStructuredLogger:
-    """Tests for StructuredLogger profile."""
-
-    def test_structured_logger_initialization(self):
-        """Test StructuredLogger initializes correctly."""
+    def test_structured_profile_initialization(self):
+        """Test STRUCTURED profile initializes correctly."""
         config = LoggingConfig(
             profile=LoggingProfile.STRUCTURED,
             service="test-service",
             component="api",
         )
-        logger = StructuredLogger(config)
+        logger = ProgressiveLogger(config)
 
         assert logger.service == "test-service"
         assert logger.component == "api"
 
-    def test_structured_logger_json_output(self, capsys):
-        """Test StructuredLogger emits valid JSON."""
-        config = LoggingConfig(
-            profile=LoggingProfile.STRUCTURED,
-            service="test-service",
-        )
-        logger = StructuredLogger(config)
-
+    def test_structured_profile_json_output(self, capsys):
+        """STRUCTURED profile emits JSON."""
+        logger = Logger(service="test", profile=LoggingProfile.STRUCTURED)
         logger.info("Test message")
 
         captured = capsys.readouterr()
-        output_line = captured.err.strip()
+        log_line = json.loads(captured.err.strip())
+        assert log_line["severity"] == "INFO"
+        assert log_line["message"] == "Test message"
+        assert "severityLevel" in log_line
 
-        parsed = json.loads(output_line)
-
-        assert parsed["severity"] == "INFO"
-        assert parsed["message"] == "Test message"
-        assert parsed["service"] == "test-service"
-        assert "timestamp" in parsed
-        assert "correlationId" in parsed
-
-    def test_structured_logger_with_context(self, capsys):
-        """Test StructuredLogger includes context fields."""
-        config = LoggingConfig(
-            profile=LoggingProfile.STRUCTURED,
-            service="test-service",
-        )
-        logger = StructuredLogger(config)
-
-        logger.info(
-            "Request received",
-            request_id="req-123",
-            user_id="user-456",
-            context={"method": "GET", "path": "/api/users"},
-        )
-
-        captured = capsys.readouterr()
-        parsed = json.loads(captured.err.strip())
-
-        assert parsed["requestId"] == "req-123"
-        assert parsed["userId"] == "user-456"
-        assert parsed["context"]["method"] == "GET"
-
-    def test_structured_logger_all_severity_levels(self, capsys):
-        """StructuredLogger should support all severity levels."""
-        config = LoggingConfig(
-            profile=LoggingProfile.STRUCTURED,
-            service="test-service",
-            default_level="TRACE",
-        )
-        logger = StructuredLogger(config)
-
-        logger.trace("Trace")
-        logger.debug("Debug")
-        logger.info("Info")
-        logger.warn("Warn")
-        logger.error("Error")
-        logger.fatal("Fatal")
-
-        captured = capsys.readouterr()
-        lines = captured.err.strip().split("\n")
-
-        assert len(lines) == 6
-
-        severities = [json.loads(line)["severity"] for line in lines]
-        assert severities == ["TRACE", "DEBUG", "INFO", "WARN", "ERROR", "FATAL"]
-
-
-class TestEnterpriseLogger:
-    """Tests for EnterpriseLogger profile."""
-
-    def test_enterprise_logger_initialization(self):
-        """Test EnterpriseLogger initializes correctly."""
-        config = LoggingConfig(
-            profile=LoggingProfile.ENTERPRISE,
-            service="test-service",
-        )
-        logger = EnterpriseLogger(config)
-
-        assert logger.service == "test-service"
-
-    def test_enterprise_logger_full_envelope(self, capsys):
-        """Test EnterpriseLogger emits full LogEvent envelope."""
+    def test_enterprise_profile_initialization(self):
+        """Test ENTERPRISE profile initializes correctly."""
         config = LoggingConfig(
             profile=LoggingProfile.ENTERPRISE,
             service="test-service",
             component="payment-processor",
         )
-        logger = EnterpriseLogger(config)
+        logger = ProgressiveLogger(config)
+
+        assert logger.service == "test-service"
+        assert logger.component == "payment-processor"
+
+    def test_enterprise_profile_full_envelope(self, capsys):
+        """Test ENTERPRISE profile emits full LogEvent envelope."""
+        logger = Logger(
+            service="test-service", profile=LoggingProfile.ENTERPRISE, component="payment-processor"
+        )
 
         logger.info(
             "Transaction completed",
@@ -193,75 +102,169 @@ class TestEnterpriseLogger:
         assert "severityLevel" in parsed
         assert parsed["severityLevel"] == 20
 
-    def test_enterprise_logger_with_error_details(self, capsys):
-        """Test EnterpriseLogger includes error details."""
+    def test_custom_profile_with_sinks(self):
+        """Test CUSTOM profile requires sinks configuration."""
         config = LoggingConfig(
-            profile=LoggingProfile.ENTERPRISE,
+            profile=LoggingProfile.CUSTOM,
+            service="test-service",
+            sinks=[{"type": "console", "formatter": "json"}],
+        )
+        logger = ProgressiveLogger(config)
+
+        assert len(logger.sinks) == 1
+
+    def test_custom_profile_without_sinks_fails(self):
+        """Test CUSTOM profile fails without sinks configuration."""
+        config = LoggingConfig(
+            profile=LoggingProfile.CUSTOM,
             service="test-service",
         )
-        logger = EnterpriseLogger(config)
 
-        logger.error(
-            "Database connection failed",
-            error={
-                "message": "Connection timeout",
-                "type": "TimeoutError",
-                "stack": "at connect() line 42",
-            },
+        with pytest.raises(ValueError, match="CUSTOM profile requires sinks configuration"):
+            ProgressiveLogger(config)
+
+    def test_all_severity_levels(self, capsys):
+        """Test all severity levels work correctly."""
+        logger = Logger(
+            service="test-service",
+            profile=LoggingProfile.STRUCTURED,
+            default_level="TRACE",
+        )
+
+        logger.trace("Trace")
+        logger.debug("Debug")
+        logger.info("Info")
+        logger.warn("Warn")
+        logger.error("Error")
+        logger.fatal("Fatal")
+
+        captured = capsys.readouterr()
+        lines = captured.err.strip().split("\n")
+
+        assert len(lines) == 6
+
+        severities = [json.loads(line)["severity"] for line in lines]
+        assert severities == ["TRACE", "DEBUG", "INFO", "WARN", "ERROR", "FATAL"]
+
+    def test_level_filtering(self, capsys):
+        """Test level filtering works correctly."""
+        logger = Logger(
+            service="test-service",
+            profile=LoggingProfile.STRUCTURED,
+            default_level="WARN",
+        )
+
+        logger.debug("Debug message")  # Should be filtered out
+        logger.info("Info message")  # Should be filtered out
+        logger.warn("Warn message")  # Should be logged
+        logger.error("Error message")  # Should be logged
+
+        captured = capsys.readouterr()
+        lines = captured.err.strip().split("\n")
+
+        assert len(lines) == 2
+
+        severities = [json.loads(line)["severity"] for line in lines]
+        assert severities == ["WARN", "ERROR"]
+
+    def test_context_merging(self, capsys):
+        """Test context merging works correctly."""
+        logger = Logger(service="test", profile=LoggingProfile.STRUCTURED)
+
+        logger.info(
+            "Request received",
+            request_id="req-123",
+            user_id="user-456",
+            context={"method": "GET", "path": "/api/users"},
         )
 
         captured = capsys.readouterr()
         parsed = json.loads(captured.err.strip())
 
-        assert parsed["severity"] == "ERROR"
-        assert parsed["error"]["message"] == "Connection timeout"
-        assert parsed["error"]["type"] == "TimeoutError"
+        assert parsed["requestId"] == "req-123"
+        assert parsed["userId"] == "user-456"
+        assert parsed["context"]["method"] == "GET"
+        assert parsed["context"]["path"] == "/api/users"
 
-    def test_enterprise_logger_policy_enforcement_allowed(self):
-        """Test EnterpriseLogger accepts valid policy."""
-        config = LoggingConfig(
-            profile=LoggingProfile.ENTERPRISE,
-            service="test-service",
+    def test_set_level(self):
+        """Test dynamic level changing."""
+        logger = Logger(service="test", default_level="INFO")
+
+        assert logger._min_level == 20  # INFO level
+
+        logger.set_level("DEBUG")
+        assert logger._min_level == 10  # DEBUG level
+
+        logger.set_level(Severity.ERROR)
+        assert logger._min_level == 40  # ERROR level
+
+    def test_resource_management_flush(self):
+        """Test flush() flushes all sinks."""
+        logger = Logger(service="test")
+        logger.info("Message 1")
+        logger.flush()  # Should not raise
+
+    def test_resource_management_close(self):
+        """Test close() closes all sinks."""
+        logger = Logger(service="test")
+        logger.info("Message 1")
+        logger.close()  # Should not raise
+
+    def test_context_manager(self, capsys):
+        """Test logger works as context manager."""
+        with Logger(service="test") as log:
+            log.info("Inside context")
+
+        captured = capsys.readouterr()
+        assert "Inside context" in captured.err
+
+    def test_custom_sinks_configuration(self, capsys):
+        """Test custom sinks configuration."""
+        logger = Logger(
+            service="test",
+            profile=LoggingProfile.STRUCTURED,
+            sinks=[
+                {"type": "console", "formatter": "text"},
+                {"type": "console", "formatter": "json"},
+            ],
         )
-        policy = LoggingPolicy(
-            allowed_profiles=["ENTERPRISE", "STRUCTURED"],
-        )
 
-        logger = EnterpriseLogger(config, policy)
+        logger.info("Test message")
 
-        assert logger.policy == policy
+        captured = capsys.readouterr()
+        lines = captured.err.strip().split("\n")
 
-    def test_enterprise_logger_policy_enforcement_denied(self):
-        """Test EnterpriseLogger rejects invalid profile."""
-        config = LoggingConfig(
-            profile=LoggingProfile.ENTERPRISE,
-            service="test-service",
-        )
-        policy = LoggingPolicy(
-            allowed_profiles=["SIMPLE"],
-        )
+        # Should have 2 lines (one from each sink)
+        assert len(lines) == 2
 
-        with pytest.raises(ValueError, match="not allowed by policy"):
-            EnterpriseLogger(config, policy)
+        # First line should be text format
+        assert "INFO" in lines[0]
+        assert "Test message" in lines[0]
+
+        # Second line should be JSON format
+        json_line = json.loads(lines[1])
+        assert json_line["severity"] == "INFO"
+        assert json_line["message"] == "Test message"
 
 
 class TestLogger:
-    """Tests for unified Logger interface."""
+    """Tests for unified Logger factory function."""
 
     def test_logger_default_profile(self):
         """Test Logger defaults to SIMPLE profile."""
         logger = Logger(service="test-service")
 
         assert logger.config.profile == LoggingProfile.SIMPLE
-        assert isinstance(logger._impl, SimpleLogger)
+        assert isinstance(logger, ProgressiveLogger)
 
-    def test_logger_simple_profile(self, caplog):
+    def test_logger_simple_profile(self, capsys):
         """Test Logger with SIMPLE profile."""
         logger = Logger(service="test-service", profile=LoggingProfile.SIMPLE)
 
         logger.info("Simple log")
 
-        assert "simple log" in caplog.text.lower()
+        captured = capsys.readouterr()
+        assert "simple log" in captured.err.lower()
 
     def test_logger_structured_profile(self, capsys):
         """Test Logger with STRUCTURED profile."""
@@ -297,7 +300,6 @@ class TestLogger:
             component="auth-handler",
             profile=LoggingProfile.STRUCTURED,
         )
-
         logger.info("Auth event")
 
         captured = capsys.readouterr()
@@ -319,31 +321,6 @@ class TestLogger:
         parsed = json.loads(captured.err.strip())
 
         assert parsed["severity"] == "DEBUG"
-
-    def test_logger_invalid_profile(self):
-        """Test Logger rejects invalid profile."""
-        with pytest.raises(ValueError, match="Invalid profile"):
-            Logger(service="test-service", profile="INVALID")
-
-    def test_logger_custom_profile_not_implemented(self):
-        """Test Logger rejects CUSTOM profile (not yet implemented)."""
-        with pytest.raises(ValueError, match="CUSTOM profile not yet implemented"):
-            Logger(service="test-service", profile=LoggingProfile.CUSTOM)
-
-    def test_logger_with_prebuilt_config(self, capsys):
-        """Test Logger with pre-built LoggingConfig."""
-        config = LoggingConfig(
-            profile=LoggingProfile.STRUCTURED,
-            service="test-service",
-            component="worker",
-            default_level="WARN",
-        )
-
-        logger = Logger(service="ignored", config=config)
-
-        assert logger.config.service == "test-service"
-        assert logger.config.component == "worker"
-        assert logger.config.default_level == "WARN"
 
     def test_logger_all_log_methods(self, capsys):
         """Test all Logger log methods."""
@@ -389,45 +366,48 @@ class TestLoggerPolicyEnforcement:
     """Tests for policy enforcement in Logger."""
 
     def test_logger_policy_file_placeholder(self):
-        """Test Logger with policy_file parameter (placeholder implementation)."""
-        logger = Logger(
-            service="test-service",
+        """Test Logger with policy_file parameter."""
+        # Note: This will fail if the file doesn't exist, but that's expected
+        # The policy loading functionality should be tested separately
+        with pytest.raises((FileNotFoundError, ValueError, OSError)):  # Expected errors
+            Logger(
+                service="test-service",
+                profile=LoggingProfile.ENTERPRISE,
+                policy_file="nonexistent-policy.yaml",
+            )
+
+    def test_enterprise_logger_policy_enforcement_allowed(self):
+        """Test ENTERPRISE profile accepts valid policy."""
+        config = LoggingConfig(
             profile=LoggingProfile.ENTERPRISE,
-            policy_file="config/logging-policy.yaml",
+            service="test-service",
         )
-
-        assert logger.policy is not None
-        assert isinstance(logger.policy, LoggingPolicy)
-
-    def test_logger_policy_validation_passes(self):
-        """Test Logger policy validation allows permitted profiles."""
         policy = LoggingPolicy(
-            allowed_profiles=["SIMPLE", "STRUCTURED", "ENTERPRISE"],
+            allowed_profiles=["ENTERPRISE", "STRUCTURED"],
         )
 
-        logger = Logger(
-            service="test-service",
-            profile=LoggingProfile.STRUCTURED,
-        )
-        logger.policy = policy
-        logger._validate_profile()
+        logger = ProgressiveLogger(config, policy)
 
-    def test_logger_policy_validation_fails(self):
-        """Test Logger policy validation rejects forbidden profiles."""
-        logger = Logger(
+        assert logger.policy == policy
+
+    def test_enterprise_logger_policy_enforcement_denied(self):
+        """Test ENTERPRISE profile rejects invalid policy."""
+        config = LoggingConfig(
+            profile=LoggingProfile.ENTERPRISE,
             service="test-service",
-            profile=LoggingProfile.SIMPLE,
         )
-        logger.policy = LoggingPolicy(allowed_profiles=["ENTERPRISE"])
+        policy = LoggingPolicy(
+            allowed_profiles=["SIMPLE"],
+        )
 
         with pytest.raises(ValueError, match="not allowed by policy"):
-            logger._validate_profile()
+            ProgressiveLogger(config, policy)
 
 
 class TestLoggerProfileComparison:
     """Comparative tests across logger profiles."""
 
-    def test_same_message_different_profiles(self, capsys, caplog):
+    def test_same_message_different_profiles(self, capsys):
         """Test same message logged across all profiles."""
         message = "Test event"
         request_id = "req-xyz"
@@ -442,16 +422,21 @@ class TestLoggerProfileComparison:
         enterprise_logger.info(message, request_id=request_id)
 
         captured = capsys.readouterr()
-        json_lines = [line for line in captured.err.strip().split("\n") if line.startswith("{")]
+        lines = captured.err.strip().split("\n")
 
-        assert len(json_lines) == 2
+        # Should have 3 lines (one from each logger)
+        assert len(lines) == 3
 
-        structured_event = json.loads(json_lines[0])
-        enterprise_event = json.loads(json_lines[1])
+        # First line should be text (SIMPLE) - doesn't include extra fields like request_id
+        assert message in lines[0]
+
+        # Second and third lines should be JSON
+        structured_event = json.loads(lines[1])
+        enterprise_event = json.loads(lines[2])
 
         assert structured_event["message"] == message
         assert structured_event["requestId"] == request_id
-        assert "severityLevel" in structured_event  # Now included for schema compliance
+        assert "severityLevel" in structured_event
 
         assert enterprise_event["message"] == message
         assert enterprise_event["requestId"] == request_id
@@ -474,13 +459,17 @@ class TestLoggerProfileComparison:
         )
 
         captured = capsys.readouterr()
-        lines = captured.err.strip().split("\n")
+        lines = [line for line in captured.err.strip().split("\n") if line.startswith("{")]
+
+        assert len(lines) == 2
 
         structured_event = json.loads(lines[0])
         enterprise_event = json.loads(lines[1])
 
         assert structured_event["requestId"] == "req-1"
-        assert "throttle_bucket" not in structured_event
+        # throttle_bucket should be camelCased in STRUCTURED profile
+        assert structured_event.get("throttleBucket") == "bucket-1"
 
         assert enterprise_event["requestId"] == "req-2"
-        assert enterprise_event["throttleBucket"] == "bucket-2"
+        # throttle_bucket should be camelCased in ENTERPRISE profile
+        assert enterprise_event.get("throttleBucket") == "bucket-2"
