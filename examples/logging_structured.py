@@ -11,8 +11,7 @@ Features:
 - Optional middleware (correlation, throttling)
 """
 
-from pyfulmen.logging import Logger
-from pyfulmen.logging._models import LoggingProfile
+from pyfulmen.logging import Logger, LoggingProfile
 
 # Create a STRUCTURED profile logger
 logger = Logger(service="api-service", profile=LoggingProfile.STRUCTURED, environment="production")

@@ -10,10 +10,10 @@ Features:
 - Perfect for development and debugging
 """
 
-from pyfulmen.logging import Logger, LoggingProfile
+from pyfulmen.logging import Logger
 
-# Create a SIMPLE profile logger (this is also the default)
-logger = Logger(service="demo-app", profile=LoggingProfile.SIMPLE)
+# Create a SIMPLE profile logger (this is the default, so no profile needed)
+logger = Logger(service="demo-app")
 
 # Log at different severity levels
 logger.trace("Entering function calculate_total")
@@ -23,9 +23,12 @@ logger.warn("Configuration file missing, using defaults")
 logger.error("Failed to connect to database", context={"host": "localhost", "port": 5432})
 logger.fatal("Critical system failure, exiting")
 
-# With component information
-logger.info("Processing request", component="api-handler")
-logger.error("Validation failed", component="validator", context={"field": "email"})
+# Set component at logger creation for module-specific loggers
+api_logger = Logger(service="demo-app", component="api-handler")
+api_logger.info("Processing request")
+
+validator_logger = Logger(service="demo-app", component="validator")
+validator_logger.error("Validation failed", context={"field": "email"})
 
 # Context is merged into the log message
 logger.info(
@@ -45,6 +48,6 @@ logger.warn("But this warning will be shown")
 logger.error("And errors are always shown")
 
 # Resource management with context manager
-with Logger(service="temp-service", profile=LoggingProfile.SIMPLE) as log:
+with Logger(service="temp-service") as log:
     log.info("Inside context manager")
     log.info("Automatic flush and close on exit")

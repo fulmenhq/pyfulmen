@@ -238,12 +238,12 @@ Each package must be installable standalone (e.g., `fulmen-logging` on PyPI) but
 
 ### Progressive Logging Playbook
 
-| Profile    | Default Sinks                                   | Required Middleware                                              | Notes                                                                                   |
-| ---------- | ------------------------------------------------ | ---------------------------------------------------------------- | --------------------------------------------------------------------------------------- |
-| SIMPLE     | `console` (stderr JSON)                          | `annotate-trace` (optional), `throttle` (optional)               | Zero-config path for tooling; inherits defaults from schema.                            |
-| STRUCTURED | `console` + optional `file`                      | `annotate-trace`, `throttle`, `correlation-context`              | Targets long-running CLIs and services needing durable logs.                            |
-| ENTERPRISE | `console`, `file`, optional external transports  | `annotate-trace`, `throttle`, `correlation-context`, `redact-*` | MUST honour `policyFile` and throttle limits; supports per-sink middleware ordering.    |
-| CUSTOM     | Author-defined                                   | Author-defined                                                   | Reserved for advanced scenarios; still must validate against schema + policy contracts. |
+| Profile    | Default Sinks                                   | Required Middleware                                             | Notes                                                                                   |
+| ---------- | ----------------------------------------------- | --------------------------------------------------------------- | --------------------------------------------------------------------------------------- |
+| SIMPLE     | `console` (stderr JSON)                         | `annotate-trace` (optional), `throttle` (optional)              | Zero-config path for tooling; inherits defaults from schema.                            |
+| STRUCTURED | `console` + optional `file`                     | `annotate-trace`, `throttle`, `correlation-context`             | Targets long-running CLIs and services needing durable logs.                            |
+| ENTERPRISE | `console`, `file`, optional external transports | `annotate-trace`, `throttle`, `correlation-context`, `redact-*` | MUST honour `policyFile` and throttle limits; supports per-sink middleware ordering.    |
+| CUSTOM     | Author-defined                                  | Author-defined                                                  | Reserved for advanced scenarios; still must validate against schema + policy contracts. |
 
 Implementations MUST document how these defaults materialize (zap cores, pino transports, structlog processors, etc.) so auditors can trace configuration to runtime behaviour.
 

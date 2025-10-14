@@ -11,6 +11,88 @@ No unreleased changes.
 
 ---
 
+## [0.1.1] - 2025-10-14
+
+### Added
+
+- **Progressive Logging System**: Complete enterprise-scale logging implementation
+  - Four progressive profiles for different deployment scenarios:
+    - **SIMPLE**: Zero-config console logging (text format, stderr, perfect for development)
+    - **STRUCTURED**: JSON output with core envelope (configurable sinks, cloud-native ready)
+    - **ENTERPRISE**: Full 20+ field Crucible envelope (policy enforcement, compliance-ready)
+    - **CUSTOM**: User-defined configuration (full control for special requirements)
+  - Unified `Logger()` factory with profile-based configuration
+  - Full Crucible schema compliance with 20+ field log envelope
+  - `LoggingConfig` and `LoggingPolicy` for organizational governance
+
+- **Sink Implementations**: Flexible output destinations
+  - `ConsoleSink`: stderr output with configurable formatting
+  - `FileSink`: Write to specified file paths with directory creation
+  - `RollingFileSink`: Automatic log rotation with size/age/backup limits
+  - Sink-level filtering and formatting support
+
+- **Middleware Pipeline**: Enterprise-grade log event processing
+  - `CorrelationMiddleware`: Auto-generate/propagate UUIDv7 correlation IDs for distributed tracing
+  - `RedactSecretsMiddleware`: Pattern-based secret detection (API keys, passwords, tokens)
+  - `RedactPIIMiddleware`: PII detection and redaction (email, phone, SSN, credit cards)
+  - `ThrottlingMiddleware`: Rate limiting with maxRate/burstSize/windowSize/dropPolicy
+  - Ordered pipeline execution with event dropping support
+
+- **Formatter System**: Multiple output formats
+  - `JSONFormatter`: Compact single-line JSON for log aggregators (ELK, Splunk, Datadog)
+  - `TextFormatter`: Human-readable text with service name and inline context
+  - `ConsoleFormatter`: ANSI-colored output for terminal readability
+
+- **Comprehensive Documentation**: Progressive logging guides and examples
+  - `docs/guides/logging/README.md`: Progressive logging index with learning path
+  - `docs/guides/logging/profiles.md`: SIMPLE, STRUCTURED, ENTERPRISE, CUSTOM profile documentation
+  - `docs/guides/logging/middleware.md`: Middleware configuration and usage guide
+  - Working examples: `logging_simple.py`, `logging_structured.py`, `logging_enterprise.py`
+
+- **Example Validation Tests**: Automated testing ensuring examples always work
+  - `tests/integration/logging/test_examples.py`: 17 tests validating all examples run correctly
+  - Validates example output characteristics (text vs JSON, correlation IDs)
+  - Ensures proper API usage in examples
+  - Verifies examples complete in reasonable time
+
+- **AGENTS.md Development Rule**: Added rule #5 for Python command invocation
+  - Never invoke `python` directly as system command
+  - Always use `uv run` or activated `.venv` for managed environments
+  - Ensures consistent dependency management across development
+
+### Changed
+
+- **TextFormatter**: Updated default template to include service name
+  - Format: `[{timestamp}] {severity:5} [{service}] {message}`
+  - SIMPLE profile now shows service name in text output
+  - Context automatically included when present
+
+- **Logger Implementation**: Fixed SIMPLE profile event emission
+  - Include service, component, and context in SIMPLE profile output
+  - Better alignment with STRUCTURED/ENTERPRISE profiles
+
+### Fixed
+
+- **Component Kwarg Bug**: Resolved duplicate argument error in logger.py:317
+  - Handle `component` parameter correctly when passed via kwargs
+  - Prefer kwargs component over logger's default component
+  - Prevents `TypeError: got multiple values for keyword argument 'component'`
+
+- **Documentation Links**: Removed broken links to non-existent guide pages
+  - Moved references to `configuration.md` to "Coming Soon" section
+  - All documentation links now point to existing files only
+
+- **Coverage Reports**: Added `coverage.json` to `.gitignore`
+  - Prevent unintentional commit of coverage JSON files
+
+### Documentation
+
+- **Crucible Standards**: Synced latest cross-language coding standards
+  - Updated Go, Python, TypeScript coding standards from Crucible
+  - Updated logging observability standard
+
+---
+
 ## [0.1.0] - 2025-10-13
 
 ### Added
@@ -72,25 +154,6 @@ No unreleased changes.
 - Test coverage: 95%+ on all modules
 - 104 tests passing across foundry module
 - Ruff formatting and lint checks passing
-
----
-
-## [0.1.1] - Planned
-
-### Planned (Logging Upscale - Phases 2-5)
-
-- **Enhanced Logging Features**: Complete enterprise logging implementation
-  - Severity mapping and level filtering
-  - Context propagation with correlation IDs
-  - Redaction and PII protection
-  - Throttling and rate limiting
-  - Custom middleware pipeline
-  - Performance optimizations
-
-### Planned (Additional Foundry Features)
-
-- **Country Code Lookup** (Optional): ISO country codes with multiple format support
-- **MIME Magic Numbers** (Optional): Byte-level MIME type detection from file headers
 
 ---
 

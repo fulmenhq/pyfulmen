@@ -84,11 +84,12 @@ logger.info(
 )
 
 # ENTERPRISE: Compliance-grade logging with policy enforcement
+# Note: Configure middleware through LoggingConfig for advanced use cases
 logger = Logger(
     service="payment-api",
     profile=LoggingProfile.ENTERPRISE,
-    policy_file=".goneat/logging-policy.yaml",
-    middleware=["correlation", "redact-secrets", "redact-pii"]
+    environment="production"
+    # Optional: policy_file=".goneat/logging-policy.yaml"
 )
 ```
 

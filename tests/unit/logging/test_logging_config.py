@@ -1,7 +1,5 @@
 """Unit tests for logging config module."""
 
-import pytest
-
 from pyfulmen.logging.config import (
     LoggerConfig,
     MiddlewareConfig,

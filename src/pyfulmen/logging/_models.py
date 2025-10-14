@@ -193,6 +193,10 @@ class LoggingConfig(FulmenConfigModel):
         default="",
         description="Component name for log entries",
     )
+    environment: str | None = Field(
+        default=None,
+        description="Deployment environment (e.g., 'production', 'staging')",
+    )
     default_level: str = Field(
         default="INFO",
         description="Default severity level",

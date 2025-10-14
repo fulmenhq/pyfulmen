@@ -13,8 +13,8 @@ Example:
     >>> validate_logger_config(config)
 """
 
-from dataclasses import dataclass, field
-from typing import Any, Dict, List, Optional
+from dataclasses import dataclass
+from typing import Any
 
 from .profiles import LoggingProfile, validate_profile_requirements
 
@@ -27,11 +27,11 @@ class SinkConfig:
     """
 
     type: str  # console, file, rolling-file, external
-    name: Optional[str] = None
-    level: Optional[str] = None
+    name: str | None = None
+    level: str | None = None
     format: str = "json"
     # Type-specific options as dict
-    options: Optional[Dict[str, Any]] = None
+    options: dict[str, Any] | None = None
 
 
 @dataclass
@@ -44,7 +44,7 @@ class MiddlewareConfig:
     name: str
     enabled: bool = True
     order: int = 0
-    config: Optional[Dict[str, Any]] = None
+    config: dict[str, Any] | None = None
 
 
 @dataclass
@@ -55,9 +55,9 @@ class ThrottlingConfig:
     """
 
     enabled: bool = False
-    maxRate: Optional[int] = None
-    burstSize: Optional[int] = None
-    windowSize: Optional[int] = None
+    maxRate: int | None = None
+    burstSize: int | None = None
+    windowSize: int | None = None
     dropPolicy: str = "drop-oldest"
 
 
@@ -72,18 +72,18 @@ class LoggerConfig:
     profile: LoggingProfile
     service: str
     environment: str = "development"
-    policyFile: Optional[str] = None
+    policyFile: str | None = None
     defaultLevel: str = "INFO"
-    sinks: Optional[List[SinkConfig]] = None
-    middleware: Optional[List[MiddlewareConfig]] = None
-    throttling: Optional[ThrottlingConfig] = None
-    staticFields: Optional[Dict[str, Any]] = None
+    sinks: list[SinkConfig] | None = None
+    middleware: list[MiddlewareConfig] | None = None
+    throttling: ThrottlingConfig | None = None
+    staticFields: dict[str, Any] | None = None
     enableCaller: bool = False
     enableStacktrace: bool = False
-    customConfig: Optional[Dict[str, Any]] = None
+    customConfig: dict[str, Any] | None = None
 
 
-def validate_logger_config(config: LoggerConfig) -> List[str]:
+def validate_logger_config(config: LoggerConfig) -> list[str]:
     """Validate LoggerConfig against profile requirements and schema.
 
     Args:
@@ -105,8 +105,12 @@ def validate_logger_config(config: LoggerConfig) -> List[str]:
         errors.append(f"Invalid profile: {config.profile}")
 
     # Profile-specific validation
-    sinks_list = [sink.__dict__ if hasattr(sink, '__dict__') else sink for sink in (config.sinks or [])]
-    middleware_list = [mw.__dict__ if hasattr(mw, '__dict__') else mw for mw in (config.middleware or [])]
+    sinks_list = [
+        sink.__dict__ if hasattr(sink, "__dict__") else sink for sink in (config.sinks or [])
+    ]
+    middleware_list = [
+        mw.__dict__ if hasattr(mw, "__dict__") else mw for mw in (config.middleware or [])
+    ]
 
     profile_errors = validate_profile_requirements(
         profile=config.profile,
@@ -145,7 +149,7 @@ def create_simple_config(service: str, **kwargs) -> LoggerConfig:
         profile=LoggingProfile.SIMPLE,
         service=service,
         sinks=[SinkConfig(type="console", format="text")],
-        **kwargs
+        **kwargs,
     )
 
 
@@ -163,7 +167,7 @@ def create_structured_config(service: str, **kwargs) -> LoggerConfig:
         profile=LoggingProfile.STRUCTURED,
         service=service,
         sinks=[SinkConfig(type="console", format="json")],
-        **kwargs
+        **kwargs,
     )
 
 
@@ -183,7 +187,7 @@ def create_enterprise_config(service: str, **kwargs) -> LoggerConfig:
         sinks=[SinkConfig(type="console", format="json")],
         middleware=[MiddlewareConfig(name="correlation")],
         throttling=ThrottlingConfig(enabled=True, maxRate=1000),
-        **kwargs
+        **kwargs,
     )
 
 

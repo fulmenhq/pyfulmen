@@ -113,25 +113,30 @@ class TextFormatter(Formatter):
     """Text formatter for human-readable log output.
 
     Formats log events as readable text lines with timestamp, severity,
-    and message. Additional fields can be included with optional formatting.
+    service, and message. Additional fields can be included with optional formatting.
 
     Example:
         >>> formatter = TextFormatter()
-        >>> event = {"timestamp": "2025-10-13T12:00:00Z", "severity": "INFO", "message": "test"}
+        >>> event = {
+        ...     "timestamp": "2025-10-13T12:00:00Z",
+        ...     "severity": "INFO",
+        ...     "service": "myapp",
+        ...     "message": "test"
+        ... }
         >>> formatter.format(event)
-        '2025-10-13T12:00:00Z INFO test'
+        '[2025-10-13T12:00:00Z] INFO  [myapp] test'
     """
 
     def __init__(
         self,
-        template: str = "{timestamp} {severity} {message}",
-        include_context: bool = False,
+        template: str = "[{timestamp}] {severity:5} [{service}] {message}",
+        include_context: bool = True,
     ):
         """Initialize text formatter.
 
         Args:
             template: Format template with {field} placeholders
-            include_context: If True, append context dictionary to output
+            include_context: If True, append context dictionary to output (default: True)
         """
         self.template = template
         self.include_context = include_context

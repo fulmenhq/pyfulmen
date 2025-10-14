@@ -162,7 +162,7 @@ class Pattern(FulmenCatalogModel):
         Example:
             >>> print(email_pattern.describe())
             Email Address (email)
-            Pattern: ^[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$
+            Pattern: ^[a-z0-9._%+-]+@[a-z0-9.-]+\\.[a-z]{2,}$
             Description: Email validation pattern
 
             Valid examples:

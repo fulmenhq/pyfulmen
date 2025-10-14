@@ -1,7 +1,5 @@
 """Unit tests for logging profiles module."""
 
-import pytest
-
 from pyfulmen.logging.profiles import (
     LoggingProfile,
     get_profile_requirements,

@@ -129,6 +129,8 @@ These rules must NEVER be violated:
 
 4. **Respect .gitignore warnings as hard stops**: Any git warning about ignored paths is a STOP signal. Consult `.gitignore` to understand why files are excluded, then verify the operation with human supervisor before proceeding. If in doubt, ask.
 
+5. **NEVER invoke `python` directly as a system command**: Do not use `python`, `python3`, or `python -m` as bare commands. This repository uses `uv` for dependency management. Always use `uv run python` or `uv run pytest` for Python execution. Alternatively, if the virtual environment is already activated (`.venv/bin/activate` sourced), then Python commands will work. The key principle: never rely on system Python - always use the project's managed environment via `uv run` or an activated `.venv`.
+
 If you encounter a situation where you believe a gitignored file should be committed, STOP and consult with @3leapsdave before taking any action.
 
 ### Development Philosophy

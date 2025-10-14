@@ -17,7 +17,10 @@ select = [
 ]
 
 [lint.per-file-ignores]
-"tests/**/*.py" = ["S101"]  # Allow assert in tests
+# config.py uses camelCase field names to match JSON schema for cross-language API compatibility
+"src/pyfulmen/logging/config.py" = ["N815"]
+# Test files: allow asserts, generic Exception in pytest.raises, and unused test fixtures
+"tests/**/*.py" = ["S101", "B017", "F841"]
 
 [format]
 quote-style = "double"

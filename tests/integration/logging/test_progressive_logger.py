@@ -4,8 +4,6 @@ import io
 import json
 from contextlib import redirect_stderr
 
-import pytest
-
 from pyfulmen.logging import Logger, LoggingProfile
 
 
@@ -293,15 +291,7 @@ class TestErrorScenarios:
         stderr = io.StringIO()
         logger = Logger(profile=LoggingProfile.STRUCTURED, service="test-app")
 
-        nested_context = {
-            "level1": {
-                "level2": {
-                    "level3": {
-                        "data": "value"
-                    }
-                }
-            }
-        }
+        nested_context = {"level1": {"level2": {"level3": {"data": "value"}}}}
 
         with redirect_stderr(stderr):
             logger.info("Nested event", context=nested_context)

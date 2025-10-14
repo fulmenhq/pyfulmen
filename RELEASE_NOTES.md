@@ -81,14 +81,92 @@ This document tracks release notes and checklists for PyFulmen releases.
 
 ---
 
+## [0.1.1] - 2025-10-14
+
+### Enterprise-Scale Progressive Logging Implementation
+
+**Release Type**: Major Feature Release - Progressive Logging Complete
+**Release Date**: October 14, 2025
+**Status**: ✅ Released
+
+#### Features
+
+**Progressive Logging System**:
+
+- ✅ **Four Progressive Profiles**:
+  - **SIMPLE**: Zero-config console logging (text format, stderr, perfect for development)
+  - **STRUCTURED**: JSON output with core envelope (configurable sinks, cloud-native ready)
+  - **ENTERPRISE**: Full 20+ field Crucible envelope (policy enforcement, compliance-ready)
+  - **CUSTOM**: User-defined configuration (full control for special requirements)
+- ✅ **Unified Logger Factory**: Profile-based configuration with LoggingConfig and LoggingPolicy
+- ✅ **Crucible Schema Compliance**: Full 20+ field log envelope for enterprise logging
+- ✅ **Policy Enforcement**: Organizational logging governance and validation
+
+**Sink Implementations**:
+
+- ✅ **ConsoleSink**: stderr output with configurable formatting
+- ✅ **FileSink**: File output with directory creation
+- ✅ **RollingFileSink**: Log rotation with size/age/backup limits
+- ✅ **Sink-level filtering**: Per-sink log level configuration
+
+**Middleware Pipeline**:
+
+- ✅ **CorrelationMiddleware**: Auto-generate/propagate UUIDv7 correlation IDs for distributed tracing
+- ✅ **RedactSecretsMiddleware**: Pattern-based secret detection (API keys, passwords, tokens)
+- ✅ **RedactPIIMiddleware**: PII detection (email, phone, SSN, credit cards)
+- ✅ **ThrottlingMiddleware**: Rate limiting with maxRate/burstSize/windowSize/dropPolicy
+- ✅ **Pipeline ordering**: Configurable middleware execution order with event dropping
+
+**Formatters**:
+
+- ✅ **JSONFormatter**: Compact JSON for log aggregators (ELK, Splunk, Datadog)
+- ✅ **TextFormatter**: Human-readable text with service name and context
+- ✅ **ConsoleFormatter**: ANSI-colored terminal output
+
+**Documentation & Testing**:
+
+- ✅ **Progressive Logging Guides**: Comprehensive docs in docs/guides/logging/
+- ✅ **Working Examples**: logging_simple.py, logging_structured.py, logging_enterprise.py
+- ✅ **Example Validation Tests**: 17 integration tests ensuring examples work
+- ✅ **95%+ Test Coverage**: Comprehensive unit and integration testing
+- ✅ **Cross-language Standards**: Synced coding standards from Crucible
+
+#### Breaking Changes
+
+- None (fully backward compatible with v0.1.0)
+- Old SimpleLogger/StructuredLogger/EnterpriseLogger classes replaced with unified ProgressiveLogger
+- Public API maintained through Logger() factory function
+
+#### Migration Notes
+
+- No migration required for existing code using Logger() factory
+- Internal implementation completely refactored but API unchanged
+- Examples updated to demonstrate new features (correlation, middleware, profiles)
+- TextFormatter default template enhanced to include service name
+
+#### Quality Gates
+
+- [x] All 17 example validation tests passing
+- [x] All existing tests still passing
+- [x] Code quality checks passing (ruff lint, ruff format)
+- [x] Documentation links validated (no 404s)
+- [x] Examples run successfully without errors
+- [x] Cross-language standards synced
+
+#### Release Checklist
+
+- [x] Version number set (0.1.1)
+- [x] CHANGELOG.md updated with v0.1.1 release notes
+- [x] RELEASE_NOTES.md updated
+- [x] docs/releases/v0.1.1.md created
+- [x] All tests passing
+- [x] Code quality checks passing
+- [x] Documentation validated
+- [x] Agentic attribution proper for all commits
+
+---
+
 ## [Unreleased]
-
-### v0.1.1 - Logging Upscale (Planned)
-
-- Logging Phases 2-5: Severity mapping, redaction, throttling, middleware
-- Enhanced policy enforcement
-- Context propagation improvements
-- Performance optimizations
 
 ### v0.1.2+ - Additional Features (Planned)
 

@@ -76,6 +76,7 @@ class ProgressiveLogger:
         self.policy = policy
         self.service = config.service
         self.component = config.component
+        self.environment = config.environment if hasattr(config, 'environment') else None
         self.default_level = config.default_level
         self._min_level = to_numeric_level(self.default_level)
 
@@ -256,8 +257,15 @@ class ProgressiveLogger:
             event_dict = {
                 "timestamp": event.timestamp,
                 "severity": event.severity,
+                "service": event.service,
                 "message": event.message,
             }
+            # Include component if present
+            if event.component:
+                event_dict["component"] = event.component
+            # Include context if present for inline display
+            if event.context:
+                event_dict["context"] = event.context
             for sink in self.sinks:
                 sink.emit(event_dict)
         else:
@@ -313,12 +321,19 @@ class ProgressiveLogger:
             else:
                 merged_kwargs["context"] = thread_context.copy()
 
+        # Handle component: prefer kwargs over logger's component
+        component = merged_kwargs.pop("component", None) or self.component or None
+
+        # Handle environment: prefer kwargs over logger's environment
+        environment = merged_kwargs.pop("environment", None) or self.environment
+
         # Create LogEvent
         event = LogEvent(
             severity=severity_str,
             message=message,
             service=self.service,
-            component=self.component or None,
+            component=component,
+            environment=environment,
             **merged_kwargs,
         )
 
@@ -387,7 +402,7 @@ def Logger(  # noqa: N802
     profile: LoggingProfile = LoggingProfile.SIMPLE,
     component: str | None = None,
     default_level: str = "INFO",
-    middleware: list[Middleware] | None = None,
+    middleware: list[str] | list[Middleware] | None = None,
     policy_file: str | None = None,
     config: LoggingConfig | None = None,
     **kwargs: Any,
@@ -399,7 +414,7 @@ def Logger(  # noqa: N802
         profile: Logging profile (default: SIMPLE)
         component: Optional component name
         default_level: Minimum severity level (default: INFO)
-        middleware: Optional middleware list
+        middleware: Optional middleware list (strings or Middleware instances)
         policy_file: Path to policy file (ENTERPRISE profile)
         config: Optional pre-built LoggingConfig (for advanced usage)
         **kwargs: Additional configuration
@@ -437,8 +452,20 @@ def Logger(  # noqa: N802
     if logger_config.profile == LoggingProfile.ENTERPRISE and policy_file:
         policy = _load_policy_impl(policy_file)
 
+    # Convert middleware strings to instances if needed
+    middleware_instances = None
+    if middleware:
+        middleware_instances = []
+        for m in middleware:
+            if isinstance(m, str):
+                # Convert string name to Middleware instance
+                middleware_instances.append(MiddlewareRegistry.create(m, {}))
+            else:
+                # Already a Middleware instance
+                middleware_instances.append(m)
+
     # Create logger
-    return ProgressiveLogger(config=logger_config, policy=policy, middleware=middleware)
+    return ProgressiveLogger(config=logger_config, policy=policy, middleware=middleware_instances)
 
 
 __all__ = [

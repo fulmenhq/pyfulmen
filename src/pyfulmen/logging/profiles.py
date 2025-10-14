@@ -12,7 +12,7 @@ Example:
 """
 
 from enum import Enum
-from typing import Any, Dict, Optional
+from typing import Any
 
 
 class LoggingProfile(str, Enum):
@@ -31,7 +31,7 @@ class LoggingProfile(str, Enum):
     CUSTOM = "CUSTOM"
 
 
-def get_profile_requirements(profile: LoggingProfile) -> Dict[str, Any]:
+def get_profile_requirements(profile: LoggingProfile) -> dict[str, Any]:
     """Get required configuration for a logging profile.
 
     Args:
@@ -81,8 +81,8 @@ def get_profile_requirements(profile: LoggingProfile) -> Dict[str, Any]:
 
 def validate_profile_requirements(
     profile: LoggingProfile,
-    sinks: Optional[list] = None,
-    middleware: Optional[list] = None,
+    sinks: list | None = None,
+    middleware: list | None = None,
     format: str = "json",
     throttling_enabled: bool = False,
     policy_enabled: bool = False,
@@ -116,12 +116,24 @@ def validate_profile_requirements(
 
     # Check middleware count
     middleware_count = len(middleware or [])
-    if "max_middleware" in reqs and reqs["max_middleware"] is not None:
-        if middleware_count > reqs["max_middleware"]:
-            errors.append(f"Profile {profile} allows max {reqs['max_middleware']} middleware, got {middleware_count}")
-    if "min_middleware" in reqs and reqs["min_middleware"] is not None:
-        if middleware_count < reqs["min_middleware"]:
-            errors.append(f"Profile {profile} requires min {reqs['min_middleware']} middleware, got {middleware_count}")
+    if (
+        "max_middleware" in reqs
+        and reqs["max_middleware"] is not None
+        and middleware_count > reqs["max_middleware"]
+    ):
+        max_allowed = reqs["max_middleware"]
+        errors.append(
+            f"Profile {profile} allows max {max_allowed} middleware, got {middleware_count}"
+        )
+    if (
+        "min_middleware" in reqs
+        and reqs["min_middleware"] is not None
+        and middleware_count < reqs["min_middleware"]
+    ):
+        min_required = reqs["min_middleware"]
+        errors.append(
+            f"Profile {profile} requires min {min_required} middleware, got {middleware_count}"
+        )
 
     # Check throttling
     if not reqs.get("throttling_allowed", False) and throttling_enabled:
@@ -130,7 +142,11 @@ def validate_profile_requirements(
     # Check policy enforcement
     if profile == LoggingProfile.ENTERPRISE and not policy_enabled:
         errors.append("ENTERPRISE profile requires policy enforcement")
-    if profile != LoggingProfile.ENTERPRISE and policy_enabled and not reqs.get("policy_enforcement", False):
+    if (
+        profile != LoggingProfile.ENTERPRISE
+        and policy_enabled
+        and not reqs.get("policy_enforcement", False)
+    ):
         errors.append(f"Profile {profile} does not support policy enforcement")
 
     return errors

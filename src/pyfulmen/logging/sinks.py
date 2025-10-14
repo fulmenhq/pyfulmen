@@ -95,10 +95,10 @@ class ConsoleSink(Sink):
 
         Args:
             formatter: Formatter instance for event serialization
-            stream: Output stream (default: sys.stderr)
+            stream: Output stream (default: sys.stderr, dynamically resolved)
         """
         super().__init__(formatter)
-        self._stream = stream if stream is not None else sys.stderr
+        self._stream = stream  # None means use sys.stderr dynamically
         self._lock = Lock()
 
     def emit(self, event: dict[str, Any]) -> None:
@@ -114,7 +114,9 @@ class ConsoleSink(Sink):
         try:
             with self._lock:
                 formatted = self.formatter.format(event)
-                print(formatted, file=self._stream, flush=True)
+                # Use sys.stderr dynamically if no custom stream provided
+                stream = self._stream if self._stream is not None else sys.stderr
+                print(formatted, file=stream, flush=True)
         except Exception as e:
             # Last resort error handling - don't let logging break the app
             print(
@@ -132,7 +134,8 @@ class ConsoleSink(Sink):
         """
         try:
             with self._lock:
-                self._stream.flush()
+                stream = self._stream if self._stream is not None else sys.stderr
+                stream.flush()
         except Exception:
             pass
 

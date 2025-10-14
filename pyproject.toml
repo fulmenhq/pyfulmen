@@ -46,3 +46,15 @@ packages = ["src/pyfulmen"]
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 python_files = ["test_*.py"]
+
+[tool.ruff]
+line-length = 100
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "N", "UP", "B", "SIM"]
+
+[tool.ruff.lint.per-file-ignores]
+# config.py uses camelCase field names to match JSON schema for cross-language API compatibility
+"src/pyfulmen/logging/config.py" = ["N815"]
+# Test files can use generic Exception in pytest.raises and have unused variables for documentation
+"tests/**/*.py" = ["B017", "F841"]

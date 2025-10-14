@@ -9,22 +9,16 @@ The ENTERPRISE profile provides full compliance-grade logging with:
 Perfect for production systems requiring SOC2, HIPAA, or similar compliance.
 """
 
-from pyfulmen.logging import Logger
-from pyfulmen.logging._models import LoggingProfile
+from pyfulmen.logging import Logger, LoggingProfile
 
-# Create an ENTERPRISE profile logger with policy
+# Create an ENTERPRISE profile logger
+# Note: For production use, configure middleware through LoggingConfig
+# This example shows the basic setup - see docs for middleware configuration
 logger = Logger(
     service="payment-api",
     profile=LoggingProfile.ENTERPRISE,
     environment="production",
-    policy_file=".goneat/logging-policy.yaml",  # Optional: enforce organizational policy
-    middleware=["correlation", "redact-secrets", "redact-pii"],  # Built-in middleware
-    throttling={
-        "enabled": True,
-        "maxRate": 10000,  # Max 10k logs/second
-        "burstSize": 1000,
-        "dropPolicy": "drop-oldest"
-    }
+    # Optional: policy_file=".goneat/logging-policy.yaml"
 )
 
 # All logs include correlation ID automatically
@@ -58,14 +52,15 @@ try:
     # Simulate an error
     raise ValueError("Invalid payment amount")
 except Exception as e:
+    import traceback
     logger.error(
         "Payment validation failed",
         context={
             "error": str(e),
             "payment_id": "pay_abc123",
-            "customer_id": "cust_xyz789"
-        },
-        enable_stacktrace=True  # Include full stack trace in log
+            "customer_id": "cust_xyz789",
+            "stacktrace": traceback.format_exc()  # Include stack trace in context
+        }
     )
 
 # Correlation context for distributed tracing
@@ -92,9 +87,16 @@ with correlation_context(correlation_id=correlation_id):
     logger.info("Processing request from client")
 
 # Audit logging for compliance
-logger.info(
-    "User action performed",
+# Create a logger with component for audit logs
+audit_logger = Logger(
+    service="payment-api",
+    profile=LoggingProfile.ENTERPRISE,
     component="audit",
+    environment="production"
+)
+
+audit_logger.info(
+    "User action performed",
     context={
         "action": "DELETE",
         "resource": "users/123",
