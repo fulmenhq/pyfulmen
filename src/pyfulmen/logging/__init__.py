@@ -84,3 +84,18 @@ __all__ = [
     "clear_context",
     "extract_correlation_id_from_headers",
 ]
+
+# Expose create_logger convenience function
+def create_logger(**kwargs):
+    """Convenience function to create a Logger instance.
+    
+    Args:
+        **kwargs: All arguments passed to Logger constructor
+        
+    Returns:
+        Logger instance
+        
+    Example:
+        >>> logger = create_logger(service="my-service", profile=LoggingProfile.STRUCTURED)
+    """
+    return Logger(**kwargs)
