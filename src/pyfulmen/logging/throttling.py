@@ -264,6 +264,16 @@ class ThrottlingMiddleware(Middleware):
             config: Optional configuration dictionary (for registry instantiation)
             order: Middleware execution order (default: 50)
         """
+        # Extract values from config if provided (schema uses camelCase)
+        if config:
+            max_rate = config.get("maxRate", max_rate)
+            burst_size = config.get("burstSize", burst_size)
+            window_size = config.get("windowSize", window_size)
+            drop_policy = config.get("dropPolicy", drop_policy)
+            # Handle bucketId -> bucket_id conversion
+            if "bucketId" in config:
+                config["bucket_id"] = config["bucketId"]
+
         # Initialize base Middleware with combined config
         throttle_config = config or {}
         throttle_config.update(

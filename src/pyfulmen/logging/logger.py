@@ -138,7 +138,7 @@ class ProgressiveLogger:
             if sink_type == "console":
                 from .formatter import JSONFormatter, TextFormatter
 
-                formatter_type = sink_config.get("formatter", "json")
+                formatter_type = sink_config.get("format", "json")
 
                 if formatter_type == "json":
                     formatter = JSONFormatter()
@@ -157,7 +157,7 @@ class ProgressiveLogger:
                 if not path:
                     raise ValueError("File sink requires 'path' configuration")
 
-                formatter_type = sink_config.get("formatter", "json")
+                formatter_type = sink_config.get("format", "json")
                 if formatter_type == "json":
                     formatter = JSONFormatter()
                 elif formatter_type == "text":
@@ -366,6 +366,7 @@ def Logger(  # noqa: N802
     default_level: str = "INFO",
     middleware: list[Middleware] | None = None,
     policy_file: str | None = None,
+    config: LoggingConfig | None = None,
     **kwargs: Any,
 ) -> ProgressiveLogger:
     """Create progressive logger with profile-based configuration.
@@ -377,6 +378,7 @@ def Logger(  # noqa: N802
         default_level: Minimum severity level (default: INFO)
         middleware: Optional middleware list
         policy_file: Path to policy file (ENTERPRISE profile)
+        config: Optional pre-built LoggingConfig (for advanced usage)
         **kwargs: Additional configuration
 
     Returns:
@@ -392,23 +394,28 @@ def Logger(  # noqa: N802
         ...     policy_file="config/policy.yaml"
         ... )
     """
-    # Build config - middleware passed directly to ProgressiveLogger
-    # not through LoggingConfig to avoid type conflicts
-    config = LoggingConfig(
-        profile=profile,
-        service=service,
-        component=component or "",
-        default_level=default_level,
-        **kwargs,
-    )
+    # Use provided config or build new one
+    if config is not None:
+        # Use provided config, but allow overrides for middleware
+        logger_config = config
+    else:
+        # Build config - middleware passed directly to ProgressiveLogger
+        # not through LoggingConfig to avoid type conflicts
+        logger_config = LoggingConfig(
+            profile=profile,
+            service=service,
+            component=component or "",
+            default_level=default_level,
+            **kwargs,
+        )
 
     # Load policy if ENTERPRISE
     policy = None
-    if profile == LoggingProfile.ENTERPRISE and policy_file:
+    if logger_config.profile == LoggingProfile.ENTERPRISE and policy_file:
         policy = _load_policy_impl(policy_file)
 
     # Create logger
-    return ProgressiveLogger(config=config, policy=policy, middleware=middleware)
+    return ProgressiveLogger(config=logger_config, policy=policy, middleware=middleware)
 
 
 __all__ = [
