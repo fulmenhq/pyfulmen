@@ -69,6 +69,51 @@ make test-all        # All test suites
 make docs            # Generate documentation
 ```
 
+### Git Hooks
+
+PyFulmen uses goneat-managed git hooks for automated quality checks:
+
+**Installed Hooks**:
+- **pre-commit**: Runs `make precommit` (formatting + linting)
+- **pre-push**: Runs `make prepush` (all checks + full test suite)
+
+**Guardian Integration**:
+Both hooks integrate with goneat guardian for approval workflows on protected operations. Guardian provides browser-based approval for high-risk git operations.
+
+**Working with Hooks**:
+
+```bash
+# Test hooks manually before committing
+goneat assess --hook pre-commit
+
+# Test pre-push checks
+goneat assess --hook pre-push
+
+# Validate hook installation
+bin/goneat hooks validate
+
+# Regenerate hooks after configuration changes
+bin/goneat hooks generate --with-guardian
+bin/goneat hooks install
+```
+
+**Hook Configuration**:
+- Configuration: `.goneat/hooks.yaml`
+- Generated hooks: `.goneat/hooks/`
+- Installed hooks: `.git/hooks/`
+- Guardian config: `~/.goneat/guardian/config.yaml` (user-level)
+
+**Bypassing Hooks** (not recommended):
+```bash
+# Skip pre-commit (emergency only)
+git commit --no-verify -m "message"
+
+# Skip pre-push (emergency only)
+git push --no-verify
+```
+
+**Note**: Hooks are local-only and not committed to the repository. New contributors should run `make bootstrap` which sets up hooks automatically.
+
 ## 🚀 Release Process
 
 ### Version Management
