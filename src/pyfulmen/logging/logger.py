@@ -37,7 +37,7 @@ from typing import Any
 from ._models import LogEvent, LoggingConfig, LoggingPolicy, LoggingProfile
 from .context import get_context, get_correlation_id
 from .formatter import JSONFormatter, TextFormatter
-from .middleware import Middleware, MiddlewarePipeline
+from .middleware import Middleware, MiddlewarePipeline, MiddlewareRegistry
 from .policy import load_policy as _load_policy_impl
 from .severity import Severity, to_numeric_level
 from .sinks import ConsoleSink, Sink
@@ -63,12 +63,14 @@ class ProgressiveLogger:
         self,
         config: LoggingConfig,
         policy: LoggingPolicy | None = None,
+        middleware: list[Middleware] | None = None,
     ):
         """Initialize progressive logger.
 
         Args:
             config: Logging configuration
             policy: Optional policy for enforcement (ENTERPRISE profile)
+            middleware: Optional middleware instances (overrides config.middleware)
         """
         self.config = config
         self.policy = policy
@@ -79,7 +81,11 @@ class ProgressiveLogger:
 
         # Initialize components
         self.sinks = self._create_sinks()
-        self.middleware = self._create_middleware()
+        # Use provided middleware instances or create from config
+        if middleware is not None:
+            self.middleware = MiddlewarePipeline(middleware)
+        else:
+            self.middleware = self._create_middleware()
         self.throttle = self._create_throttle()
 
         # Validate policy if ENTERPRISE
@@ -169,7 +175,13 @@ class ProgressiveLogger:
     def _create_middleware(self) -> MiddlewarePipeline | None:
         """Create middleware pipeline from config."""
         if self.config.middleware:
-            return MiddlewarePipeline(self.config.middleware)
+            instances = []
+            for m_config in self.config.middleware:
+                name = m_config.get("name") or m_config.get("type", "redact-secrets")
+                config = {k: v for k, v in m_config.items() if k not in ("name", "type")}
+                instance = MiddlewareRegistry.create(name, config)
+                instances.append(instance)
+            return MiddlewarePipeline(instances)
         return None
 
     def _create_throttle(self) -> Any:
@@ -380,13 +392,13 @@ def Logger(  # noqa: N802
         ...     policy_file="config/policy.yaml"
         ... )
     """
-    # Build config
+    # Build config - middleware passed directly to ProgressiveLogger
+    # not through LoggingConfig to avoid type conflicts
     config = LoggingConfig(
         profile=profile,
         service=service,
         component=component or "",
         default_level=default_level,
-        middleware=middleware or [],
         **kwargs,
     )
 
@@ -396,7 +408,7 @@ def Logger(  # noqa: N802
         policy = _load_policy_impl(policy_file)
 
     # Create logger
-    return ProgressiveLogger(config=config, policy=policy)
+    return ProgressiveLogger(config=config, policy=policy, middleware=middleware)
 
 
 __all__ = [

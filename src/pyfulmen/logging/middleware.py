@@ -400,8 +400,11 @@ class MiddlewareRegistry:
         return list(cls._registry.keys())
 
 
+from .throttling import ThrottlingMiddleware
+
 MiddlewareRegistry.register("redact-secrets", RedactSecretsMiddleware)
 MiddlewareRegistry.register("redact-pii", RedactPIIMiddleware)
+MiddlewareRegistry.register("throttling", ThrottlingMiddleware)
 
 
 __all__ = [
