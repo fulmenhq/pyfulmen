@@ -385,9 +385,12 @@ class MiddlewareRegistry:
 
         middleware_class = cls._registry[name]
 
-        # Extract order from config if provided
+        # Extract order from config if provided, but do not forward 'order' inside config
         if config and "order" in config:
-            return middleware_class(config=config, order=config["order"])
+            order = config.get("order")
+            cfg = dict(config)
+            cfg.pop("order", None)
+            return middleware_class(config=cfg, order=order)
         return middleware_class(config=config)
 
     @classmethod
@@ -400,7 +403,7 @@ class MiddlewareRegistry:
         return list(cls._registry.keys())
 
 
-from .throttling import ThrottlingMiddleware
+from .throttling import ThrottlingMiddleware  # noqa: E402
 
 MiddlewareRegistry.register("redact-secrets", RedactSecretsMiddleware)
 MiddlewareRegistry.register("redact-pii", RedactPIIMiddleware)

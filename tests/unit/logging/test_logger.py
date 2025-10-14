@@ -7,6 +7,7 @@ import pytest
 from pyfulmen.logging._models import LoggingConfig, LoggingPolicy, LoggingProfile
 from pyfulmen.logging.logger import Logger, ProgressiveLogger
 from pyfulmen.logging.severity import Severity
+from pyfulmen.logging.throttling import ThrottlingMiddleware
 
 
 class TestProgressiveLogger:
@@ -245,6 +246,47 @@ class TestProgressiveLogger:
         json_line = json.loads(lines[1])
         assert json_line["severity"] == "INFO"
         assert json_line["message"] == "Test message"
+
+    def test_middleware_config_unwrap_and_enabled(self):
+        """Middleware config is unwrapped and enabled flag respected."""
+        config = LoggingConfig(
+            profile=LoggingProfile.STRUCTURED,
+            service="svc",
+            middleware=[
+                {
+                    "name": "throttling",
+                    "order": 3,
+                    "config": {
+                        "maxRate": 1000,
+                        "burstSize": 50,
+                        "windowSize": 1.0,
+                        "dropPolicy": "drop-newest",
+                        "bucketId": "api",
+                    },
+                },
+                {  # should be ignored entirely
+                    "name": "redact-secrets",
+                    "enabled": False,
+                    "order": 1,
+                    "config": {"dummy": True},
+                },
+            ],
+        )
+        logger = ProgressiveLogger(config)
+        assert logger.middleware is not None
+        chain = logger.middleware.middleware
+        # Only throttling should be present
+        assert len(chain) == 1
+        m = chain[0]
+        assert isinstance(m, ThrottlingMiddleware)
+        # Order comes from outer key
+        assert m.order == 3
+        # Inner config flattened and camelCase consumed
+        assert m.controller.max_rate == 1000
+        assert m.controller.window_size == 1.0
+        assert m.controller.drop_policy == "drop-newest"
+        # 'order' is not forwarded inside config payload
+        assert "order" not in m.config
 
 
 class TestLogger:

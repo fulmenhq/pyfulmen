@@ -136,7 +136,7 @@ class ProgressiveLogger:
             sink_type = sink_config.get("type", "console")
 
             if sink_type == "console":
-                from .formatter import JSONFormatter, TextFormatter
+                from .formatter import ConsoleFormatter, JSONFormatter, TextFormatter
 
                 formatter_type = sink_config.get("format", "json")
 
@@ -144,13 +144,16 @@ class ProgressiveLogger:
                     formatter = JSONFormatter()
                 elif formatter_type == "text":
                     formatter = TextFormatter()
+                elif formatter_type == "console":
+                    use_colors = bool(sink_config.get("colorize", False))
+                    formatter = ConsoleFormatter(use_colors=use_colors)
                 else:
                     raise ValueError(f"Unknown formatter type: {formatter_type}")
 
                 sinks.append(ConsoleSink(formatter=formatter))
 
             elif sink_type == "file":
-                from .formatter import JSONFormatter, TextFormatter
+                from .formatter import ConsoleFormatter, JSONFormatter, TextFormatter
                 from .sinks import FileSink
 
                 path = sink_config.get("path")
@@ -162,6 +165,9 @@ class ProgressiveLogger:
                     formatter = JSONFormatter()
                 elif formatter_type == "text":
                     formatter = TextFormatter()
+                elif formatter_type == "console":
+                    # For files, default to no ANSI colors regardless of colorize setting
+                    formatter = ConsoleFormatter(use_colors=False)
                 else:
                     raise ValueError(f"Unknown formatter type: {formatter_type}")
 
@@ -174,15 +180,32 @@ class ProgressiveLogger:
 
     def _create_middleware(self) -> MiddlewarePipeline | None:
         """Create middleware pipeline from config."""
-        if self.config.middleware:
-            instances = []
-            for m_config in self.config.middleware:
-                name = m_config.get("name") or m_config.get("type", "redact-secrets")
-                config = {k: v for k, v in m_config.items() if k not in ("name", "type")}
-                instance = MiddlewareRegistry.create(name, config)
-                instances.append(instance)
-            return MiddlewarePipeline(instances)
-        return None
+        if not self.config.middleware:
+            return None
+
+        instances: list[Middleware] = []
+        for m_config in self.config.middleware:
+            # Honor enabled flag (default True)
+            if m_config.get("enabled") is False:
+                continue
+
+            name = m_config.get("name") or m_config.get("type", "redact-secrets")
+
+            # Unwrap nested 'config' payload; outer keys handled by pipeline
+            inner_cfg = m_config.get("config") or {}
+            order = m_config.get("order")
+
+            # Build payload for registry: inner config only, plus 'order' if provided
+            cfg_for_registry: dict[str, Any] = (
+                dict(inner_cfg) if isinstance(inner_cfg, dict) else {}
+            )
+            if order is not None:
+                cfg_for_registry["order"] = order
+
+            instance = MiddlewareRegistry.create(name, cfg_for_registry)
+            instances.append(instance)
+
+        return MiddlewarePipeline(instances) if instances else None
 
     def _create_throttle(self) -> Any:
         """Create throttle controller if configured.
