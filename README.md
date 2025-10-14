@@ -14,11 +14,11 @@ PyFulmen is part of the Fulmen ecosystem, providing templates, processes, and to
 
 **Key Features:**
 
+- **Progressive Logging** - Zero-complexity to enterprise-grade logging with SIMPLE → STRUCTURED → ENTERPRISE profiles
 - **Crucible Shim** - Idiomatic Python access to Crucible schemas, docs, and config defaults
 - **Config Path API** - XDG-compliant, platform-aware configuration paths
 - **Three-Layer Config Loading** - Crucible defaults → User overrides → App config
 - **Schema Validation** - Helpers for validating data against Crucible JSON schemas
-- **Observability Integration** - Structured logging with Crucible severity mapping
 - **Version Management** - Utilities for reading and validating repository versions
 
 ## Installation
@@ -60,10 +60,44 @@ This allows you to modify PyFulmen code and see changes immediately without rebu
 
 ## Usage
 
-### Basic Example
+### Progressive Logging
+
+PyFulmen provides a progressive logging system that grows with your needs:
 
 ```python
-from pyfulmen import crucible, config, schema, logging
+from pyfulmen.logging import Logger, LoggingProfile
+
+# SIMPLE: Zero-complexity console logging (perfect for development)
+logger = Logger(service="my-app")
+logger.info("Application started")
+logger.error("Connection failed", context={"host": "db.local"})
+
+# STRUCTURED: Production-ready JSON logging
+logger = Logger(
+    service="api-service",
+    profile=LoggingProfile.STRUCTURED,
+    environment="production"
+)
+logger.info(
+    "Request processed",
+    context={"method": "GET", "path": "/api/users", "duration_ms": 45}
+)
+
+# ENTERPRISE: Compliance-grade logging with policy enforcement
+logger = Logger(
+    service="payment-api",
+    profile=LoggingProfile.ENTERPRISE,
+    policy_file=".goneat/logging-policy.yaml",
+    middleware=["correlation", "redact-secrets", "redact-pii"]
+)
+```
+
+📖 **[Read the complete Logging Guide](docs/guides/logging.md)** for progressive profiles, middleware, policy enforcement, and best practices.
+
+### Other Features
+
+```python
+from pyfulmen import crucible, config, schema, version
 
 # Access Crucible assets
 schemas = crucible.schemas.list_available_schemas()
@@ -83,10 +117,6 @@ schema.validator.validate_against_schema(
     version='v1.0.0',
     name='log-event'
 )
-
-# Configure logging
-logger = logging.logger.configure_logging(app_name='myapp', level='debug')
-logger.info('Application started')
 ```
 
 ### Version Management
