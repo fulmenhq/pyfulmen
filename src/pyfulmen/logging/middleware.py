@@ -211,11 +211,19 @@ class RedactSecretsMiddleware(Middleware):
         """
         # Sensitive key patterns (case-insensitive)
         sensitive_keys = [
-            "api_key", "apikey", "api-key",
-            "password", "passwd", "pwd",
-            "secret", "token", "auth",
-            "bearer", "authorization",
-            "private_key", "privatekey",
+            "api_key",
+            "apikey",
+            "api-key",
+            "password",
+            "passwd",
+            "pwd",
+            "secret",
+            "token",
+            "auth",
+            "bearer",
+            "authorization",
+            "private_key",
+            "privatekey",
         ]
 
         result = {}

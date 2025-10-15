@@ -76,7 +76,7 @@ class ProgressiveLogger:
         self.policy = policy
         self.service = config.service
         self.component = config.component
-        self.environment = config.environment if hasattr(config, 'environment') else None
+        self.environment = config.environment if hasattr(config, "environment") else None
         self.default_level = config.default_level
         self._min_level = to_numeric_level(self.default_level)
 
