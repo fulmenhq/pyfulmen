@@ -4,6 +4,7 @@ import pytest
 
 from pyfulmen.config.loader import ConfigLoader
 from pyfulmen.foundry.catalog import (
+    Country,
     FoundryCatalog,
     HttpStatusCode,
     HttpStatusGroup,
@@ -11,13 +12,23 @@ from pyfulmen.foundry.catalog import (
     MimeType,
     Pattern,
     PatternAccessor,
+    get_country,
+    get_country_by_alpha3,
+    get_country_by_numeric,
     get_default_catalog,
     get_mime_type,
     get_mime_type_by_extension,
+    get_mime_type_by_mime_string,
     get_pattern,
     is_client_error,
+    is_informational,
+    is_redirect,
     is_server_error,
     is_success,
+    is_supported_mime_type,
+    list_countries,
+    list_mime_types,
+    validate_country_code,
 )
 
 
@@ -331,6 +342,25 @@ class TestFoundryCatalog:
         assert "success" in groups
         assert "client-error" in groups
 
+    def test_catalog_get_mime_type_by_mime_string(self, catalog):
+        """FoundryCatalog should find MIME type by string."""
+        mime = catalog.get_mime_type_by_mime_string("application/json")
+        assert mime is not None
+        assert mime.id == "json"
+
+        mime = catalog.get_mime_type_by_mime_string("application/yaml")
+        assert mime is not None
+        assert mime.id == "yaml"
+
+        # Case insensitive
+        mime = catalog.get_mime_type_by_mime_string("APPLICATION/JSON")
+        assert mime is not None
+        assert mime.id == "json"
+
+        # Not found
+        mime = catalog.get_mime_type_by_mime_string("application/x-unknown")
+        assert mime is None
+
 
 class TestPatternAccessor:
     """Test PatternAccessor convenience methods."""
@@ -405,6 +435,22 @@ class TestPatternAccessor:
         patterns = pattern_accessor.get_all_patterns()
         assert isinstance(patterns, dict)
         assert len(patterns) > 0
+
+    def test_all_catalog_patterns_accessible(self, catalog):
+        """All patterns in catalog should be accessible via get_pattern."""
+        # Crucible requirement: Validate all Foundry pattern IDs are exposed
+        all_patterns = catalog.get_all_patterns()
+        assert len(all_patterns) > 0, "Catalog should contain patterns"
+
+        # Verify each pattern is accessible and valid
+        for pattern_id in all_patterns:
+            pattern = catalog.get_pattern(pattern_id)
+            assert pattern is not None, f"Pattern {pattern_id} should be accessible"
+            assert pattern.id == pattern_id, f"Pattern ID should match: {pattern_id}"
+            assert pattern.kind in ["regex", "glob", "literal"], (
+                f"Pattern {pattern_id} should have valid kind"
+            )
+            assert pattern.pattern, f"Pattern {pattern_id} should have pattern string"
 
 
 class TestPatternMatching:
@@ -570,3 +616,345 @@ class TestConvenienceFunctions:
         assert is_server_error(503)
         assert not is_server_error(200)
         assert not is_server_error(404)
+
+    def test_get_mime_type_by_mime_string(self):
+        """get_mime_type_by_mime_string should find MIME by string."""
+        mime = get_mime_type_by_mime_string("application/json")
+        assert mime is not None
+        assert mime.id == "json"
+
+        mime = get_mime_type_by_mime_string("application/yaml")
+        assert mime is not None
+        assert mime.id == "yaml"
+
+        # Not found
+        mime = get_mime_type_by_mime_string("application/x-unknown")
+        assert mime is None
+
+    def test_is_supported_mime_type(self):
+        """is_supported_mime_type should check if MIME is in catalog."""
+        assert is_supported_mime_type("application/json")
+        assert is_supported_mime_type("application/yaml")
+        assert not is_supported_mime_type("application/x-unknown")
+
+    def test_list_mime_types(self):
+        """list_mime_types should return all MIME types."""
+        types = list_mime_types()
+        assert isinstance(types, list)
+        assert len(types) > 0
+        assert any(t.id == "json" for t in types)
+        assert any(t.id == "yaml" for t in types)
+
+    def test_is_informational(self):
+        """is_informational should check 1xx status codes."""
+        assert is_informational(100)
+        assert is_informational(101)
+        assert not is_informational(200)
+        assert not is_informational(404)
+
+    def test_is_redirect(self):
+        """is_redirect should check 3xx status codes."""
+        assert is_redirect(301)
+        assert is_redirect(302)
+        assert is_redirect(307)
+        assert not is_redirect(200)
+        assert not is_redirect(404)
+
+
+class TestCountry:
+    """Test Country model and methods."""
+
+    def test_country_creation(self):
+        """Country should be created with all fields."""
+        country = Country(
+            alpha2="US",
+            alpha3="USA",
+            numeric="840",
+            name="United States of America",
+            officialName="United States of America",  # Use alias (YAML/JSON style)
+        )
+        assert country.alpha2 == "US"
+        assert country.alpha3 == "USA"
+        assert country.numeric == "840"
+        assert country.name == "United States of America"
+        assert country.official_name == "United States of America"
+
+    def test_country_creation_with_field_name(self):
+        """Country should accept both field name and alias (populate_by_name=True)."""
+        # Test using Pythonic field name (enabled by populate_by_name=True in v0.1.2)
+        country = Country(
+            alpha2="CA",
+            alpha3="CAN",
+            numeric="124",
+            name="Canada",
+            official_name="Canada",  # Pythonic field name
+        )
+        assert country.alpha2 == "CA"
+        assert country.official_name == "Canada"
+
+    def test_country_matches_code_alpha2(self):
+        """Country should match alpha-2 codes."""
+        country = Country(alpha2="US", alpha3="USA", numeric="840", name="United States of America")
+        assert country.matches_code("US")
+        assert country.matches_code("us")  # Case insensitive
+        assert not country.matches_code("CA")
+
+    def test_country_matches_code_alpha3(self):
+        """Country should match alpha-3 codes."""
+        country = Country(alpha2="US", alpha3="USA", numeric="840", name="United States of America")
+        assert country.matches_code("USA")
+        assert country.matches_code("usa")  # Case insensitive
+        assert not country.matches_code("CAN")
+
+    def test_country_matches_code_numeric(self):
+        """Country should match numeric codes."""
+        country = Country(alpha2="US", alpha3="USA", numeric="840", name="United States of America")
+        assert country.matches_code("840")
+        assert not country.matches_code("124")
+
+    def test_country_matches_code_case_insensitive(self):
+        """Country should match codes case-insensitively."""
+        country = Country(alpha2="US", alpha3="USA", numeric="840", name="United States of America")
+        assert country.matches_code("us")
+        assert country.matches_code("Us")
+        assert country.matches_code("uS")
+        assert country.matches_code("usa")
+        assert country.matches_code("Usa")
+        assert country.matches_code("UsA")
+
+    def test_country_matches_code_numeric_padding(self):
+        """Country should match numeric codes with zero-padding."""
+        country = Country(alpha2="BR", alpha3="BRA", numeric="076", name="Brazil")
+        assert country.matches_code("076")
+        assert country.matches_code("76")  # Should pad to 076
+        assert not country.matches_code("76a")
+
+
+class TestCountryCatalog:
+    """Test country lookup methods in FoundryCatalog."""
+
+    def test_catalog_get_country(self, catalog):
+        """Catalog should lookup country by alpha-2."""
+        country = catalog.get_country("US")
+        assert country is not None
+        assert country.alpha2 == "US"
+        assert country.name == "United States of America"
+
+    def test_catalog_get_country_case_insensitive(self, catalog):
+        """Catalog should handle case-insensitive alpha-2 lookup."""
+        country = catalog.get_country("us")
+        assert country is not None
+        assert country.alpha2 == "US"
+
+        country = catalog.get_country("ca")
+        assert country is not None
+        assert country.alpha2 == "CA"
+
+    def test_catalog_get_country_not_found(self, catalog):
+        """Catalog should return None for invalid alpha-2."""
+        country = catalog.get_country("XX")
+        assert country is None
+
+        country = catalog.get_country("ZZZ")
+        assert country is None
+
+    def test_catalog_get_country_by_alpha3(self, catalog):
+        """Catalog should lookup country by alpha-3."""
+        country = catalog.get_country_by_alpha3("USA")
+        assert country is not None
+        assert country.alpha3 == "USA"
+        assert country.alpha2 == "US"
+
+    def test_catalog_get_country_by_alpha3_case_insensitive(self, catalog):
+        """Catalog should handle case-insensitive alpha-3 lookup."""
+        country = catalog.get_country_by_alpha3("usa")
+        assert country is not None
+        assert country.alpha3 == "USA"
+
+        country = catalog.get_country_by_alpha3("CaN")
+        assert country is not None
+        assert country.alpha3 == "CAN"
+
+    def test_catalog_get_country_by_alpha3_not_found(self, catalog):
+        """Catalog should return None for invalid alpha-3."""
+        country = catalog.get_country_by_alpha3("XXX")
+        assert country is None
+
+    def test_catalog_get_country_by_numeric(self, catalog):
+        """Catalog should lookup country by numeric code."""
+        country = catalog.get_country_by_numeric("840")
+        assert country is not None
+        assert country.numeric == "840"
+        assert country.alpha2 == "US"
+
+    def test_catalog_get_country_by_numeric_zero_padding(self, catalog):
+        """Catalog should handle numeric lookup with zero-padding."""
+        country = catalog.get_country_by_numeric("76")
+        assert country is not None
+        assert country.numeric == "076"
+        assert country.alpha2 == "BR"
+
+        # Also test with full padding
+        country = catalog.get_country_by_numeric("076")
+        assert country is not None
+        assert country.alpha2 == "BR"
+
+    def test_catalog_get_country_by_numeric_not_found(self, catalog):
+        """Catalog should return None for invalid numeric code."""
+        country = catalog.get_country_by_numeric("999")
+        assert country is None
+
+    def test_catalog_list_countries(self, catalog):
+        """Catalog should list all countries."""
+        countries = catalog.list_countries()
+        assert isinstance(countries, list)
+        assert len(countries) == 5  # US, CA, JP, DE, BR
+        alpha2_codes = {c.alpha2 for c in countries}
+        assert "US" in alpha2_codes
+        assert "CA" in alpha2_codes
+        assert "JP" in alpha2_codes
+        assert "DE" in alpha2_codes
+        assert "BR" in alpha2_codes
+
+    def test_catalog_countries_lazy_loading(self, catalog):
+        """Catalog should lazy load countries."""
+        # Initially, countries should not be loaded
+        assert catalog._countries is None
+        assert catalog._countries_alpha3 is None
+        assert catalog._countries_numeric is None
+
+        # After first access, should be loaded
+        _ = catalog.get_country("US")
+        assert catalog._countries is not None
+        assert catalog._countries_alpha3 is not None
+        assert catalog._countries_numeric is not None
+
+
+class TestCountryConvenienceFunctions:
+    """Test country convenience functions."""
+
+    def test_validate_country_code_alpha2(self):
+        """validate_country_code should validate alpha-2 codes."""
+        assert validate_country_code("US")
+        assert validate_country_code("CA")
+        assert validate_country_code("JP")
+
+    def test_validate_country_code_alpha2_case_insensitive(self):
+        """validate_country_code should validate alpha-2 case-insensitively."""
+        assert validate_country_code("us")
+        assert validate_country_code("ca")
+        assert validate_country_code("Jp")
+
+    def test_validate_country_code_alpha3(self):
+        """validate_country_code should validate alpha-3 codes."""
+        assert validate_country_code("USA")
+        assert validate_country_code("CAN")
+        assert validate_country_code("JPN")
+
+    def test_validate_country_code_alpha3_case_insensitive(self):
+        """validate_country_code should validate alpha-3 case-insensitively."""
+        assert validate_country_code("usa")
+        assert validate_country_code("can")
+        assert validate_country_code("Jpn")
+
+    def test_validate_country_code_numeric(self):
+        """validate_country_code should validate numeric codes."""
+        assert validate_country_code("840")  # US
+        assert validate_country_code("124")  # CA
+        assert validate_country_code("392")  # JP
+
+    def test_validate_country_code_numeric_padding(self):
+        """validate_country_code should validate numeric codes with padding."""
+        assert validate_country_code("76")  # BR (076)
+        assert validate_country_code("076")  # BR
+
+    def test_validate_country_code_empty(self):
+        """validate_country_code should return False for empty string."""
+        assert not validate_country_code("")
+
+    def test_validate_country_code_invalid(self):
+        """validate_country_code should return False for invalid codes."""
+        assert not validate_country_code("XX")
+        assert not validate_country_code("XXX")
+        assert not validate_country_code("999")
+        assert not validate_country_code("invalid")
+
+    def test_get_country(self):
+        """get_country convenience function should lookup by alpha-2."""
+        country = get_country("US")
+        assert country is not None
+        assert country.alpha2 == "US"
+
+        country = get_country("us")  # Case insensitive
+        assert country is not None
+        assert country.alpha2 == "US"
+
+    def test_get_country_by_alpha3(self):
+        """get_country_by_alpha3 convenience function should lookup by alpha-3."""
+        country = get_country_by_alpha3("USA")
+        assert country is not None
+        assert country.alpha3 == "USA"
+
+        country = get_country_by_alpha3("usa")  # Case insensitive
+        assert country is not None
+        assert country.alpha3 == "USA"
+
+    def test_get_country_by_numeric(self):
+        """get_country_by_numeric convenience function should lookup by numeric."""
+        country = get_country_by_numeric("840")
+        assert country is not None
+        assert country.numeric == "840"
+
+    def test_get_country_by_numeric_padding(self):
+        """get_country_by_numeric should handle zero-padding."""
+        country = get_country_by_numeric("76")
+        assert country is not None
+        assert country.numeric == "076"
+        assert country.alpha2 == "BR"
+
+    def test_list_countries(self):
+        """list_countries convenience function should return all countries."""
+        countries = list_countries()
+        assert isinstance(countries, list)
+        assert len(countries) == 5
+        alpha2_codes = {c.alpha2 for c in countries}
+        assert "US" in alpha2_codes
+        assert "CA" in alpha2_codes
+
+
+class TestCountryIntegration:
+    """Integration tests for country code functionality."""
+
+    def test_all_lookup_methods_return_same_country(self):
+        """All lookup methods should return the same country instance."""
+        us_by_alpha2 = get_country("US")
+        us_by_alpha3 = get_country_by_alpha3("USA")
+        us_by_numeric = get_country_by_numeric("840")
+
+        assert us_by_alpha2 is not None
+        assert us_by_alpha3 is not None
+        assert us_by_numeric is not None
+
+        # Should all have same data
+        assert us_by_alpha2.alpha2 == us_by_alpha3.alpha2 == us_by_numeric.alpha2
+        assert us_by_alpha2.alpha3 == us_by_alpha3.alpha3 == us_by_numeric.alpha3
+        assert us_by_alpha2.numeric == us_by_alpha3.numeric == us_by_numeric.numeric
+        assert us_by_alpha2.name == us_by_alpha3.name == us_by_numeric.name
+
+    def test_country_in_pydantic_model(self):
+        """Country should be usable in Pydantic models."""
+        from pydantic import BaseModel
+
+        class Address(BaseModel):
+            street: str
+            country: Country
+
+        country = get_country("US")
+        address = Address(street="123 Main St", country=country)
+
+        assert address.country.alpha2 == "US"
+        assert address.country.name == "United States of America"
+
+        # Test model validation
+        model_dict = address.model_dump()
+        assert model_dict["country"]["alpha2"] == "US"

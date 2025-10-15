@@ -315,6 +315,57 @@ class HttpStatusGroup(FulmenCatalogModel):
         return None
 
 
+class Country(FulmenCatalogModel):
+    """Immutable ISO 3166-1 country code definition from Foundry catalog.
+
+    Represents a country with Alpha-2, Alpha-3, and Numeric codes.
+
+    Example:
+        >>> country = Country(
+        ...     alpha2="US",
+        ...     alpha3="USA",
+        ...     numeric="840",
+        ...     name="United States of America",
+        ...     official_name="United States of America"
+        ... )
+        >>> country.alpha2
+        'US'
+    """
+
+    alpha2: str = Field(description="ISO 3166-1 alpha-2 two-letter country code (e.g., US, CA)")
+    alpha3: str = Field(description="ISO 3166-1 alpha-3 three-letter country code (e.g., USA, CAN)")
+    numeric: str = Field(description="ISO 3166-1 numeric country code as string (e.g., 840, 076)")
+    name: str = Field(description="Common English name of the country")
+    official_name: str | None = Field(
+        None, alias="officialName", description="Official name of the country"
+    )
+
+    def matches_code(self, code: str) -> bool:
+        """Check if given code matches this country's codes (case-insensitive).
+
+        Args:
+            code: Country code to check (alpha-2, alpha-3, or numeric)
+
+        Returns:
+            True if code matches any of this country's codes
+
+        Example:
+            >>> us_country.matches_code("us")
+            True
+            >>> us_country.matches_code("USA")
+            True
+            >>> us_country.matches_code("840")
+            True
+        """
+        code_upper = code.upper()
+        return (
+            self.alpha2.upper() == code_upper
+            or self.alpha3.upper() == code_upper
+            or self.numeric == code
+            or (code.isdigit() and self.numeric == code.zfill(3))
+        )
+
+
 class FoundryCatalog:
     """Immutable catalog loader for Foundry pattern datasets.
 
@@ -346,6 +397,9 @@ class FoundryCatalog:
         self._mime_types: dict[str, MimeType] | None = None
         self._http_groups: dict[str, HttpStatusGroup] | None = None
         self._http_code_to_group: dict[int, str] | None = None
+        self._countries: dict[str, Country] | None = None  # Keyed by uppercase Alpha-2
+        self._countries_alpha3: dict[str, Country] | None = None  # Keyed by uppercase Alpha-3
+        self._countries_numeric: dict[str, Country] | None = None  # Keyed by zero-padded numeric
 
     def _load_patterns(self) -> dict[str, Pattern]:
         """Load patterns from Crucible (lazy loading).
@@ -409,6 +463,49 @@ class FoundryCatalog:
         self._http_code_to_group = code_to_group
         return groups
 
+    def _load_countries(self) -> tuple[dict[str, Country], dict[str, Country], dict[str, Country]]:
+        """Load countries from Crucible (lazy loading).
+
+        Builds three precomputed indexes for O(1) lookups:
+        - Alpha-2 (uppercase, e.g., "US")
+        - Alpha-3 (uppercase, e.g., "USA")
+        - Numeric (zero-padded to 3 digits, e.g., "840")
+
+        Returns:
+            Tuple of (alpha2_dict, alpha3_dict, numeric_dict)
+        """
+        if self._countries is not None:
+            return self._countries, self._countries_alpha3, self._countries_numeric  # type: ignore
+
+        config = self._config_loader.load("library/foundry/country-codes")
+        countries = {}
+        countries_alpha3 = {}
+        countries_numeric = {}
+
+        for country_data in config.get("countries", []):
+            country = Country(**country_data)
+
+            # Build primary index (Alpha-2, uppercase)
+            if country.alpha2:
+                normalized_alpha2 = country.alpha2.upper()
+                countries[normalized_alpha2] = country
+
+            # Build secondary index (Alpha-3, uppercase)
+            if country.alpha3:
+                normalized_alpha3 = country.alpha3.upper()
+                countries_alpha3[normalized_alpha3] = country
+
+            # Build tertiary index (Numeric, zero-padded to 3 digits)
+            if country.numeric:
+                # Ensure numeric code is zero-padded to 3 digits
+                numeric_code = country.numeric.zfill(3)
+                countries_numeric[numeric_code] = country
+
+        self._countries = countries
+        self._countries_alpha3 = countries_alpha3
+        self._countries_numeric = countries_numeric
+        return countries, countries_alpha3, countries_numeric
+
     def get_pattern(self, pattern_id: str) -> Pattern | None:
         """Get pattern by ID.
 
@@ -455,6 +552,29 @@ class FoundryCatalog:
         """
         mime_types = self._load_mime_types()
         return mime_types.get(mime_id)
+
+    def get_mime_type_by_mime_string(self, mime_string: str) -> MimeType | None:
+        """Get MIME type by MIME string (e.g., "application/json").
+
+        Args:
+            mime_string: MIME type string
+
+        Returns:
+            MimeType instance or None if not found
+
+        Example:
+            >>> mime_type = catalog.get_mime_type_by_mime_string("application/json")
+            >>> mime_type.id
+            'json'
+        """
+        mime_types = self._load_mime_types()
+        mime_lower = mime_string.lower()
+
+        for mime_type in mime_types.values():
+            if mime_type.mime.lower() == mime_lower:
+                return mime_type
+
+        return None
 
     def get_mime_type_by_extension(self, extension: str) -> MimeType | None:
         """Get MIME type by file extension.
@@ -535,6 +655,81 @@ class FoundryCatalog:
             Dictionary mapping group ID to HttpStatusGroup instance
         """
         return self._load_http_groups().copy()
+
+    def get_country(self, alpha2: str) -> Country | None:
+        """Get country by Alpha-2 code (case-insensitive).
+
+        Args:
+            alpha2: ISO 3166-1 alpha-2 code (e.g., "US", "us")
+
+        Returns:
+            Country instance or None if not found
+
+        Example:
+            >>> country = catalog.get_country("US")
+            >>> country.name
+            'United States of America'
+        """
+        countries, _, _ = self._load_countries()
+        normalized = alpha2.upper()
+        return countries.get(normalized)
+
+    def get_country_by_alpha3(self, alpha3: str) -> Country | None:
+        """Get country by Alpha-3 code (case-insensitive).
+
+        Args:
+            alpha3: ISO 3166-1 alpha-3 code (e.g., "USA", "usa")
+
+        Returns:
+            Country instance or None if not found
+
+        Example:
+            >>> country = catalog.get_country_by_alpha3("USA")
+            >>> country.name
+            'United States of America'
+        """
+        _, countries_alpha3, _ = self._load_countries()
+        normalized = alpha3.upper()
+        return countries_alpha3.get(normalized)
+
+    def get_country_by_numeric(self, numeric: str) -> Country | None:
+        """Get country by numeric ISO 3166-1 code.
+
+        The code is normalized to zero-padded 3-digit string.
+        Accepts numeric codes with or without leading zeros.
+
+        Args:
+            numeric: Numeric country code (e.g., "840", "76")
+
+        Returns:
+            Country instance or None if not found
+
+        Example:
+            >>> country = catalog.get_country_by_numeric("840")
+            >>> country.name
+            'United States of America'
+            >>> country = catalog.get_country_by_numeric("76")  # Brazil
+            >>> country.name
+            'Brazil'
+        """
+        _, _, countries_numeric = self._load_countries()
+        # Normalize to 3 digits with zero-padding
+        normalized = numeric.zfill(3)
+        return countries_numeric.get(normalized)
+
+    def list_countries(self) -> list[Country]:
+        """List all countries from catalog.
+
+        Returns:
+            List of all Country instances
+
+        Example:
+            >>> countries = catalog.list_countries()
+            >>> len(countries) > 0
+            True
+        """
+        countries, _, _ = self._load_countries()
+        return list(countries.values())
 
 
 class PatternAccessor:
@@ -862,6 +1057,67 @@ def get_mime_type_by_extension(extension: str) -> MimeType | None:
     return catalog.get_mime_type_by_extension(extension)
 
 
+def get_mime_type_by_mime_string(mime_string: str) -> MimeType | None:
+    """Get MIME type from default catalog by MIME string.
+
+    Convenience function that uses the default catalog singleton.
+
+    Args:
+        mime_string: MIME type string (e.g., "application/json")
+
+    Returns:
+        MimeType instance or None if not found
+
+    Example:
+        >>> from pyfulmen.foundry import get_mime_type_by_mime_string
+        >>> mime = get_mime_type_by_mime_string("application/json")
+        >>> print(mime.id)
+        json
+    """
+    catalog = get_default_catalog()
+    return catalog.get_mime_type_by_mime_string(mime_string)
+
+
+def is_supported_mime_type(mime_string: str) -> bool:
+    """Check if MIME type string is supported in catalog.
+
+    Convenience function that uses the default catalog singleton.
+
+    Args:
+        mime_string: MIME type string to check
+
+    Returns:
+        True if MIME type is in catalog, False otherwise
+
+    Example:
+        >>> from pyfulmen.foundry import is_supported_mime_type
+        >>> is_supported_mime_type("application/json")
+        True
+        >>> is_supported_mime_type("application/x-unknown")
+        False
+    """
+    catalog = get_default_catalog()
+    return catalog.get_mime_type_by_mime_string(mime_string) is not None
+
+
+def list_mime_types() -> list[MimeType]:
+    """List all MIME types from default catalog.
+
+    Convenience function that uses the default catalog singleton.
+
+    Returns:
+        List of all MIME type instances
+
+    Example:
+        >>> from pyfulmen.foundry import list_mime_types
+        >>> types = list_mime_types()
+        >>> len(types) > 0
+        True
+    """
+    catalog = get_default_catalog()
+    return list(catalog.get_all_mime_types().values())
+
+
 def is_success(status_code: int) -> bool:
     """Check if HTTP status code is successful (2xx).
 
@@ -925,11 +1181,184 @@ def is_server_error(status_code: int) -> bool:
     return helper.is_server_error(status_code)
 
 
+def is_informational(status_code: int) -> bool:
+    """Check if HTTP status code is informational (1xx).
+
+    Convenience function that uses the default catalog singleton.
+
+    Args:
+        status_code: HTTP status code
+
+    Returns:
+        True if code is in 100-199 range
+
+    Example:
+        >>> from pyfulmen.foundry import is_informational
+        >>> if is_informational(100):
+        ...     print("Continue response")
+    """
+    catalog = get_default_catalog()
+    helper = HttpStatusHelper(catalog)
+    return helper.is_informational(status_code)
+
+
+def is_redirect(status_code: int) -> bool:
+    """Check if HTTP status code is redirect (3xx).
+
+    Convenience function that uses the default catalog singleton.
+
+    Args:
+        status_code: HTTP status code
+
+    Returns:
+        True if code is in 300-399 range
+
+    Example:
+        >>> from pyfulmen.foundry import is_redirect
+        >>> if is_redirect(301):
+        ...     print("Moved permanently")
+    """
+    catalog = get_default_catalog()
+    helper = HttpStatusHelper(catalog)
+    return helper.is_redirect(status_code)
+
+
+def validate_country_code(code: str) -> bool:
+    """Check if country code is valid (Alpha-2, Alpha-3, or Numeric).
+
+    Convenience function that uses the default catalog singleton.
+    Supports all three ISO 3166-1 formats with case-insensitive matching.
+
+    Args:
+        code: Country code to validate (alpha-2, alpha-3, or numeric)
+
+    Returns:
+        True if code is valid, False otherwise
+
+    Example:
+        >>> from pyfulmen.foundry import validate_country_code
+        >>> if validate_country_code("US"):
+        ...     print("Valid country code")
+        >>> if validate_country_code("usa"):  # Case-insensitive
+        ...     print("Valid country code")
+        >>> if validate_country_code("76"):  # Brazil numeric
+        ...     print("Valid country code")
+    """
+    if not code:
+        return False
+
+    catalog = get_default_catalog()
+
+    # Try Alpha-2 lookup
+    if catalog.get_country(code) is not None:
+        return True
+
+    # Try Alpha-3 lookup
+    if catalog.get_country_by_alpha3(code) is not None:
+        return True
+
+    # Try Numeric lookup
+    return code.isdigit() and catalog.get_country_by_numeric(code) is not None
+
+
+def get_country(alpha2: str) -> Country | None:
+    """Get country from default catalog by Alpha-2 code.
+
+    Convenience function that uses the default catalog singleton.
+
+    Args:
+        alpha2: ISO 3166-1 alpha-2 code (e.g., "US", "us")
+
+    Returns:
+        Country instance or None if not found
+
+    Example:
+        >>> from pyfulmen.foundry import get_country
+        >>> country = get_country("US")
+        >>> if country:
+        ...     print(country.name)
+        United States of America
+    """
+    catalog = get_default_catalog()
+    return catalog.get_country(alpha2)
+
+
+def get_country_by_alpha3(alpha3: str) -> Country | None:
+    """Get country from default catalog by Alpha-3 code.
+
+    Convenience function that uses the default catalog singleton.
+
+    Args:
+        alpha3: ISO 3166-1 alpha-3 code (e.g., "USA", "usa")
+
+    Returns:
+        Country instance or None if not found
+
+    Example:
+        >>> from pyfulmen.foundry import get_country_by_alpha3
+        >>> country = get_country_by_alpha3("USA")
+        >>> if country:
+        ...     print(country.name)
+        United States of America
+    """
+    catalog = get_default_catalog()
+    return catalog.get_country_by_alpha3(alpha3)
+
+
+def get_country_by_numeric(numeric: str) -> Country | None:
+    """Get country from default catalog by numeric code.
+
+    Convenience function that uses the default catalog singleton.
+    Numeric codes are zero-padded to 3 digits automatically.
+
+    Args:
+        numeric: Numeric country code (e.g., "840", "76")
+
+    Returns:
+        Country instance or None if not found
+
+    Example:
+        >>> from pyfulmen.foundry import get_country_by_numeric
+        >>> country = get_country_by_numeric("840")
+        >>> if country:
+        ...     print(country.name)
+        United States of America
+        >>> country = get_country_by_numeric("76")  # Brazil
+        >>> if country:
+        ...     print(country.name)
+        Brazil
+    """
+    catalog = get_default_catalog()
+    return catalog.get_country_by_numeric(numeric)
+
+
+def list_countries() -> list[Country]:
+    """List all countries from default catalog.
+
+    Convenience function that uses the default catalog singleton.
+
+    Returns:
+        List of all Country instances
+
+    Example:
+        >>> from pyfulmen.foundry import list_countries
+        >>> countries = list_countries()
+        >>> for country in countries:
+        ...     print(f"{country.alpha2}: {country.name}")
+        US: United States of America
+        CA: Canada
+        ...
+    """
+    catalog = get_default_catalog()
+    return catalog.list_countries()
+
+
 __all__ = [
     "Pattern",
     "MimeType",
     "HttpStatusCode",
     "HttpStatusGroup",
+    "Country",
     "FoundryCatalog",
     "PatternAccessor",
     "HttpStatusHelper",
@@ -937,7 +1366,17 @@ __all__ = [
     "get_pattern",
     "get_mime_type",
     "get_mime_type_by_extension",
+    "get_mime_type_by_mime_string",
+    "is_supported_mime_type",
+    "list_mime_types",
     "is_success",
     "is_client_error",
     "is_server_error",
+    "is_informational",
+    "is_redirect",
+    "validate_country_code",
+    "get_country",
+    "get_country_by_alpha3",
+    "get_country_by_numeric",
+    "list_countries",
 ]

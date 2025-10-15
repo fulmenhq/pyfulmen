@@ -288,20 +288,50 @@ class FulmenCatalogModel(FulmenBaseModel):
     Features:
     - Immutable (frozen=True) - catalog entries never change
     - Flexible schema (extra='ignore') - ignores unknown fields from catalog updates
+    - Field name flexibility (populate_by_name=True) - accepts both field names and aliases
     - Supports lazy-loaded computed fields
     - Optimized for lookups and caching
 
+    Field Naming:
+        The `populate_by_name=True` setting allows Crucible YAML/JSON catalogs to use
+        either camelCase or snake_case field names. This is particularly useful when:
+        - YAML uses camelCase (e.g., `officialName`) but Python prefers snake_case
+          (e.g., `official_name`)
+        - Crucible schemas define field aliases for cross-language consistency
+
+        With this setting enabled, both forms work:
+        >>> # Using field name (Python style)
+        >>> Country(alpha2="US", alpha3="USA", numeric="840", name="...", official_name="...")
+        >>> # Using alias (YAML/JSON style)
+        >>> Country(alpha2="US", alpha3="USA", numeric="840", name="...", officialName="...")
+
+        Without populate_by_name=True, only the alias form would work, which is less Pythonic
+        and surprising to Python developers.
+
     Example:
         >>> from pyfulmen.foundry import FulmenCatalogModel
-        >>> class Pattern(FulmenCatalogModel):
-        ...     id: str
-        ...     pattern: str
-        ...     pattern_type: str
+        >>> from pydantic import Field
+        >>> class Country(FulmenCatalogModel):
+        ...     alpha2: str
+        ...     alpha3: str
+        ...     numeric: str
+        ...     name: str
+        ...     official_name: str | None = Field(None, alias="officialName")
         ...
-        >>> email_pattern = Pattern(
-        ...     id="email",
-        ...     pattern=r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$",
-        ...     pattern_type="regex"
+        >>> # Both forms work due to populate_by_name=True
+        >>> country = Country(
+        ...     alpha2="US",
+        ...     alpha3="USA",
+        ...     numeric="840",
+        ...     name="United States of America",
+        ...     official_name="United States of America"  # Pythonic
+        ... )
+        >>> country = Country(
+        ...     alpha2="US",
+        ...     alpha3="USA",
+        ...     numeric="840",
+        ...     name="United States of America",
+        ...     officialName="United States of America"  # YAML/JSON alias
         ... )
     """
 
@@ -309,6 +339,7 @@ class FulmenCatalogModel(FulmenBaseModel):
         frozen=True,
         extra="ignore",
         validate_assignment=True,
+        populate_by_name=True,  # Allow both field names and aliases (added v0.1.2)
         use_enum_values=True,
     )
 
