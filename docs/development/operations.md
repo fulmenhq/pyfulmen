@@ -74,6 +74,7 @@ make docs            # Generate documentation
 PyFulmen uses goneat-managed git hooks for automated quality checks:
 
 **Installed Hooks**:
+
 - **pre-commit**: Runs `make precommit` (formatting + linting)
 - **pre-push**: Runs `make prepush` (all checks + full test suite)
 
@@ -98,12 +99,14 @@ bin/goneat hooks install
 ```
 
 **Hook Configuration**:
+
 - Configuration: `.goneat/hooks.yaml`
 - Generated hooks: `.goneat/hooks/`
 - Installed hooks: `.git/hooks/`
 - Guardian config: `~/.goneat/guardian/config.yaml` (user-level)
 
 **Bypassing Hooks** (not recommended):
+
 ```bash
 # Skip pre-commit (emergency only)
 git commit --no-verify -m "message"

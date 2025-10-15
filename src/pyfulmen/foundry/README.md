@@ -338,29 +338,91 @@ print(slug.describe())
 - `iso_date()` - ISO 8601 dates (YYYY-MM-DD)
 - `iso_timestamp_utc()` - ISO 8601 UTC timestamps
 
-### MimeType
+### MIME Type Detection
 
-Immutable MIME type definition with extension matching.
+Immutable MIME type definitions with multiple lookup methods per Crucible standard.
 
-**Example:**
+**Catalog Methods:**
 
 ```python
+from pyfulmen.foundry import FoundryCatalog
+from pyfulmen.config.loader import ConfigLoader
+
+loader = ConfigLoader(app_name="fulmen")
+catalog = FoundryCatalog(loader)
+
+# Lookup by MIME type ID
 mime = catalog.get_mime_type("json")
 print(mime.mime)  # "application/json"
 print(mime.extensions)  # ["json", "map"]
 
-# Check if extension matches
-if mime.matches_extension(".json"):
-    print("JSON file")
+# Lookup by file extension
+mime = catalog.get_mime_type_by_extension("json")
+print(mime.mime)  # "application/json"
+
+# Lookup by MIME string
+mime = catalog.get_mime_type_by_mime_string("application/json")
+print(mime.id)  # "json"
+
+# List all MIME types
+mime_types = catalog.get_all_mime_types()
+for mime in mime_types.values():
+    print(f"{mime.id}: {mime.mime}")
 ```
 
-### HttpStatusGroup
+**Convenience Functions:**
 
-HTTP status code groups with lookup and classification.
-
-**Example:**
+For quick access without creating a catalog instance:
 
 ```python
+from pyfulmen.foundry import (
+    get_mime_type_by_extension,
+    get_mime_type_by_mime_string,
+    is_supported_mime_type,
+    list_mime_types,
+)
+
+# Check if MIME type is supported
+if is_supported_mime_type("application/json"):
+    print("JSON is supported")
+
+# Get MIME type by extension
+mime = get_mime_type_by_extension("json")
+
+# Get MIME type by MIME string (case-insensitive)
+mime = get_mime_type_by_mime_string("application/json")
+
+# List all available MIME types
+for mime in list_mime_types():
+    print(f"{mime.id}: {mime.mime}")
+```
+
+**Extension Matching:**
+
+```python
+mime = catalog.get_mime_type("json")
+
+# Check if extension matches (with or without dot)
+if mime.matches_extension(".json"):
+    print("Matches .json extension")
+
+if mime.matches_extension("json"):
+    print("Matches json extension")
+```
+
+### HTTP Status Helpers
+
+HTTP status code groups with lookup, classification, and convenience helpers per Crucible standard.
+
+**Catalog Methods:**
+
+```python
+from pyfulmen.foundry import FoundryCatalog, HttpStatusHelper
+from pyfulmen.config.loader import ConfigLoader
+
+loader = ConfigLoader(app_name="fulmen")
+catalog = FoundryCatalog(loader)
+
 # Get status group by ID
 success_group = catalog.get_http_status_group("success")
 print(success_group.contains(200))  # True
@@ -370,15 +432,196 @@ print(success_group.get_reason(201))  # "Created"
 group = catalog.get_http_status_group_for_code(404)
 print(group.id)  # "client-error"
 print(group.name)  # "Client Error Responses"
+
+# Use HttpStatusHelper for classification
+helper = HttpStatusHelper(catalog)
+print(helper.is_success(200))  # True
+print(helper.is_client_error(404))  # True
+print(helper.is_server_error(500))  # True
+```
+
+**Convenience Functions:**
+
+For quick status code classification without creating a catalog instance:
+
+```python
+from pyfulmen.foundry import (
+    is_informational,
+    is_success,
+    is_redirect,
+    is_client_error,
+    is_server_error,
+)
+
+# Check status code categories
+if is_success(200):
+    print("Success response")
+
+if is_client_error(404):
+    print("Client error - not found")
+
+if is_server_error(500):
+    print("Server error")
+
+if is_informational(100):
+    print("Informational response")
+
+if is_redirect(301):
+    print("Redirect response")
 ```
 
 **Available Status Groups:**
 
-- `informational` - 1xx responses
-- `success` - 2xx responses
-- `redirect` - 3xx responses
-- `client-error` - 4xx responses
-- `server-error` - 5xx responses
+- `informational` - 1xx responses (100-199)
+- `success` - 2xx responses (200-299)
+- `redirect` - 3xx responses (300-399)
+- `client-error` - 4xx responses (400-499)
+- `server-error` - 5xx responses (500-599)
+
+### Country Code Lookups
+
+ISO 3166-1 country code support with Alpha-2, Alpha-3, and Numeric lookups.
+
+**Catalog Methods:**
+
+```python
+from pyfulmen.foundry import FoundryCatalog
+from pyfulmen.config.loader import ConfigLoader
+
+loader = ConfigLoader(app_name="fulmen")
+catalog = FoundryCatalog(loader)
+
+# Lookup by Alpha-2 (case-insensitive)
+country = catalog.get_country("US")
+print(country.name)  # "United States of America"
+
+# Lookup by Alpha-3 (case-insensitive)
+country = catalog.get_country_by_alpha3("USA")
+print(country.alpha2)  # "US"
+
+# Lookup by Numeric (zero-padded automatically)
+country = catalog.get_country_by_numeric("840")
+print(country.name)  # "United States of America"
+
+country = catalog.get_country_by_numeric("76")  # Brazil
+print(country.numeric)  # "076" (zero-padded)
+
+# List all countries
+countries = catalog.list_countries()
+for country in countries:
+    print(f"{country.alpha2}: {country.name}")
+```
+
+**Convenience Functions:**
+
+```python
+from pyfulmen.foundry import (
+    validate_country_code,
+    get_country,
+    get_country_by_alpha3,
+    get_country_by_numeric,
+    list_countries,
+)
+
+# Validate country codes (all formats)
+if validate_country_code("US"):      # Alpha-2
+    print("Valid")
+if validate_country_code("usa"):     # Alpha-3 (case-insensitive)
+    print("Valid")
+if validate_country_code("76"):      # Numeric (Brazil)
+    print("Valid")
+
+# Quick lookups
+country = get_country("US")
+country = get_country_by_alpha3("USA")
+country = get_country_by_numeric("840")
+
+# List all
+for country in list_countries():
+    print(f"{country.alpha2}: {country.name}")
+```
+
+**Key Features:**
+
+- **Case-insensitive** alpha code matching ("us" → "US")
+- **Automatic zero-padding** for numeric codes ("76" → "076")
+- **O(1) lookups** via precomputed indexes
+- **5 sample countries**: US, CA, JP, DE, BR
+
+## Crucible Standards Conformance
+
+PyFulmen Foundry implements the Crucible Foundry pattern catalog standard with the following conformance status:
+
+### Implemented ✅
+
+**Base Models (Phase 0)**
+
+- `FulmenDataModel` - Immutable data models with JSON serialization
+- `FulmenConfigModel` - Mutable config models with deep merge
+- `FulmenCatalogModel` - Immutable catalog entries
+- UUIDv7 correlation ID generation
+- RFC3339Nano timestamp generation
+
+**Pattern Catalog (Phase 1)**
+
+- Regex, glob, and literal pattern matching
+- Lazy loading with caching
+- Python-specific magic methods (`__call__`)
+- PatternAccessor for convenient pattern access
+- Full pattern catalog from Crucible sync
+
+**MIME Type Interface (Phase 2A)**
+
+- `get_mime_type(id)` - Lookup by MIME type ID
+- `get_mime_type_by_extension(ext)` - Lookup by file extension
+- `get_mime_type_by_mime_string(mime)` - Lookup by MIME string (case-insensitive)
+- `is_supported_mime_type(mime)` - Check if MIME type is supported
+- `list_mime_types()` - Enumerate all MIME types
+- Extension matching with or without dot prefix
+
+**HTTP Status Helpers (Phase 2B)**
+
+- `HttpStatusGroup` catalog entries
+- `HttpStatusHelper` for classification
+- Convenience functions: `is_informational()`, `is_success()`, `is_redirect()`, `is_client_error()`, `is_server_error()`
+- Status code lookup and reason phrase access
+
+**Country Code Catalog (Phase 2E)**
+
+- ISO 3166-1 Alpha-2/Alpha-3/Numeric lookups
+- Case-insensitive validation with `validate_country_code()`
+- Numeric zero-padding canonicalization ("76" → "076")
+- O(1) lookups via precomputed indexes
+- 5 sample countries from Crucible catalog (US, CA, JP, DE, BR)
+
+### Deferred 🔄
+
+**Magic Number Detection (Phase 3 - Optional)**
+
+- `detect_mime_type(input: bytes | stream)` - Byte signature detection
+- Rationale: Requires magic number catalog seeding; deferred to future version when Crucible provides canonical magic number catalog
+
+### Testing Coverage
+
+- **Unit Tests**: 143+ tests covering catalog loading, pattern matching, MIME lookups, HTTP status helpers, country code lookups
+- **Coverage**: 95% on catalog module
+- **Test Strategy**:
+  - Positive and negative test cases for all interfaces
+  - Case-insensitive MIME string lookup validation
+  - Extension matching with/without dot prefix
+  - Lazy loading and caching validation
+  - Pydantic model validation and serialization
+
+### Design Principles
+
+Per Crucible standards, PyFulmen Foundry follows these principles:
+
+1. **Read-Only Catalog** - Catalog entries are immutable (`frozen=True`)
+2. **Single Source of Truth** - All patterns, MIME types, and status codes come from Crucible sync
+3. **Lazy Loading** - Catalogs load on first access, not at import time
+4. **Forward Compatibility** - Catalog models ignore unknown fields (`extra='ignore'`)
+5. **Type Safety** - Pydantic validation for all catalog entries
+6. **Cross-Language Consistency** - UUIDv7, RFC3339Nano match gofulmen/tsfulmen
 
 ## Fulmen Library Requirements
 
@@ -439,8 +682,8 @@ Pydantic v2.12+ computed fields with intelligent exclusion:
 
 Planned enhancements for future versions:
 
-- Global catalog instance with convenience functions
-- HTTP status helper methods (is_success(), is_client_error(), etc.)
-- Country code lookups (ISO alpha-2/alpha-3/numeric)
-- MIME magic number detection from bytes
-- Additional domain-specific utilities
+- **Magic Number Detection** - MIME type detection from byte signatures (awaiting Crucible magic number catalog)
+- **Country Code Catalog** - ISO 3166-1 alpha-2/alpha-3/numeric lookups (planned for v0.2.x)
+- **Pattern Validation Helpers** - Additional domain-specific pattern utilities
+- **Catalog Versioning** - Track Crucible catalog version and sync status
+- **Performance Optimizations** - Compiled regex caching, bloom filters for existence checks

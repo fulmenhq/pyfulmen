@@ -19,7 +19,7 @@ PyFulmen is the third in a series of Fulmen helper libraries, following the Go a
 - ✅ Python 3.13.7 (CPython)
 - ✅ uv 0.8.22 installed
 - ✅ make available
-- ✅ Access to sibling repositories: ../crucible, ../gofulmen, ../fuldx
+- ✅ Access to sibling repositories: ../crucible, ../gofulmen
 
 ## Bootstrap Steps Completed
 
