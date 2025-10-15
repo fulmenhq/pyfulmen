@@ -6,10 +6,12 @@ development in Python, following the Fulmen ecosystem standards.
 Example:
     >>> import pyfulmen
     >>> print(pyfulmen.__version__)
-    0.1.1
+    0.1.2
 """
 
-__version__ = "0.1.1"
+from importlib.metadata import version as _get_version
+
+__version__ = _get_version("pyfulmen")
 
 # Export public API
 __all__ = [

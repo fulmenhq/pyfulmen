@@ -166,13 +166,114 @@ This document tracks release notes and checklists for PyFulmen releases.
 
 ---
 
+## [0.1.2] - 2025-10-15
+
+### Foundry Module Expansion: Country Codes & ADR Infrastructure
+
+**Release Type**: Feature Release - Foundry Phase 2E + Architectural Governance
+**Release Date**: October 15, 2025
+**Status**: 🚧 In Progress (Magic Numbers feature pending)
+
+#### Features
+
+**Country Code Support (Phase 2E)**:
+
+- ✅ **ISO 3166-1 Country Model**: Alpha-2, Alpha-3, Numeric codes with name and official name fields
+- ✅ **Triple-Index Catalog**: O(1) lookups via precomputed Alpha-2, Alpha-3, Numeric indexes
+- ✅ **Case-Insensitive Matching**: "us" → "US", "usa" → "USA", automatic normalization
+- ✅ **Numeric Zero-Padding**: "76" → "076" (Brazil), automatic canonicalization
+- ✅ **Five Convenience Functions**:
+  - `validate_country_code()`: Three-lookup fallback strategy (Alpha-2 → Alpha-3 → Numeric)
+  - `get_country()`: Lookup by Alpha-2 code
+  - `get_country_by_alpha3()`: Lookup by Alpha-3 code
+  - `get_country_by_numeric()`: Lookup by Numeric code (with zero-padding)
+  - `list_countries()`: Enumerate all countries in catalog
+- ✅ **Catalog Integration**: 5 sample countries from Crucible (US, CA, JP, DE, BR)
+- ✅ **Full gofulmen v0.1.1 API Parity**: Identical API signatures and behavior
+- ✅ **32 Comprehensive Tests**: Model, catalog, convenience functions, integration tests
+- ✅ **95% Coverage**: Maintained on catalog module
+
+**ADR Infrastructure (Architectural Governance)**:
+
+- ✅ **Two-Tier ADR System**: Local (Python-specific) and Ecosystem (cross-language) decisions
+- ✅ **Local ADR Infrastructure**: `docs/development/adr/` with comprehensive index and README
+- ✅ **Three Foundry ADRs**:
+  - ADR-0001: FulmenCatalogModel populate_by_name=True (Python-specific Pydantic config)
+  - ADR-0002: validate_country_code() Three-Lookup Strategy (Alpha-2 → Alpha-3 → Numeric)
+  - ADR-0003: Country Catalog Preview Status (lifecycle and maturity communication)
+- ✅ **Four Ecosystem ADRs Synced from Crucible**:
+  - ADR-0002: Triple-Index Catalog Strategy (foundational cross-language pattern)
+  - ADR-0003: Progressive Logging Profiles (SIMPLE/STRUCTURED/ENTERPRISE)
+  - ADR-0004: Schema-Driven Config Hydration (three-layer config pattern)
+  - ADR-0005: CamelCase to Language Convention Mapping (field alias strategy)
+- ✅ **Promotion Path**: Clear process for promoting local → ecosystem ADRs
+- ✅ **+2,000 Lines of Documentation**: Architectural decision records
+
+**MIME Magic Number Detection (Phase 3)** - *(In Progress)*:
+
+- ⏳ **Byte Signature Detection**: Identify MIME types from file magic numbers
+- ⏳ **Stream-Based Detection**: Efficient processing for large files
+- ⏳ **Integration**: Combine with existing extension-based detection
+- ⏳ **Testing**: Comprehensive tests with real file samples
+
+**Version Management Improvement**:
+
+- ✅ **Single Source Pattern**: `__init__.py` now uses `importlib.metadata` to read from pyproject.toml
+- ✅ **Two-File Sync**: Only VERSION and pyproject.toml need manual sync (goneat will automate)
+- ✅ **Dynamic Version Reading**: No more hardcoded version strings in __init__.py
+
+#### Breaking Changes
+
+- None (fully backward compatible with v0.1.1)
+
+#### Migration Notes
+
+- **Version Reading**: `__init__.py` now dynamically reads version from package metadata
+  - No impact on users (transparent change)
+  - Developers: Only update VERSION and pyproject.toml (not __init__.py)
+- **Country Codes**: New API, additive only (no existing APIs changed)
+- **ADR System**: Documentation addition, no code impact
+
+#### Known Limitations
+
+- **5 Sample Countries**: Full 250+ country catalog will come in future Crucible sync
+- **Magic Numbers**: Pending final implementation before v0.1.2 release
+
+#### Quality Gates
+
+- [x] Country code tests: 32/32 passing (model, catalog, convenience, integration)
+- [x] Version sync test passing (importlib.metadata validation)
+- [x] Code quality checks passing (ruff lint, ruff format)
+- [x] ADR documentation complete and cross-referenced
+- [x] Full gofulmen v0.1.1 behavioral parity verified
+- [ ] Magic numbers implementation (pending)
+- [ ] All tests passing (pending magic numbers)
+- [ ] Final documentation review (pending magic numbers)
+
+#### Release Checklist
+
+- [x] Version number set in VERSION (0.1.2)
+- [x] pyproject.toml version updated (0.1.2)
+- [x] __init__.py refactored to use importlib.metadata
+- [x] CHANGELOG.md updated with v0.1.2 draft
+- [x] RELEASE_NOTES.md updated with v0.1.2 draft
+- [x] Country code implementation complete
+- [x] ADR infrastructure complete
+- [ ] Magic numbers implementation complete
+- [ ] All tests passing
+- [ ] Code quality checks passing
+- [ ] Final documentation review
+- [ ] Agentic attribution proper for all commits
+- [ ] Git tag created (v0.1.2)
+
+---
+
 ## [Unreleased]
 
-### v0.1.2+ - Additional Features (Planned)
+### v0.1.3+ - Additional Features (Planned)
 
-- Country code lookup (optional)
-- MIME magic number detection (optional)
 - Additional ecosystem utilities
+- Expanded catalog coverage
 
 ### v0.2.0 - Enterprise Complete (Planned)
 

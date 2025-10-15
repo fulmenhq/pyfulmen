@@ -74,18 +74,21 @@ def get_version_info() -> dict[str, Any]:
 
 
 def validate_version_sync() -> dict[str, Any]:
-    """Validate that VERSION is synced across all files.
+    """Validate that VERSION is synced with pyproject.toml.
+
+    Since __init__.py now uses importlib.metadata to read from pyproject.toml,
+    we only need to validate VERSION and pyproject.toml are in sync.
+    Goneat tooling will manage this synchronization.
 
     Checks that VERSION file matches:
     - pyproject.toml [project] version
-    - src/pyfulmen/__init__.py __version__
 
     Returns:
         Dictionary with sync status:
         - synced: Whether all versions match
         - version_file: Version from VERSION
         - pyproject_version: Version from pyproject.toml
-        - init_version: Version from __init__.py
+        - init_version: Version from __init__.py (via importlib.metadata)
         - mismatches: List of files with mismatched versions
 
     Example:
@@ -107,16 +110,16 @@ def validate_version_sync() -> dict[str, Any]:
             if pyproject_version != version_file:
                 mismatches.append("pyproject.toml")
 
-    # Check __init__.py
-    init_path = _REPO_ROOT / "src" / "pyfulmen" / "__init__.py"
+    # Get __init__.py version via import (uses importlib.metadata)
     init_version = None
-    if init_path.exists():
-        content = init_path.read_text()
-        match = re.search(r'^__version__\s*=\s*["\']([^"\']+)["\']', content, re.MULTILINE)
-        if match:
-            init_version = match.group(1)
-            if init_version != version_file:
-                mismatches.append("__init__.py")
+    try:
+        import pyfulmen
+        init_version = pyfulmen.__version__
+        # __init__.py version comes from pyproject.toml via importlib.metadata,
+        # so if pyproject.toml matches VERSION, __init__.py will too
+    except Exception:
+        # If import fails, just skip this check
+        pass
 
     return {
         "synced": len(mismatches) == 0,

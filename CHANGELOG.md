@@ -11,6 +11,66 @@ No unreleased changes.
 
 ---
 
+## [0.1.2] - 2025-10-15
+
+### Added
+
+- **Architecture Decision Records (ADR) Infrastructure**: Two-tier ADR system for architectural governance
+  - Local ADR infrastructure in `docs/development/adr/` with comprehensive index and template
+  - Three foundry architectural decisions documented:
+    - `ADR-0001`: FulmenCatalogModel populate_by_name=True (Python-specific implementation detail)
+    - `ADR-0002`: validate_country_code() Three-Lookup Strategy (Alpha-2 → Alpha-3 → Numeric fallback)
+    - `ADR-0003`: Country Catalog Preview Status (maturity communication for catalog lifecycle)
+  - Four ecosystem ADRs synced from Crucible:
+    - `ADR-0002`: Triple-Index Catalog Strategy (cross-language foundational pattern)
+    - `ADR-0003`: Progressive Logging Profiles (SIMPLE/STRUCTURED/ENTERPRISE definitions)
+    - `ADR-0004`: Schema-Driven Config Hydration (three-layer config pattern)
+    - `ADR-0005`: CamelCase to Language Convention Mapping (field alias strategy)
+  - +2,000 lines of architectural decision documentation
+
+- **Country Code Support (Phase 2E)**: ISO 3166-1 country code lookups with full gofulmen v0.1.1 API parity
+  - `Country` model with Alpha-2, Alpha-3, Numeric codes, name, and optional official name
+  - O(1) lookups via triple-index lazy-loading catalog (precomputed Alpha-2, Alpha-3, Numeric indexes)
+  - Case-insensitive matching: "us" → "US", "usa" → "USA"
+  - Numeric zero-padding canonicalization: "76" → "076" (Brazil)
+  - Five convenience functions: `validate_country_code()`, `get_country()`, `get_country_by_alpha3()`, `get_country_by_numeric()`, `list_countries()`
+  - 5 sample countries from Crucible catalog (US, CA, JP, DE, BR)
+  - 32 comprehensive tests covering model, catalog, convenience functions, and integration
+  - Full behavioral parity with gofulmen v0.1.1 country code implementation
+
+- **MIME Magic Number Detection (Phase 3)**: *(Coming in final v0.1.2 commit)*
+  - Byte signature detection for MIME type identification
+  - Stream-based detection for efficient processing
+  - Integration with existing extension-based detection
+  - *(Details to be added upon completion)*
+
+- **Foundry Documentation Expansion**: Comprehensive README updates
+  - Country code lookup section with catalog methods and convenience functions
+  - Updated Crucible Standards Conformance section (moved Phase 2E from "Deferred" to "Implemented")
+  - Expanded test count: 143+ tests covering all foundry features
+  - Updated coverage metrics: 95% maintained on catalog module
+
+### Changed
+
+- **Version Synchronization**: Aligned VERSION, pyproject.toml, and __init__.py to 0.1.2
+  - Fixed version mismatch between files
+  - Ensures consistent version reporting across tooling
+
+### Fixed
+
+- **Code Style**: Normalized quote styles and list formatting in logging module
+  - Single quotes → double quotes for consistency
+  - Multi-line list formatting for sensitive_keys in RedactSecretsMiddleware
+
+### Documentation
+
+- **ADR System**: Established governance framework for architectural decisions
+  - Clear distinction between local (Python-specific) and ecosystem (cross-language) ADRs
+  - Promotion path from local → ecosystem when cross-language impact identified
+  - Links to Crucible ecosystem ADRs for shared architectural patterns
+
+---
+
 ## [0.1.1] - 2025-10-14
 
 ### Added
