@@ -69,7 +69,9 @@ def compute_sha256(file_path: Path) -> str:
 
 
 def install_via_link(source: str, destination: Path, bin_name: str) -> None:
-    """Install tool by copying from local source."""
+    """Install tool by creating symlink to local source."""
+    import os
+
     source_path = Path(source).expanduser().resolve()
 
     if not source_path.exists():
@@ -81,12 +83,13 @@ def install_via_link(source: str, destination: Path, bin_name: str) -> None:
     destination.parent.mkdir(parents=True, exist_ok=True)
     dest_file = destination.parent / bin_name
 
-    print(f"  📦 Copying from {source_path}")
-    shutil.copy2(source_path, dest_file)
+    # Remove existing file/symlink if it exists
+    if dest_file.exists() or dest_file.is_symlink():
+        dest_file.unlink()
 
-    # Make executable
-    dest_file.chmod(0o755)
-    print(f"  ✓ Installed to {dest_file}")
+    print(f"  🔗 Creating symlink to {source_path}")
+    os.symlink(source_path, dest_file)
+    print(f"  ✓ Linked {dest_file} → {source_path}")
 
 
 def install_via_download(
