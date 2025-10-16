@@ -170,9 +170,9 @@ This document tracks release notes and checklists for PyFulmen releases.
 
 ### Foundry Module Expansion: Country Codes & ADR Infrastructure
 
-**Release Type**: Feature Release - Foundry Phase 2E + Architectural Governance
+**Release Type**: Feature Release - Foundry Phase 2E + Phase 3 Complete + Architectural Governance
 **Release Date**: October 15, 2025
-**Status**: 🚧 In Progress (Magic Numbers feature pending)
+**Status**: ✅ Released
 
 #### Features
 
@@ -209,18 +209,20 @@ This document tracks release notes and checklists for PyFulmen releases.
 - ✅ **Promotion Path**: Clear process for promoting local → ecosystem ADRs
 - ✅ **+2,000 Lines of Documentation**: Architectural decision records
 
-**MIME Magic Number Detection (Phase 3)** - *(In Progress)*:
+**MIME Magic Number Detection (Phase 3)** - _(Complete)_:
 
-- ⏳ **Byte Signature Detection**: Identify MIME types from file magic numbers
-- ⏳ **Stream-Based Detection**: Efficient processing for large files
-- ⏳ **Integration**: Combine with existing extension-based detection
-- ⏳ **Testing**: Comprehensive tests with real file samples
+- ✅ **Byte Signature Detection**: Identify MIME types from file magic numbers
+- ✅ **Stream-Based Detection**: Efficient processing for large files with reader preservation
+- ✅ **BOM Handling**: UTF-8/UTF-16 byte order mark stripping
+- ✅ **Format Support**: JSON, XML, YAML, CSV, plain text
+- ✅ **Golden Fixtures**: 8 cross-language test fixtures under tests/fixtures/foundry/mime/
+- ✅ **Parity Verification**: 100% behavioral parity with gofulmen v0.1.1 (28/28 features)
 
 **Version Management Improvement**:
 
 - ✅ **Single Source Pattern**: `__init__.py` now uses `importlib.metadata` to read from pyproject.toml
 - ✅ **Two-File Sync**: Only VERSION and pyproject.toml need manual sync (goneat will automate)
-- ✅ **Dynamic Version Reading**: No more hardcoded version strings in __init__.py
+- ✅ **Dynamic Version Reading**: No more hardcoded version strings in **init**.py
 
 #### Breaking Changes
 
@@ -230,14 +232,13 @@ This document tracks release notes and checklists for PyFulmen releases.
 
 - **Version Reading**: `__init__.py` now dynamically reads version from package metadata
   - No impact on users (transparent change)
-  - Developers: Only update VERSION and pyproject.toml (not __init__.py)
+  - Developers: Only update VERSION and pyproject.toml (not **init**.py)
 - **Country Codes**: New API, additive only (no existing APIs changed)
 - **ADR System**: Documentation addition, no code impact
 
 #### Known Limitations
 
 - **5 Sample Countries**: Full 250+ country catalog will come in future Crucible sync
-- **Magic Numbers**: Pending final implementation before v0.1.2 release
 
 #### Quality Gates
 
@@ -246,25 +247,25 @@ This document tracks release notes and checklists for PyFulmen releases.
 - [x] Code quality checks passing (ruff lint, ruff format)
 - [x] ADR documentation complete and cross-referenced
 - [x] Full gofulmen v0.1.1 behavioral parity verified
-- [ ] Magic numbers implementation (pending)
-- [ ] All tests passing (pending magic numbers)
-- [ ] Final documentation review (pending magic numbers)
+- [x] Magic numbers implementation complete
+- [x] All tests passing (520 tests)
+- [x] Final documentation review complete
 
 #### Release Checklist
 
 - [x] Version number set in VERSION (0.1.2)
 - [x] pyproject.toml version updated (0.1.2)
-- [x] __init__.py refactored to use importlib.metadata
+- [x] **init**.py refactored to use importlib.metadata
 - [x] CHANGELOG.md updated with v0.1.2 draft
 - [x] RELEASE_NOTES.md updated with v0.1.2 draft
 - [x] Country code implementation complete
 - [x] ADR infrastructure complete
-- [ ] Magic numbers implementation complete
-- [ ] All tests passing
-- [ ] Code quality checks passing
-- [ ] Final documentation review
-- [ ] Agentic attribution proper for all commits
-- [ ] Git tag created (v0.1.2)
+- [x] Magic numbers implementation complete
+- [x] All tests passing (520 tests)
+- [x] Code quality checks passing
+- [x] Final documentation review
+- [x] Agentic attribution proper for all commits
+- [ ] Git tag created (v0.1.2) - pending final commit
 
 ---
 

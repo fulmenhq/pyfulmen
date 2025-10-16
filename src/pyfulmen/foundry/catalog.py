@@ -1353,6 +1353,82 @@ def list_countries() -> list[Country]:
     return catalog.list_countries()
 
 
+def detect_mime_type(data: bytes) -> MimeType | None:
+    """Detect MIME type from raw bytes.
+
+    Convenience function that uses content-based detection.
+    See mime_detection.detect_mime_type for full documentation.
+
+    Args:
+        data: Raw bytes to analyze
+
+    Returns:
+        MimeType instance if detected, None if unknown
+
+    Example:
+        >>> from pyfulmen.foundry import detect_mime_type
+        >>> data = b'{"key": "value"}'
+        >>> mime = detect_mime_type(data)
+        >>> print(mime.mime)
+        application/json
+    """
+    from .mime_detection import detect_mime_type as _detect
+
+    return _detect(data)
+
+
+def detect_mime_type_from_file(path: str) -> MimeType | None:
+    """Detect MIME type from file path.
+
+    Convenience function that uses content-based detection.
+    See mime_detection.detect_mime_type_from_file for full documentation.
+
+    Args:
+        path: File path (string or Path object)
+
+    Returns:
+        MimeType instance if detected, None if unknown or empty
+
+    Raises:
+        FileNotFoundError: If file doesn't exist
+        IOError: If file cannot be read
+
+    Example:
+        >>> from pyfulmen.foundry import detect_mime_type_from_file
+        >>> mime = detect_mime_type_from_file('config.json')
+        >>> if mime:
+        ...     print(f'Detected: {mime.mime}')
+    """
+    from .mime_detection import detect_mime_type_from_file as _detect_file
+
+    return _detect_file(path)
+
+
+def detect_mime_type_from_reader(reader, max_bytes: int = 512) -> tuple[MimeType | None, any]:
+    """Detect MIME type from streaming data.
+
+    Convenience function that uses content-based detection.
+    See mime_detection.detect_mime_type_from_reader for full documentation.
+
+    Args:
+        reader: Input stream
+        max_bytes: Maximum bytes to read for detection (default 512)
+
+    Returns:
+        Tuple of (MimeType or None, new_reader with buffered bytes)
+
+    Example:
+        >>> from pyfulmen.foundry import detect_mime_type_from_reader
+        >>> with open('data.bin', 'rb') as f:
+        ...     mime, reader = detect_mime_type_from_reader(f)
+        ...     if mime:
+        ...         process_file(reader, mime)
+    """
+    from .mime_detection import detect_mime_type_from_reader as _detect_reader
+
+    return _detect_reader(reader, max_bytes)
+
+
 __all__ = [
     "Pattern",
     "MimeType",
@@ -1369,6 +1445,9 @@ __all__ = [
     "get_mime_type_by_mime_string",
     "is_supported_mime_type",
     "list_mime_types",
+    "detect_mime_type",
+    "detect_mime_type_from_file",
+    "detect_mime_type_from_reader",
     "is_success",
     "is_client_error",
     "is_server_error",

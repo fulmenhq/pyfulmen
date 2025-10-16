@@ -32,8 +32,8 @@ logger.info(
         "api_key": "sk_live_51234567890",  # Will be redacted to [REDACTED]
         "headers": {
             "Authorization": "Bearer secret_token"  # Will be redacted
-        }
-    }
+        },
+    },
 )
 
 # PII is automatically redacted
@@ -43,8 +43,8 @@ logger.info(
         "email": "alice@example.com",  # Will be redacted
         "phone": "+1-555-123-4567",  # Will be redacted
         "ssn": "123-45-6789",  # Will be redacted
-        "username": "alice123"  # Username is preserved
-    }
+        "username": "alice123",  # Username is preserved
+    },
 )
 
 # Error tracking with full context
@@ -53,14 +53,15 @@ try:
     raise ValueError("Invalid payment amount")
 except Exception as e:
     import traceback
+
     logger.error(
         "Payment validation failed",
         context={
             "error": str(e),
             "payment_id": "pay_abc123",
             "customer_id": "cust_xyz789",
-            "stacktrace": traceback.format_exc()  # Include stack trace in context
-        }
+            "stacktrace": traceback.format_exc(),  # Include stack trace in context
+        },
     )
 
 # Correlation context for distributed tracing
@@ -79,7 +80,7 @@ from pyfulmen.logging import extract_correlation_id_from_headers
 headers = {
     "X-Correlation-ID": "req-from-client-123",
     "X-Request-ID": "backup-id",
-    "User-Agent": "Mozilla/5.0"
+    "User-Agent": "Mozilla/5.0",
 }
 
 correlation_id = extract_correlation_id_from_headers(headers)
@@ -92,7 +93,7 @@ audit_logger = Logger(
     service="payment-api",
     profile=LoggingProfile.ENTERPRISE,
     component="audit",
-    environment="production"
+    environment="production",
 )
 
 audit_logger.info(
@@ -102,8 +103,8 @@ audit_logger.info(
         "resource": "users/123",
         "user_id": "admin_001",
         "ip_address": "192.168.1.100",
-        "timestamp_utc": "2024-10-14T12:00:00Z"
-    }
+        "timestamp_utc": "2024-10-14T12:00:00Z",
+    },
 )
 
 # Throttling prevents log flooding

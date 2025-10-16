@@ -958,3 +958,35 @@ class TestCountryIntegration:
         # Test model validation
         model_dict = address.model_dump()
         assert model_dict["country"]["alpha2"] == "US"
+
+
+class TestMimeDetectionIntegration:
+    """Integration tests for MIME detection via catalog API."""
+
+    def test_detect_via_catalog_import(self):
+        from pyfulmen.foundry import detect_mime_type
+
+        data = b'{"key": "value"}'
+        mime = detect_mime_type(data)
+        assert mime.mime == "application/json"
+
+    def test_detect_file_via_catalog_import(self, tmp_path):
+        from pyfulmen.foundry import detect_mime_type_from_file
+
+        file = tmp_path / "test.yaml"
+        file.write_bytes(b"key: value\n")
+
+        mime = detect_mime_type_from_file(str(file))
+        assert mime.id == "yaml"
+
+    def test_detect_reader_via_catalog_import(self):
+        import io
+
+        from pyfulmen.foundry import detect_mime_type_from_reader
+
+        data = b'<?xml version="1.0"?><root/>'
+        reader = io.BytesIO(data)
+
+        mime, new_reader = detect_mime_type_from_reader(reader)
+        assert mime.id == "xml"
+        assert new_reader.read() == data

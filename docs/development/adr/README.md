@@ -117,6 +117,7 @@ ADRs are **immutable** once accepted. Instead of editing:
 | [ADR-0001](ADR-0001-fulmencatalogmodel-populate-by-name.md)   | FulmenCatalogModel populate_by_name=True      | 2025-10-15 | Accepted |
 | [ADR-0002](ADR-0002-validate-country-code-lookup-strategy.md) | validate_country_code() Three-Lookup Strategy | 2025-10-15 | Accepted |
 | [ADR-0003](ADR-0003-country-catalog-preview-status.md)        | Country Code Catalog Preview Status           | 2025-10-15 | Accepted |
+| [ADR-0004](ADR-0004-tool-config-separation.md)                | Tool Configuration Separation                 | 2025-10-15 | Accepted |
 
 ### Ecosystem ADRs (Reference)
 
@@ -153,6 +154,10 @@ PyFulmen implements these cross-language architectural decisions from Crucible. 
 
 - [ADR-0002](ADR-0002-validate-country-code-lookup-strategy.md) - Parity with gofulmen v0.1.1
 - [Ecosystem ADR-0002](../../crucible-py/architecture/decisions/ADR-0002-triple-index-catalog-strategy.md) - gofulmen implementation match
+
+#### DevOps & Tooling
+
+- [ADR-0004](ADR-0004-tool-config-separation.md) - Tool configuration separation (DRY principle)
 
 ## Architectural Principles
 

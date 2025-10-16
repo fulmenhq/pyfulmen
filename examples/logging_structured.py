@@ -23,8 +23,8 @@ logger.info(
         "method": "GET",
         "path": "/api/users",
         "query": {"page": 1, "limit": 10},
-        "response_time_ms": 45
-    }
+        "response_time_ms": 45,
+    },
 )
 
 # Log with nested context
@@ -35,12 +35,8 @@ logger.info(
         "query": "SELECT * FROM users WHERE active = true",
         "duration_ms": 23,
         "rows_returned": 150,
-        "connection": {
-            "host": "db.example.com",
-            "database": "production",
-            "pool_size": 10
-        }
-    }
+        "connection": {"host": "db.example.com", "database": "production", "pool_size": 10},
+    },
 )
 
 # Error logging with structured context
@@ -52,8 +48,8 @@ logger.error(
         "amount": 99.99,
         "currency": "USD",
         "error_code": "INSUFFICIENT_FUNDS",
-        "customer_id": "cust_67890"
-    }
+        "customer_id": "cust_67890",
+    },
 )
 
 # Using correlation context for request tracking
@@ -70,11 +66,7 @@ logger_with_metadata = Logger(
     service="worker-service",
     profile=LoggingProfile.STRUCTURED,
     environment="staging",
-    static_fields={
-        "version": "2.1.0",
-        "region": "us-west-2",
-        "instance_id": "i-1234567890abcdef"
-    }
+    static_fields={"version": "2.1.0", "region": "us-west-2", "instance_id": "i-1234567890abcdef"},
 )
 
 logger_with_metadata.info("Worker started", context={"queue": "high-priority"})

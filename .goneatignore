@@ -1,0 +1,8 @@
+# .goneatignore
+# Gitignore-style exclusions for goneat formatting
+
+# Test fixtures - test data, not source code
+tests/fixtures/
+
+# Local config examples (may be incomplete/invalid)
+.goneat/*.local.yaml.example

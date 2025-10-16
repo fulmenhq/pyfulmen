@@ -33,11 +33,7 @@ validator_logger.error("Validation failed", context={"field": "email"})
 # Context is merged into the log message
 logger.info(
     "User login attempt",
-    context={
-        "username": "alice",
-        "ip_address": "192.168.1.100",
-        "user_agent": "Mozilla/5.0"
-    }
+    context={"username": "alice", "ip_address": "192.168.1.100", "user_agent": "Mozilla/5.0"},
 )
 
 # Set log level to filter messages

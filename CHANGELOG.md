@@ -38,21 +38,28 @@ No unreleased changes.
   - 32 comprehensive tests covering model, catalog, convenience functions, and integration
   - Full behavioral parity with gofulmen v0.1.1 country code implementation
 
-- **MIME Magic Number Detection (Phase 3)**: *(Coming in final v0.1.2 commit)*
-  - Byte signature detection for MIME type identification
-  - Stream-based detection for efficient processing
-  - Integration with existing extension-based detection
-  - *(Details to be added upon completion)*
+- **MIME Magic Number Detection (Phase 3)**: Content-based MIME type identification with full gofulmen v0.1.1 API parity
+  - `detect_mime_type(data: bytes)` - Core byte signature detection from raw bytes
+  - `detect_mime_type_from_reader(reader, max_bytes)` - Streaming detection with reader preservation (ChainedReader pattern)
+  - `detect_mime_type_from_file(path)` - File content detection (reads first 512 bytes)
+  - BOM stripping: UTF-8 (EF BB BF), UTF-16 LE (FF FE), UTF-16 BE (FE FF)
+  - Leading whitespace trimming for accurate signature detection
+  - Format detection: JSON (objects/arrays), XML (<?xml declaration), YAML (key: value), CSV (2+ commas), plain text (>80% printable)
+  - Returns None for binary/unknown content (not exceptions)
+  - 83 comprehensive tests including golden fixtures
+  - 8 cross-language golden fixtures: valid-json-object.json, valid-json-array.json, valid-xml.xml, valid-yaml.yaml, valid-csv.csv, valid-text.txt, binary-unknown.bin, json-with-utf8-bom.json
+  - Full behavioral parity with gofulmen v0.1.1 verified via parity checklist (28/28 features, 100% compliance)
 
 - **Foundry Documentation Expansion**: Comprehensive README updates
   - Country code lookup section with catalog methods and convenience functions
-  - Updated Crucible Standards Conformance section (moved Phase 2E from "Deferred" to "Implemented")
-  - Expanded test count: 143+ tests covering all foundry features
-  - Updated coverage metrics: 95% maintained on catalog module
+  - MIME Type Detection (Magic Numbers) section with Core Detection, Streaming Detection, File Detection
+  - Updated Crucible Standards Conformance section (moved Phase 2E and Phase 3 from "Deferred" to "Implemented")
+  - Expanded test count: 520 tests covering all pyfulmen features (227 foundry tests)
+  - Updated coverage metrics: 95% maintained on catalog and mime_detection modules
 
 ### Changed
 
-- **Version Synchronization**: Aligned VERSION, pyproject.toml, and __init__.py to 0.1.2
+- **Version Synchronization**: Aligned VERSION, pyproject.toml, and **init**.py to 0.1.2
   - Fixed version mismatch between files
   - Ensures consistent version reporting across tooling
 

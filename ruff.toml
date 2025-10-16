@@ -4,6 +4,11 @@
 line-length = 100
 target-version = "py312"
 
+# Exclude fixture files - they are test data, not code to lint
+exclude = [
+    "tests/fixtures/",
+]
+
 [lint]
 select = [
     "E",   # pycodestyle errors
@@ -21,6 +26,8 @@ select = [
 "src/pyfulmen/logging/config.py" = ["N815"]
 # Test files: allow asserts, generic Exception in pytest.raises, and unused test fixtures
 "tests/**/*.py" = ["S101", "B017", "F841"]
+# Example files: allow imports not at top (E402) for pedagogical inline demonstrations
+"examples/**/*.py" = ["E402"]
 
 [format]
 quote-style = "double"

@@ -114,6 +114,7 @@ def validate_version_sync() -> dict[str, Any]:
     init_version = None
     try:
         import pyfulmen
+
         init_version = pyfulmen.__version__
         # __init__.py version comes from pyproject.toml via importlib.metadata,
         # so if pyproject.toml matches VERSION, __init__.py will too

@@ -548,6 +548,79 @@ for country in list_countries():
 - **O(1) lookups** via precomputed indexes
 - **5 sample countries**: US, CA, JP, DE, BR
 
+## MIME Type Detection (Magic Numbers)
+
+PyFulmen Foundry supports content-based MIME type detection using byte signatures (magic numbers). This complements extension-based detection and enables validation of file contents.
+
+### Core Detection
+
+```python
+from pyfulmen.foundry import detect_mime_type
+
+# Detect from bytes
+data = b'{"key": "value"}'
+mime = detect_mime_type(data)
+print(mime.mime)  # application/json
+
+# Handles BOM and whitespace
+data = b"\xef\xbb\xbf  {\"key\": \"value\"}"
+mime = detect_mime_type(data)
+print(mime.id)  # json
+
+# Returns None for unknown/binary
+binary = b"\x00\x01\x02\xFF"
+mime = detect_mime_type(binary)
+print(mime)  # None
+```
+
+### Streaming Detection
+
+```python
+from pyfulmen.foundry import detect_mime_type_from_reader
+
+# Detect from stream (preserves reader)
+with open('upload.dat', 'rb') as f:
+    mime, reader = detect_mime_type_from_reader(f)
+    if mime and mime.id == 'json':
+        # Continue processing with reader
+        data = json.load(reader)
+
+# HTTP request body detection
+mime, body_reader = detect_mime_type_from_reader(request.body, max_bytes=512)
+if mime and mime.id == 'json':
+    process_json(body_reader)
+```
+
+### File Detection
+
+```python
+from pyfulmen.foundry import detect_mime_type_from_file
+
+# Detect from file path
+mime = detect_mime_type_from_file('config.json')
+if mime:
+    print(f'Detected: {mime.mime}')
+
+# Handles large files (reads first 512 bytes)
+mime = detect_mime_type_from_file('large_data.csv')
+```
+
+**Supported Formats**:
+
+- **JSON**: Objects (`{...}`) and arrays (`[...]`)
+- **XML**: Files with `<?xml` declaration
+- **YAML**: Key-value documents (`key: value`)
+- **CSV**: Comma-separated data (2+ commas)
+- **Plain Text**: >80% printable ASCII/UTF-8
+
+**Key Features**:
+
+- **BOM stripping**: Handles UTF-8, UTF-16 LE/BE byte order marks
+- **Whitespace trimming**: Accurate detection despite leading whitespace
+- **Reader preservation**: Stream detection returns usable reader
+- **Nil on unknown**: Returns None for binary/unknown (not exceptions)
+- **gofulmen parity**: Full API compatibility with gofulmen v0.1.1
+
 ## Crucible Standards Conformance
 
 PyFulmen Foundry implements the Crucible Foundry pattern catalog standard with the following conformance status:
@@ -594,16 +667,20 @@ PyFulmen Foundry implements the Crucible Foundry pattern catalog standard with t
 - O(1) lookups via precomputed indexes
 - 5 sample countries from Crucible catalog (US, CA, JP, DE, BR)
 
-### Deferred 🔄
+**Magic Number Detection (Phase 3)**
 
-**Magic Number Detection (Phase 3 - Optional)**
-
-- `detect_mime_type(input: bytes | stream)` - Byte signature detection
-- Rationale: Requires magic number catalog seeding; deferred to future version when Crucible provides canonical magic number catalog
+- `detect_mime_type(data: bytes)` - Byte signature detection from raw bytes
+- `detect_mime_type_from_reader(reader, max_bytes)` - Streaming detection with reader preservation
+- `detect_mime_type_from_file(path)` - File content detection
+- BOM stripping (UTF-8, UTF-16 LE/BE)
+- Detects: JSON, XML, YAML, CSV, plain text
+- Full gofulmen v0.1.1 API parity
+- 83+ comprehensive tests including golden fixtures
+- Cross-language parity checklist with 100% compliance
 
 ### Testing Coverage
 
-- **Unit Tests**: 143+ tests covering catalog loading, pattern matching, MIME lookups, HTTP status helpers, country code lookups
+- **Unit Tests**: 167+ tests covering catalog loading, pattern matching, MIME lookups, HTTP status helpers, country code lookups, MIME detection
 - **Coverage**: 95% on catalog module
 - **Test Strategy**:
   - Positive and negative test cases for all interfaces
