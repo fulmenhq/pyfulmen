@@ -40,8 +40,9 @@ help:
 	@echo ""
 	@echo "Version:"
 	@echo "  make version           - Print current version"
-	@echo "  make version-set       - Update version (VERSION=x.y.z)"
-	@echo "  make version-bump-*    - Bump version (major/minor/patch)"
+	@echo "  make version-set       - Update version (VERSION=x.y.z) and propagate"
+	@echo "  make version-propagate - Sync VERSION to package managers"
+	@echo "  make version-bump-*    - Bump version (major/minor/patch) and propagate"
 	@echo ""
 	@echo "Release:"
 	@echo "  make release-check     - Run release checklist validation"
@@ -131,25 +132,38 @@ version:
 .PHONY: version-set
 version-set: bin/goneat
 	@test -n "$(VERSION)" || (echo "❌ VERSION not set. Use: make version-set VERSION=x.y.z" && exit 1)
-	@bin/goneat version sync --version $(VERSION)
-	@echo "✓ Version set to $(VERSION)"
+	@bin/goneat version set $(VERSION)
+	@$(MAKE) version-propagate
+	@echo "✓ Version set to $(VERSION) and propagated"
+
+.PHONY: version-propagate
+version-propagate: bin/goneat
+	@bin/goneat version propagate
+	@echo "✓ Version propagated to package managers"
 
 .PHONY: version-bump-major
 version-bump-major: bin/goneat
 	@bin/goneat version bump major
+	@$(MAKE) version-propagate
+	@echo "✓ Version bumped (major) and propagated"
 
 .PHONY: version-bump-minor
 version-bump-minor: bin/goneat
 	@bin/goneat version bump minor
+	@$(MAKE) version-propagate
+	@echo "✓ Version bumped (minor) and propagated"
 
 .PHONY: version-bump-patch
 version-bump-patch: bin/goneat
 	@bin/goneat version bump patch
-
+	@$(MAKE) version-propagate
+	@echo "✓ Version bumped (patch) and propagated"
 
 .PHONY: version-bump-calver
 version-bump-calver: bin/goneat
 	@bin/goneat version bump calver
+	@$(MAKE) version-propagate
+	@echo "✓ Version bumped (calver) and propagated"
 
 .PHONY: build
 build:
