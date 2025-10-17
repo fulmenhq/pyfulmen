@@ -218,11 +218,13 @@ This document tracks release notes and checklists for PyFulmen releases.
 - ✅ **Golden Fixtures**: 8 cross-language test fixtures under tests/fixtures/foundry/mime/
 - ✅ **Parity Verification**: 100% behavioral parity with gofulmen v0.1.1 (28/28 features)
 
-**Version Management Improvement**:
+**Version Management Infrastructure**:
 
 - ✅ **Single Source Pattern**: `__init__.py` now uses `importlib.metadata` to read from pyproject.toml
-- ✅ **Two-File Sync**: Only VERSION and pyproject.toml need manual sync (goneat will automate)
-- ✅ **Dynamic Version Reading**: No more hardcoded version strings in **init**.py
+- ✅ **Version Propagation**: `.goneat/version-policy.yaml` enables automatic VERSION → pyproject.toml sync
+- ✅ **Policy-Driven**: Semver scheme, branch guards, backup retention, workspace strategy configuration
+- ✅ **Automated Workflow**: Makefile targets (version-set, version-bump-*) auto-propagate to pyproject.toml
+- ✅ **Manual Control**: New `version-propagate` target for explicit sync operations
 
 #### Breaking Changes
 
@@ -232,7 +234,9 @@ This document tracks release notes and checklists for PyFulmen releases.
 
 - **Version Reading**: `__init__.py` now dynamically reads version from package metadata
   - No impact on users (transparent change)
-  - Developers: Only update VERSION and pyproject.toml (not **init**.py)
+  - Developers: Use `make version-bump-patch` or `make version-set VERSION=x.y.z` (auto-propagates)
+- **Bootstrap**: `type:link` now creates symlinks (bin/goneat tracks source automatically)
+  - Run `make bootstrap` to update existing installations
 - **Country Codes**: New API, additive only (no existing APIs changed)
 - **ADR System**: Documentation addition, no code impact
 
@@ -261,10 +265,13 @@ This document tracks release notes and checklists for PyFulmen releases.
 - [x] Country code implementation complete
 - [x] ADR infrastructure complete
 - [x] Magic numbers implementation complete
+- [x] Version propagation infrastructure complete
+- [x] Bootstrap symlink fix verified
 - [x] All tests passing (520 tests)
 - [x] Code quality checks passing
 - [x] Final documentation review
 - [x] Agentic attribution proper for all commits
+- [ ] docs/releases/v0.1.2.md created
 - [ ] Git tag created (v0.1.2) - pending final commit
 
 ---

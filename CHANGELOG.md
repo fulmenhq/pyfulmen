@@ -57,17 +57,34 @@ No unreleased changes.
   - Expanded test count: 520 tests covering all pyfulmen features (227 foundry tests)
   - Updated coverage metrics: 95% maintained on catalog and mime_detection modules
 
+- **Version Propagation Infrastructure**: Policy-driven VERSION management
+  - `.goneat/version-policy.yaml` configuration for automatic pyproject.toml sync
+  - VERSION file as single source of truth with goneat version propagate
+  - Policy controls: semver scheme, branch guards, backup retention, workspace strategy
+  - Safety features: dirty worktree checks, required branches (main, release/*)
+
 ### Changed
 
 - **Version Synchronization**: Aligned VERSION, pyproject.toml, and **init**.py to 0.1.2
   - Fixed version mismatch between files
   - Ensures consistent version reporting across tooling
 
+- **Makefile Version Targets**: Enhanced version management workflow
+  - `version-set` now auto-propagates VERSION to pyproject.toml
+  - All bump targets (major/minor/patch/calver) auto-propagate after bumping
+  - Added `version-propagate` target for manual sync operations
+  - Fixed `version-set` command (was using non-existent `goneat version sync`)
+
 ### Fixed
 
 - **Code Style**: Normalized quote styles and list formatting in logging module
   - Single quotes → double quotes for consistency
   - Multi-line list formatting for sensitive_keys in RedactSecretsMiddleware
+
+- **Bootstrap Symlink**: Fixed type:link tools to use symlinks instead of copies
+  - `bin/goneat` now symlinks to source, tracking rebuilds automatically
+  - No more stale binaries requiring `make bootstrap-force` after goneat rebuilds
+  - Addresses Pitfall 6 from Fulmen Helper Library Standard
 
 ### Documentation
 
