@@ -3,10 +3,10 @@ title: "PyFulmen Overview"
 description: "Python foundation library for the Fulmen ecosystem"
 author: "PyFulmen Architect"
 date: "2025-10-11"
-last_updated: "2025-10-12"
+last_updated: "2025-10-17"
 status: "active"
 lifecycle_phase: "alpha"
-version: "0.1.0"
+version: "0.1.3"
 tags: ["python", "library", "fulmen", "enterprise"]
 ---
 
@@ -40,17 +40,17 @@ PyFulmen implements the mandatory core modules defined in the [Module Manifest](
 | **config-path-api**       | ✅ Stable  | 90%             | [Spec](docs/crucible-py/standards/config/fulmen-config-paths.md)         | Platform-aware config/data/cache paths (XDG-compliant on Linux/macOS, Windows-aware) |
 | **three-layer-config**    | ✅ Stable  | 90%             | [Spec](docs/crucible-py/standards/library/modules/three-layer-config.md) | Crucible defaults → User overrides → Runtime config with YAML/JSON support           |
 | **schema-validation**     | ✅ Stable  | 90%             | [Spec](docs/crucible-py/standards/library/modules/schema-validation.md)  | JSON Schema validation helpers using jsonschema library                              |
-| **observability-logging** | 🔄 Active  | 95%             | [Spec](docs/crucible-py/standards/observability/logging.md)              | Progressive logging with SIMPLE/STRUCTURED/ENTERPRISE profiles, policy enforcement   |
+| **observability-logging** | ✅ Stable  | 95%             | [Spec](docs/crucible-py/standards/observability/logging.md)              | Progressive logging with SIMPLE/STRUCTURED/ENTERPRISE profiles, policy enforcement   |
 | **goneat-bootstrap**      | ✅ Stable  | 90%             | [Spec](docs/crucible-py/guides/bootstrap-goneat.md)                      | Goneat tool installation and SSOT sync automation                                    |
 | **ssot-sync**             | ✅ Stable  | 90%             | -                                                                        | Automated sync of Crucible assets via goneat                                         |
-| **foundry-patterns**      | 📋 Planned | 90%             | [Spec](docs/crucible-py/standards/library/foundry/interfaces.md)         | Pattern catalogs, MIME detection, HTTP status helpers                                |
+| **foundry-patterns**      | ✅ Stable  | 90%             | [Spec](docs/crucible-py/standards/library/foundry/interfaces.md)         | Pattern catalogs, MIME detection, HTTP status helpers                                |
 
 ### Extension Modules (Optional)
 
 | Module ID         | Status     | Notes                                                  |
 | ----------------- | ---------- | ------------------------------------------------------ |
-| **pathfinder**    | 📋 Planned | Filesystem scanning with include/exclude patterns      |
-| **ascii-helpers** | 📋 Planned | Console formatting utilities (tables, boxes, progress) |
+| **pathfinder**    | ✅ Stable  | Filesystem scanning with include/exclude patterns (47 tests, 90%+ coverage)      |
+| **ascii-helpers** | ✅ Stable  | Console formatting utilities (tables, boxes, progress) (48 tests, 90%+ coverage) |
 | **cloud-storage** | 📋 Planned | Unified S3/GCS/Azure Blob helpers                      |
 
 **Legend**: ✅ Stable | 🔄 Active Development | 📋 Planned | ⚠️ Deprecated
@@ -192,9 +192,9 @@ PyFulmen's dependency structure follows the Fulmen ecosystem model to prevent ci
 
 ## Roadmap & Gaps
 
-### Current Release (v0.1.0)
+### Current Release (v0.1.3)
 
-**Status**: Alpha - Core modules stable, observability under active development
+**Status**: Alpha - Core modules stable, two extension modules added
 
 **Completed**:
 
@@ -203,46 +203,46 @@ PyFulmen's dependency structure follows the Fulmen ecosystem model to prevent ci
 - ✅ Three-layer config loading
 - ✅ Schema validation utilities
 - ✅ Goneat bootstrap automation
-- ✅ Basic logging implementation
+- ✅ Progressive logging profiles (SIMPLE/STRUCTURED/ENTERPRISE)
+- ✅ Logging policy enforcement
+- ✅ Middleware pipeline implementation
+- ✅ Throttling and backpressure management
+- ✅ Foundry patterns module (pattern catalogs, MIME detection, HTTP status helpers)
+- ✅ Pathfinder module (filesystem scanning with glob patterns, 47 tests)
+- ✅ ASCII helpers (console formatting, box drawing, 48 tests)
 
-**In Progress**:
-
-- 🔄 Progressive logging profiles (SIMPLE/STRUCTURED/ENTERPRISE)
-- 🔄 Logging policy enforcement
-- 🔄 Middleware pipeline implementation
-- 🔄 Throttling and backpressure management
+**Test Coverage**: 615 tests passing, 90%+ coverage across all modules
 
 ### Next Release (v0.2.0)
 
-**Target**: Q4 2025
+**Target**: Q1 2026
 
 **Planned Features**:
 
-- Foundry patterns module (pattern catalogs, MIME detection, HTTP status helpers)
 - Enhanced correlation ID propagation (HTTP headers, gRPC metadata)
 - Tracing integration (OpenTelemetry compatibility)
 - External sink support (HTTP/HTTPS log shipping)
 - Performance optimizations for high-throughput logging
+- Async logging support for high-throughput services
 
 ### Future Releases
 
 **v0.3.0+**:
 
-- Pathfinder module (filesystem scanning)
-- ASCII helpers (console formatting)
 - Cloud storage helpers (S3/GCS/Azure)
 - Metrics and tracing modules (full observability stack)
 - Enhanced CLI tooling integration
+- Performance benchmarks and optimization
 
 ### Known Gaps
 
 | Gap                         | Priority | Target Version | Notes                                   |
 | --------------------------- | -------- | -------------- | --------------------------------------- |
 | External sinks (HTTP/HTTPS) | High     | v0.2.0         | Required for enterprise log aggregation |
-| Middleware plugin system    | High     | v0.1.0         | In active development                   |
 | Async logging support       | Medium   | v0.2.0         | For high-throughput services            |
 | Windows path edge cases     | Low      | v0.2.0         | Best-effort Windows support             |
 | Performance benchmarks      | Medium   | v0.2.0         | Establish baseline metrics              |
+| Tracing integration         | Medium   | v0.2.0         | OpenTelemetry compatibility             |
 
 ### Breaking Changes Policy
 

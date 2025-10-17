@@ -11,6 +11,96 @@ No unreleased changes.
 
 ---
 
+## [0.1.3] - 2025-10-17
+
+### Added
+
+- **Pathfinder Extension Module**: Safe filesystem discovery with glob patterns and proper path normalization
+  - `Finder` class with configuration-based discovery (maxWorkers, caching, validation)
+  - `FindQuery` model with include/exclude patterns, maxDepth, followSymlinks, includeHidden options
+  - `PathResult` model with relativePath, sourcePath, logicalPath, loaderType, metadata
+  - Path safety validation with traversal attack prevention (`validate_path()`)
+  - Proper `pathlib.Path` usage throughout (no string manipulation - addresses Go implementation bugs)
+  - Recursive `**` glob pattern support via pathlib.rglob()
+  - Convenience methods: `find_go_files()`, `find_config_files()`, `find_schema_files()`, `find_by_extension()`
+  - Schema validation support for FindQuery and PathResult against Crucible schemas
+  - Error handlers and progress callbacks for streaming discovery
+  - 47 comprehensive tests with 90%+ coverage
+  - 100% gofulmen pathfinder behavioral parity
+
+- **ASCII Helpers Extension Module**: Unicode-aware console formatting with terminal-specific width overrides
+  - `string_width()`: wcwidth-based display width calculation with terminal overrides
+  - Padding functions: `pad_right()`, `pad_left()`, `pad_center()` with Unicode awareness
+  - `truncate()`: Width-aware string truncation with ellipsis support
+  - Box drawing with `draw_box()` supporting 4 box styles (SINGLE, DOUBLE, ROUNDED, BOLD)
+  - Three-layer terminal configuration (Crucible defaults → User overrides → BYOC)
+  - Auto-detection of terminal type via `TERM_PROGRAM` environment variable
+  - Terminal-specific character width overrides for proper alignment (VSCode, Apple Terminal, iTerm2)
+  - `get_terminal_config()`: Access current terminal configuration
+  - wcwidth library integration for accurate Unicode width calculation
+  - 48 comprehensive tests with 90%+ coverage
+  - 100% gofulmen ASCII implementation alignment
+
+- **Ecosystem ADR Adoption Tracking**: Comprehensive architectural decision tracking
+  - `docs/development/adr/ecosystem-adoption-status.md`: New comprehensive adoption status document
+  - Adoption status levels defined: not-applicable (0), deferred (5), planned (10), in-progress (20), implemented (30), verified (40)
+  - Tracking for 5 ecosystem ADRs with test evidence and coverage metrics
+  - Module maturity tracking: 7 modules tracked (Foundry, Logging, Config, Crucible Shim, Schema, Pathfinder, ASCII)
+  - 4 ecosystem ADRs at "verified" status (40), 1 at "implemented" status (30)
+  - Total test count tracking: 615 tests passing across all modules
+  - Coverage summary by module with Ecosystem ADR mappings
+
+### Changed
+
+- **Documentation**: Comprehensive updates for v0.1.3 release
+  - `docs/pyfulmen_overview.md`: Updated all module statuses to "✅ Stable"
+  - Updated version metadata to 0.1.3 and last_updated to 2025-10-17
+  - Updated module catalog with current statuses: observability-logging and foundry-patterns now stable
+  - Updated extension modules table: pathfinder and ascii-helpers now stable with test counts
+  - Updated roadmap: Current Release section reflects v0.1.3 status with 615 tests passing
+  - Updated Next Release target to Q1 2026 for v0.2.0
+  - Removed completed items from Known Gaps (middleware plugin system completed)
+  - `docs/development/adr/README.md`: Updated ecosystem ADR adoption statuses from "In Progress" to "Verified"
+  - Added link to ecosystem-adoption-status.md with adoption status level definitions
+
+- **Test Organization**: Renamed pathfinder test file to avoid pytest collection errors
+  - Renamed `tests/unit/pathfinder/test_models.py` to `test_pathfinder_models.py`
+  - Prevents collision with `tests/unit/foundry/test_models.py`
+  - Fixes pytest "imported module has this __file__ attribute" error
+
+- **Version Alignment**: Updated version to 0.1.3 across all files
+  - `VERSION`: 0.1.3
+  - `pyproject.toml`: version = "0.1.3"
+  - `tests/test_basic.py`: Updated version assertion to "0.1.3"
+
+### Fixed
+
+- **Path Traversal Detection**: Fixed to check for ".." BEFORE normalization
+  - `os.path.normpath()` resolves ".." sequences, hiding traversal attempts
+  - Now checks for ".." in original path first, then normalizes
+  - Prevents false negatives in path safety validation
+
+- **Import Paths**: Fixed config module import for ASCII terminal configuration
+  - Changed from `from pyfulmen.config import get_fulmen_config_dir` to `from pyfulmen.config.paths import get_fulmen_config_dir`
+  - Accounts for config module submodule structure
+
+### Dependencies
+
+- **wcwidth**: Added `wcwidth>=0.2.0` for Unicode character width calculation
+  - Enables accurate terminal width calculation for CJK, emojis, box-drawing characters
+  - Required for ASCII helpers module
+
+### Documentation
+
+- **Release Notes**: Comprehensive v0.1.3 release documentation
+  - `docs/releases/v0.1.3.md`: Complete release notes with feature descriptions, examples, migration guide
+  - Pathfinder and ASCII module documentation
+  - Ecosystem ADR adoption tracking documentation
+  - Quality metrics: 615 tests, 90%+ coverage across all modules
+  - Cross-language parity verification with gofulmen
+
+---
+
 ## [0.1.2] - 2025-10-15
 
 ### Added

@@ -123,13 +123,21 @@ ADRs are **immutable** once accepted. Instead of editing:
 
 PyFulmen implements these cross-language architectural decisions from Crucible. See [`docs/crucible-py/architecture/decisions/`](../../crucible-py/architecture/decisions/) for complete ecosystem ADRs.
 
+**📊 Detailed adoption tracking**: See [Ecosystem Adoption Status](ecosystem-adoption-status.md) for comprehensive implementation status, test coverage, and related local ADRs.
+
 | ADR                                                                                                | Title                             | Status   | PyFulmen Adoption |
 | -------------------------------------------------------------------------------------------------- | --------------------------------- | -------- | ----------------- |
-| [ADR-0001](../../crucible-py/architecture/decisions/ADR-0001-two-tier-adr-system.md)               | Two-Tier ADR System               | Accepted | Implemented       |
-| [ADR-0002](../../crucible-py/architecture/decisions/ADR-0002-triple-index-catalog-strategy.md)     | Triple-Index Catalog Strategy     | Proposal | Implemented       |
-| [ADR-0003](../../crucible-py/architecture/decisions/ADR-0003-progressive-logging-profiles.md)      | Progressive Logging Profiles      | Proposal | In Progress       |
-| [ADR-0004](../../crucible-py/architecture/decisions/ADR-0004-schema-driven-config-hydration.md)    | Schema-Driven Config Hydration    | Proposal | Planned           |
-| [ADR-0005](../../crucible-py/architecture/decisions/ADR-0005-camelcase-to-language-conventions.md) | CamelCase to Language Conventions | Proposal | Implemented       |
+| [ADR-0001](../../crucible-py/architecture/decisions/ADR-0001-two-tier-adr-system.md)               | Two-Tier ADR System               | Accepted | Verified          |
+| [ADR-0002](../../crucible-py/architecture/decisions/ADR-0002-triple-index-catalog-strategy.md)     | Triple-Index Catalog Strategy     | Proposal | Verified          |
+| [ADR-0003](../../crucible-py/architecture/decisions/ADR-0003-progressive-logging-profiles.md)      | Progressive Logging Profiles      | Proposal | Verified          |
+| [ADR-0004](../../crucible-py/architecture/decisions/ADR-0004-schema-driven-config-hydration.md)    | Schema-Driven Config Hydration    | Proposal | Implemented       |
+| [ADR-0005](../../crucible-py/architecture/decisions/ADR-0005-camelcase-to-language-conventions.md) | CamelCase to Language Conventions | Proposal | Verified          |
+
+**Adoption Status Levels**:
+- **Verified** (40): Implemented and validated through tests/production use
+- **Implemented** (30): Fully implemented, ready for validation
+- **In Progress** (20): Active implementation underway
+- **Planned** (10): Implementation planned but not started
 
 **Note**: Ecosystem ADR-0002 was promoted from PyFulmen's original local ADR-0003 (Triple-Index Catalog Strategy). The local version has been removed as superseded by the ecosystem version.
 
