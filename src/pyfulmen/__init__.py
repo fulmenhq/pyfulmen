@@ -21,7 +21,9 @@ __all__ = [
     "config",
     "schema",
     "logging",
+    "foundry",
+    "pathfinder",
 ]
 
 # Submodules
-from . import config, crucible, logging, schema, version
+from . import config, crucible, foundry, logging, pathfinder, schema, version
