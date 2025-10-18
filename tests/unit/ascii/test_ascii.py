@@ -45,6 +45,26 @@ class TestStringWidth:
         result = string_width("Hello\nWorld")
         assert result >= 10  # At minimum, the character count
 
+    def test_emoji_with_variation_selector(self):
+        """Emoji with variation selectors should not crash (multi-codepoint)."""
+        # These emoji have variation selectors (U+FE0F) making them multi-codepoint
+        # Regression test for TypeError: ord() expected a character
+        assert string_width("✌️") == 2
+        assert string_width("☠️") == 2
+        assert string_width("⚠️") == 2
+        assert string_width("🛠️") == 2
+
+    def test_string_with_emoji_variation_selector(self):
+        """Strings containing emoji with variation selectors should work."""
+        # test✌️test should be: t(1) + e(1) + s(1) + t(1) + ✌️(2) + t(1) + e(1) + s(1) + t(1) = 10
+        assert string_width("test✌️test") == 10
+
+    def test_multiple_emoji_with_variation_selectors(self):
+        """Multiple emoji with variation selectors in one string."""
+        # Each emoji is width 2
+        result = string_width("✌️☠️⚠️")
+        assert result == 6  # 3 emoji * 2 width each
+
 
 class TestMaxContentWidth:
     """Test max content width calculation."""
@@ -141,11 +161,65 @@ class TestDrawBoxWithOptions:
         # Box should be at least 30 chars wide
         assert len(lines[0]) >= 32  # 30 + 2 for borders
 
-    def test_max_width_error(self):
-        """Should raise error if content exceeds max_width."""
+    def test_max_width_truncates(self):
+        """Should truncate content if it exceeds max_width (matches gofulmen)."""
         options = BoxOptions(max_width=5)
-        with pytest.raises(ValueError, match="exceeds maximum width"):
-            draw_box_with_options("This is a very long string", options)
+        result = draw_box_with_options("This is a very long string", options)
+        # Should truncate to max_width, not raise error
+        assert result  # Box should be created
+        lines = result.strip().split("\n")
+        # Content line should be truncated
+        content_line = lines[1]
+        assert len(content_line) <= 5 + 4  # max_width + border/padding chars
+
+    def test_max_width_with_cjk(self):
+        """Truncation should respect CJK character width (regression test)."""
+        # CJK characters are width-2, so max_width=3 should fit only 1 char
+        options = BoxOptions(max_width=3)
+        result = draw_box_with_options("中文测试", options)
+        lines = result.strip().split("\n")
+
+        # Box width should be 3 (max_width)
+        top_border = lines[0]
+        content_line = lines[1]
+        bottom_border = lines[2]
+
+        # All lines should have same DISPLAY WIDTH (not character count)
+        # "中" is 1 character but 2 display width, so char counts will differ
+        assert string_width(top_border) == string_width(content_line) == string_width(bottom_border)
+
+        # Content should be "中" (width 2) with 1 space padding to reach width 3
+        assert "中" in content_line
+        assert "文" not in content_line  # Second char should be truncated
+
+    def test_max_width_with_emoji(self):
+        """Truncation should respect emoji width (regression test)."""
+        # Emoji are typically width-2, so max_width=3 should fit only 1 emoji
+        options = BoxOptions(max_width=3)
+        result = draw_box_with_options("🎉🎊🎈", options)
+        lines = result.strip().split("\n")
+
+        content_line = lines[1]
+        # Should contain first emoji but not the others
+        assert "🎉" in content_line
+        assert "🎊" not in content_line
+        assert "🎈" not in content_line
+
+    def test_max_width_mixed_width_chars(self):
+        """Truncation should handle mixed ASCII and CJK correctly."""
+        # "test中文" = t(1) + e(1) + s(1) + t(1) + 中(2) + 文(2) = 8 total
+        # max_width=5 should give us "test中" = 1+1+1+1+2 = 6, but that exceeds
+        # Actually: "test" = 4, can't fit "中" (would be 6), so just "test"
+        options = BoxOptions(max_width=5)
+        result = draw_box_with_options("test中文", options)
+        lines = result.strip().split("\n")
+
+        content_line = lines[1]
+        assert "test" in content_line
+        # Whether 中 fits depends on exact width calculation
+        # With max_width=5, "test"=4, "中"=2, total would be 6 which exceeds 5
+        # So 中 should NOT be included
+        assert "中" not in content_line
 
     def test_max_width_with_short_content(self):
         """Short content should work fine with max_width."""

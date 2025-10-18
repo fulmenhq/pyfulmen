@@ -57,17 +57,81 @@ def string_width(s: str) -> int:
             count = s.count(char)
             if count > 0:
                 if HAS_WCWIDTH:
-                    current_width = wcwidth.wcwidth(char)
-                    if current_width >= 0:
-                        adjustment += count * (expected_width - current_width)
+                    # Handle multi-codepoint characters (emoji with variation selectors)
+                    # wcwidth.wcwidth() only accepts single characters, so use wcswidth()
+                    # for multi-codepoint grapheme clusters
+                    if len(char) > 1:
+                        # Multi-codepoint character (e.g., '✌️' = base + variation selector)
+                        current_width = wcwidth.wcswidth(char)
+                        if current_width < 0:
+                            # Unprintable or invalid - skip this override
+                            continue
+                    else:
+                        # Single codepoint - use wcwidth()
+                        current_width = wcwidth.wcwidth(char)
+                        if current_width < 0:
+                            # Unprintable or invalid - skip this override
+                            continue
+
+                    adjustment += count * (expected_width - current_width)
                 else:
-                    # Fallback: assume char is 1 wide
-                    adjustment += count * (expected_width - 1)
+                    # Fallback: assume char is len(char) wide (handles multi-codepoint)
+                    current_width_fallback = len(char)
+                    adjustment += count * (expected_width - current_width_fallback)
 
         if adjustment != 0:
             return base_width + adjustment
 
     return base_width
+
+
+def _truncate_to_width(s: str, max_width: int) -> str:
+    """
+    Truncate string to fit within max_width display columns.
+
+    Iterates through characters and accumulates display width until
+    adding the next character would exceed max_width.
+
+    Args:
+        s: String to truncate
+        max_width: Maximum display width in columns
+
+    Returns:
+        Truncated string that fits within max_width
+
+    Example:
+        >>> _truncate_to_width("中文测试", 3)
+        "中"  # One CJK char = 2 width, second would exceed 3
+    """
+    if max_width <= 0:
+        return ""
+
+    current_width = 0
+    result = []
+
+    for char in s:
+        # Calculate width of this character
+        if HAS_WCWIDTH:
+            # Use wcswidth for multi-codepoint characters (emoji with variation selectors)
+            if len(char) > 1:
+                char_width = wcwidth.wcswidth(char)
+                if char_width < 0:
+                    char_width = len(char)
+            else:
+                char_width = wcwidth.wcwidth(char)
+                if char_width < 0:
+                    char_width = 1
+        else:
+            char_width = len(char)
+
+        # Check if adding this character would exceed max_width
+        if current_width + char_width > max_width:
+            break
+
+        result.append(char)
+        current_width += char_width
+
+    return "".join(result)
 
 
 def max_content_width(contents: list[str]) -> int:
@@ -164,10 +228,8 @@ def draw_box_with_options(content: str, options: BoxOptions) -> str:
     if options.min_width > 0 and box_width < options.min_width:
         box_width = options.min_width
     if options.max_width > 0 and content_width > options.max_width:
-        # Content exceeds max width - this is an error condition
-        raise ValueError(
-            f"Content width {content_width} exceeds maximum width {options.max_width}"
-        )
+        # Content exceeds max width - truncate to max_width (matches gofulmen behavior)
+        box_width = options.max_width
 
     # Build the box
     result = []
@@ -178,14 +240,15 @@ def draw_box_with_options(content: str, options: BoxOptions) -> str:
 
     # Content lines
     for line in lines:
-        line_width = string_width(line)
-
-        # Handle truncation if max_width exceeded (shouldn't happen after check above)
-        if options.max_width > 0 and line_width > options.max_width:
-            # Truncate at character boundaries (simple truncation)
-            truncated_line = line[:options.max_width]
-            line = truncated_line
-            line_width = string_width(truncated_line)
+        # Truncate line if it exceeds max_width (width-aware truncation for CJK/emoji)
+        if options.max_width > 0:
+            line_width = string_width(line)
+            if line_width > options.max_width:
+                # Use width-aware truncation to handle double-width characters
+                line = _truncate_to_width(line, options.max_width)
+                line_width = string_width(line)
+        else:
+            line_width = string_width(line)
 
         # Padding to reach box width
         padding = box_width - line_width

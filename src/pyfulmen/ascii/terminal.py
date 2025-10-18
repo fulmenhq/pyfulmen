@@ -12,6 +12,7 @@ from typing import Optional
 import yaml
 
 from pyfulmen.config.paths import get_fulmen_config_dir
+from pyfulmen.crucible.config import load_config_defaults
 
 from .models import TerminalConfig, TerminalOverrides
 
@@ -19,61 +20,30 @@ from .models import TerminalConfig, TerminalOverrides
 _terminal_catalog: Optional[TerminalOverrides] = None
 _current_terminal_config: Optional[TerminalConfig] = None
 
-# Embedded defaults (would be loaded from Crucible in production)
-DEFAULT_TERMINAL_OVERRIDES = """
-version: "v1.0.0"
-last_updated: "2025-10-17"
-notes: |
-  Default emoji width overrides calibrated across common terminals.
-  Consumed by pyfulmen and layered with user/app overrides.
-terminals:
-  Apple_Terminal:
-    name: "macOS Terminal"
-    notes: "Generally follows Unicode width standards."
-  ghostty:
-    name: "Ghostty"
-    overrides:
-      "⏱️": 2
-      "☠️": 2
-      "☹️": 2
-      "⚠️": 2
-      "✌️": 2
-      "🎗️": 2
-      "🎟️": 2
-      "🖐️": 2
-      "🛠️": 2
-      "ℹ️": 2
-    notes: "Calibrated via interactive session."
-  iTerm.app:
-    name: "iTerm2"
-    overrides:
-      "⏱️": 2
-      "☠️": 2
-      "☹️": 2
-      "⚠️": 2
-      "✌️": 2
-      "🎗️": 2
-      "🎟️": 2
-      "🖐️": 2
-      "🛠️": 2
-      "ℹ️": 2
-    notes: "Uses same override set as Ghostty after calibration."
-"""
-
 
 def _load_terminal_catalog() -> None:
     """
     Load terminal configuration catalog (three-layer config pattern).
 
-    Layer 1: Embedded defaults from Crucible SSOT
+    Layer 1: Crucible defaults from synced SSOT
     Layer 2: User overrides from ~/.config/fulmen/terminal-overrides.yaml
     Layer 3: Application overrides via set_terminal_overrides()
     """
     global _terminal_catalog
 
-    # Layer 1: Load embedded defaults
-    data = yaml.safe_load(DEFAULT_TERMINAL_OVERRIDES)
-    _terminal_catalog = TerminalOverrides(**data)
+    # Layer 1: Load Crucible defaults from synced asset
+    try:
+        data = load_config_defaults("terminal", "v1.0.0", "terminal-overrides-defaults")
+        _terminal_catalog = TerminalOverrides(**data)
+    except (FileNotFoundError, ValueError):
+        # Fallback to empty catalog if Crucible asset not synced
+        # This allows module to work even without `make sync-crucible`
+        _terminal_catalog = TerminalOverrides(
+            version="v1.0.0",
+            last_updated="",
+            notes="Fallback: Crucible assets not synced (run 'make sync-crucible')",
+            terminals={},
+        )
 
     # Layer 2: Merge user overrides
     fulmen_config_dir = get_fulmen_config_dir()
