@@ -60,9 +60,7 @@ class TerminalConfig(FulmenConfigModel):
     """
 
     name: str = Field(..., description="Terminal name")
-    overrides: dict[str, int] = Field(
-        default_factory=dict, description="Character width overrides"
-    )
+    overrides: dict[str, int] = Field(default_factory=dict, description="Character width overrides")
     notes: str = Field(default="", description="Additional notes")
 
 

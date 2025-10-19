@@ -17,13 +17,13 @@ Based on [ADR Adoption Status Schema v1.0.0](https://schemas.fulmenhq.dev/standa
 
 ## PyFulmen Adoption Status
 
-| Ecosystem ADR | Title | Status | Notes | Related Local ADRs |
-|---------------|-------|--------|-------|--------------------|
-| [ADR-0001](../../crucible-py/architecture/decisions/ADR-0001-two-tier-adr-system.md) | Two-Tier ADR System | **verified** (40) | Implemented with 4 local + 5 ecosystem ADRs tracked | ADR-0001, ADR-0002, ADR-0003, ADR-0004 |
-| [ADR-0002](../../crucible-py/architecture/decisions/ADR-0002-triple-index-catalog-strategy.md) | Triple-Index Catalog Strategy | **verified** (40) | Implemented in foundry/catalog.py with alpha2/alpha3/numeric indexes, 227 foundry tests | [ADR-0001](ADR-0001-fulmencatalogmodel-populate-by-name.md) |
-| [ADR-0003](../../crucible-py/architecture/decisions/ADR-0003-progressive-logging-profiles.md) | Progressive Logging Profiles | **verified** (40) | All profiles implemented: SIMPLE, STRUCTURED, ENTERPRISE, CUSTOM | - |
-| [ADR-0004](../../crucible-py/architecture/decisions/ADR-0004-schema-driven-config-hydration.md) | Schema-Driven Config Hydration | **implemented** (30) | Layer 1 & 2 complete (defaults + user overrides), Layer 3 (BYOC) partial | - |
-| [ADR-0005](../../crucible-py/architecture/decisions/ADR-0005-camelcase-to-language-conventions.md) | CamelCase to Language Conventions | **verified** (40) | Field aliases working throughout (snake_case externally, Pydantic handles conversion) | [ADR-0001](ADR-0001-fulmencatalogmodel-populate-by-name.md) |
+| Ecosystem ADR                                                                                      | Title                             | Status               | Notes                                                                                   | Related Local ADRs                                          |
+| -------------------------------------------------------------------------------------------------- | --------------------------------- | -------------------- | --------------------------------------------------------------------------------------- | ----------------------------------------------------------- |
+| [ADR-0001](../../crucible-py/architecture/decisions/ADR-0001-two-tier-adr-system.md)               | Two-Tier ADR System               | **verified** (40)    | Implemented with 4 local + 5 ecosystem ADRs tracked                                     | ADR-0001, ADR-0002, ADR-0003, ADR-0004                      |
+| [ADR-0002](../../crucible-py/architecture/decisions/ADR-0002-triple-index-catalog-strategy.md)     | Triple-Index Catalog Strategy     | **verified** (40)    | Implemented in foundry/catalog.py with alpha2/alpha3/numeric indexes, 227 foundry tests | [ADR-0001](ADR-0001-fulmencatalogmodel-populate-by-name.md) |
+| [ADR-0003](../../crucible-py/architecture/decisions/ADR-0003-progressive-logging-profiles.md)      | Progressive Logging Profiles      | **verified** (40)    | All profiles implemented: SIMPLE, STRUCTURED, ENTERPRISE, CUSTOM                        | -                                                           |
+| [ADR-0004](../../crucible-py/architecture/decisions/ADR-0004-schema-driven-config-hydration.md)    | Schema-Driven Config Hydration    | **implemented** (30) | Layer 1 & 2 complete (defaults + user overrides), Layer 3 (BYOC) partial                | -                                                           |
+| [ADR-0005](../../crucible-py/architecture/decisions/ADR-0005-camelcase-to-language-conventions.md) | CamelCase to Language Conventions | **verified** (40)    | Field aliases working throughout (snake_case externally, Pydantic handles conversion)   | [ADR-0001](ADR-0001-fulmencatalogmodel-populate-by-name.md) |
 
 ## Detailed Status Notes
 
@@ -38,6 +38,7 @@ Based on [ADR Adoption Status Schema v1.0.0](https://schemas.fulmenhq.dev/standa
 - ✅ 4 local ADRs + 5 ecosystem ADRs tracked
 
 **Evidence**:
+
 - 4 local decision records documented
 - Clear separation between local (Python-specific) and ecosystem (cross-language) decisions
 - Promotion path documented in ADR README
@@ -53,11 +54,13 @@ Based on [ADR Adoption Status Schema v1.0.0](https://schemas.fulmenhq.dev/standa
 - ✅ Lazy loading with precomputed indexes
 
 **Evidence**:
+
 - `foundry/catalog.py` implementation with triple indexes
 - 227 foundry tests (95%+ coverage)
 - API parity with gofulmen v0.1.1 verified
 
 **Related Local ADRs**:
+
 - [ADR-0001](ADR-0001-fulmencatalogmodel-populate-by-name.md) - Python-specific populate_by_name pattern
 
 ### ADR-0003: Progressive Logging Profiles
@@ -71,6 +74,7 @@ Based on [ADR Adoption Status Schema v1.0.0](https://schemas.fulmenhq.dev/standa
 - ✅ Unified `Logger()` factory with profile selection
 
 **Evidence**:
+
 - `logging/` module with 4 profiles implemented
 - `logging/profiles.py` with profile definitions
 - `logging/policy.py` for enforcement
@@ -89,12 +93,14 @@ Based on [ADR Adoption Status Schema v1.0.0](https://schemas.fulmenhq.dev/standa
   - ⚠️ Some modules need explicit BYOC API
 
 **Evidence**:
+
 - `config/loader.py` with three-layer loading
 - `config/merger.py` for deep merge
 - Crucible assets synced and embedded
 - ASCII module demonstrates full three-layer pattern
 
 **Next Steps**:
+
 - Expose BYOC APIs consistently across all config-driven modules
 - Document BYOC patterns in config module documentation
 
@@ -108,12 +114,14 @@ Based on [ADR Adoption Status Schema v1.0.0](https://schemas.fulmenhq.dev/standa
 - ✅ JSON schemas use camelCase, Python uses snake_case
 
 **Evidence**:
+
 - All data models inherit from Fulmen foundation models
 - Pydantic `ConfigDict` with `populate_by_name=True` where needed
 - Consistent snake_case throughout Python codebase
 - Interop with gofulmen (camelCase) and tsfulmen verified
 
 **Related Local ADRs**:
+
 - [ADR-0001](ADR-0001-fulmencatalogmodel-populate-by-name.md) - Python-specific populate_by_name decision
 
 ## Coverage Summary
@@ -126,15 +134,15 @@ Based on [ADR Adoption Status Schema v1.0.0](https://schemas.fulmenhq.dev/standa
 
 ## Module Maturity
 
-| Module | Core/Extension | Test Count | Coverage | Ecosystem ADRs | Status |
-|--------|---------------|------------|----------|----------------|---------|
-| Foundry | Core | 227 | 95% | ADR-0002, ADR-0005 | ✅ Stable |
-| Logging | Core | 200+ | 96-100% | ADR-0003 | ✅ Stable |
-| Config | Core | 30+ | 90%+ | ADR-0004, ADR-0005 | ✅ Stable |
-| Crucible Shim | Core | 20+ | 95%+ | ADR-0001 | ✅ Stable |
-| Schema | Core | 10+ | 90%+ | ADR-0004 | ✅ Stable |
-| Pathfinder | Extension | 47 | 90%+ | - | ✅ Stable |
-| ASCII | Extension | 48 | 90%+ | ADR-0004 | ✅ Stable |
+| Module        | Core/Extension | Test Count | Coverage | Ecosystem ADRs     | Status    |
+| ------------- | -------------- | ---------- | -------- | ------------------ | --------- |
+| Foundry       | Core           | 227        | 95%      | ADR-0002, ADR-0005 | ✅ Stable |
+| Logging       | Core           | 200+       | 96-100%  | ADR-0003           | ✅ Stable |
+| Config        | Core           | 30+        | 90%+     | ADR-0004, ADR-0005 | ✅ Stable |
+| Crucible Shim | Core           | 20+        | 95%+     | ADR-0001           | ✅ Stable |
+| Schema        | Core           | 10+        | 90%+     | ADR-0004           | ✅ Stable |
+| Pathfinder    | Extension      | 47         | 90%+     | -                  | ✅ Stable |
+| ASCII         | Extension      | 48         | 90%+     | ADR-0004           | ✅ Stable |
 
 **Total Tests**: 615 passing
 

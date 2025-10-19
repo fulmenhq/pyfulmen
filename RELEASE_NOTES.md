@@ -223,7 +223,7 @@ This document tracks release notes and checklists for PyFulmen releases.
 - ✅ **Single Source Pattern**: `__init__.py` now uses `importlib.metadata` to read from pyproject.toml
 - ✅ **Version Propagation**: `.goneat/version-policy.yaml` enables automatic VERSION → pyproject.toml sync
 - ✅ **Policy-Driven**: Semver scheme, branch guards, backup retention, workspace strategy configuration
-- ✅ **Automated Workflow**: Makefile targets (version-set, version-bump-*) auto-propagate to pyproject.toml
+- ✅ **Automated Workflow**: Makefile targets (version-set, version-bump-\*) auto-propagate to pyproject.toml
 - ✅ **Manual Control**: New `version-propagate` target for explicit sync operations
 
 #### Breaking Changes

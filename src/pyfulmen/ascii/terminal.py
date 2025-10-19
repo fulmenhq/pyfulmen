@@ -208,10 +208,7 @@ def set_terminal_config(terminal_name: str, config: TerminalConfig) -> None:
     global _terminal_catalog
 
     if _terminal_catalog is None:
-        _terminal_catalog = TerminalOverrides(
-            version="1.0.0",
-            terminals={}
-        )
+        _terminal_catalog = TerminalOverrides(version="1.0.0", terminals={})
 
     _terminal_catalog.terminals[terminal_name] = config
     _detect_current_terminal()

@@ -93,10 +93,7 @@ class TestFindFiles:
     def test_find_with_multiple_patterns(self, temp_file_tree):
         """Should find files matching multiple patterns."""
         finder = Finder()
-        query = FindQuery(
-            root=str(temp_file_tree),
-            include=["*.py", "*.txt"]
-        )
+        query = FindQuery(root=str(temp_file_tree), include=["*.py", "*.txt"])
         results = finder.find_files(query)
 
         paths = [r.relative_path for r in results]
@@ -106,10 +103,7 @@ class TestFindFiles:
     def test_find_recursive(self, temp_file_tree):
         """Should find files recursively with ** pattern."""
         finder = Finder()
-        query = FindQuery(
-            root=str(temp_file_tree),
-            include=["**/*.py"]
-        )
+        query = FindQuery(root=str(temp_file_tree), include=["**/*.py"])
         results = finder.find_files(query)
 
         # Should find both file1.py and subdir/nested.py
@@ -121,11 +115,7 @@ class TestFindFiles:
     def test_exclude_patterns(self, temp_file_tree):
         """Should exclude files matching exclude patterns."""
         finder = Finder()
-        query = FindQuery(
-            root=str(temp_file_tree),
-            include=["*.py", "*.txt"],
-            exclude=["*.txt"]
-        )
+        query = FindQuery(root=str(temp_file_tree), include=["*.py", "*.txt"], exclude=["*.txt"])
         results = finder.find_files(query)
 
         paths = [r.relative_path for r in results]
@@ -135,11 +125,7 @@ class TestFindFiles:
     def test_max_depth(self, temp_file_tree):
         """Should respect max_depth setting."""
         finder = Finder()
-        query = FindQuery(
-            root=str(temp_file_tree),
-            include=["**/*.md"],
-            max_depth=2
-        )
+        query = FindQuery(root=str(temp_file_tree), include=["**/*.md"], max_depth=2)
         results = finder.find_files(query)
 
         # deepest.md is at depth 3 (deep/deeper/deepest.md), should be excluded
@@ -148,11 +134,7 @@ class TestFindFiles:
     def test_include_hidden_false(self, temp_file_tree):
         """Should exclude hidden files by default."""
         finder = Finder()
-        query = FindQuery(
-            root=str(temp_file_tree),
-            include=["**/*.txt"],
-            include_hidden=False
-        )
+        query = FindQuery(root=str(temp_file_tree), include=["**/*.txt"], include_hidden=False)
         results = finder.find_files(query)
 
         paths = [r.relative_path for r in results]
@@ -163,11 +145,7 @@ class TestFindFiles:
     def test_include_hidden_true(self, temp_file_tree):
         """Should include hidden files when enabled."""
         finder = Finder()
-        query = FindQuery(
-            root=str(temp_file_tree),
-            include=["**/*.txt"],
-            include_hidden=True
-        )
+        query = FindQuery(root=str(temp_file_tree), include=["**/*.txt"], include_hidden=True)
         results = finder.find_files(query)
 
         paths = [r.relative_path for r in results]
@@ -183,9 +161,7 @@ class TestFindFiles:
 
         finder = Finder()
         query = FindQuery(
-            root=str(temp_file_tree),
-            include=["**/*.nonexistent"],
-            error_handler=count_errors
+            root=str(temp_file_tree), include=["**/*.nonexistent"], error_handler=count_errors
         )
         results = finder.find_files(query)
 
@@ -201,9 +177,7 @@ class TestFindFiles:
 
         finder = Finder()
         query = FindQuery(
-            root=str(temp_file_tree),
-            include=["*.py", "*.txt"],
-            progress_callback=track_progress
+            root=str(temp_file_tree), include=["*.py", "*.txt"], progress_callback=track_progress
         )
         results = finder.find_files(query)
 
@@ -238,7 +212,7 @@ class TestPathResult:
             source_path="/abs/test/file.py",
             logical_path="test/file.py",
             loader_type="local",
-            metadata={"size": 1024}
+            metadata={"size": 1024},
         )
 
         # Should serialize to dict/JSON without errors

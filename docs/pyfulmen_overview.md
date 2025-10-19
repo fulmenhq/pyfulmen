@@ -34,24 +34,24 @@ tags: ["python", "library", "fulmen", "enterprise"]
 
 PyFulmen implements the mandatory core modules defined in the [Module Manifest](config/crucible-py/library/v1.0.0/module-manifest.yaml). Each module follows the progressive interface pattern and targets 90%+ test coverage.
 
-| Module ID                 | Status     | Coverage Target | Specification                                                            | Description                                                                          |
-| ------------------------- | ---------- | --------------- | ------------------------------------------------------------------------ | ------------------------------------------------------------------------------------ |
-| **crucible-shim**         | ✅ Stable  | 90%             | [Spec](docs/crucible-py/standards/library/modules/crucible-shim.md)      | Idiomatic Python access to Crucible schemas, docs, and config defaults               |
-| **config-path-api**       | ✅ Stable  | 90%             | [Spec](docs/crucible-py/standards/config/fulmen-config-paths.md)         | Platform-aware config/data/cache paths (XDG-compliant on Linux/macOS, Windows-aware) |
-| **three-layer-config**    | ✅ Stable  | 90%             | [Spec](docs/crucible-py/standards/library/modules/three-layer-config.md) | Crucible defaults → User overrides → Runtime config with YAML/JSON support           |
-| **schema-validation**     | ✅ Stable  | 90%             | [Spec](docs/crucible-py/standards/library/modules/schema-validation.md)  | JSON Schema validation helpers using jsonschema library                              |
-| **observability-logging** | ✅ Stable  | 95%             | [Spec](docs/crucible-py/standards/observability/logging.md)              | Progressive logging with SIMPLE/STRUCTURED/ENTERPRISE profiles, policy enforcement   |
-| **goneat-bootstrap**      | ✅ Stable  | 90%             | [Spec](docs/crucible-py/guides/bootstrap-goneat.md)                      | Goneat tool installation and SSOT sync automation                                    |
-| **ssot-sync**             | ✅ Stable  | 90%             | -                                                                        | Automated sync of Crucible assets via goneat                                         |
-| **foundry-patterns**      | ✅ Stable  | 90%             | [Spec](docs/crucible-py/standards/library/foundry/interfaces.md)         | Pattern catalogs, MIME detection, HTTP status helpers                                |
+| Module ID                 | Status    | Coverage Target | Specification                                                            | Description                                                                          |
+| ------------------------- | --------- | --------------- | ------------------------------------------------------------------------ | ------------------------------------------------------------------------------------ |
+| **crucible-shim**         | ✅ Stable | 90%             | [Spec](docs/crucible-py/standards/library/modules/crucible-shim.md)      | Idiomatic Python access to Crucible schemas, docs, and config defaults               |
+| **config-path-api**       | ✅ Stable | 90%             | [Spec](docs/crucible-py/standards/config/fulmen-config-paths.md)         | Platform-aware config/data/cache paths (XDG-compliant on Linux/macOS, Windows-aware) |
+| **three-layer-config**    | ✅ Stable | 90%             | [Spec](docs/crucible-py/standards/library/modules/three-layer-config.md) | Crucible defaults → User overrides → Runtime config with YAML/JSON support           |
+| **schema-validation**     | ✅ Stable | 90%             | [Spec](docs/crucible-py/standards/library/modules/schema-validation.md)  | JSON Schema validation helpers using jsonschema library                              |
+| **observability-logging** | ✅ Stable | 95%             | [Spec](docs/crucible-py/standards/observability/logging.md)              | Progressive logging with SIMPLE/STRUCTURED/ENTERPRISE profiles, policy enforcement   |
+| **goneat-bootstrap**      | ✅ Stable | 90%             | [Spec](docs/crucible-py/guides/bootstrap-goneat.md)                      | Goneat tool installation and SSOT sync automation                                    |
+| **ssot-sync**             | ✅ Stable | 90%             | -                                                                        | Automated sync of Crucible assets via goneat                                         |
+| **foundry-patterns**      | ✅ Stable | 90%             | [Spec](docs/crucible-py/standards/library/foundry/interfaces.md)         | Pattern catalogs, MIME detection, HTTP status helpers                                |
 
 ### Extension Modules (Optional)
 
-| Module ID         | Status     | Notes                                                  |
-| ----------------- | ---------- | ------------------------------------------------------ |
+| Module ID         | Status     | Notes                                                                            |
+| ----------------- | ---------- | -------------------------------------------------------------------------------- |
 | **pathfinder**    | ✅ Stable  | Filesystem scanning with include/exclude patterns (47 tests, 90%+ coverage)      |
 | **ascii-helpers** | ✅ Stable  | Console formatting utilities (tables, boxes, progress) (48 tests, 90%+ coverage) |
-| **cloud-storage** | 📋 Planned | Unified S3/GCS/Azure Blob helpers                      |
+| **cloud-storage** | 📋 Planned | Unified S3/GCS/Azure Blob helpers                                                |
 
 **Legend**: ✅ Stable | 🔄 Active Development | 📋 Planned | ⚠️ Deprecated
 

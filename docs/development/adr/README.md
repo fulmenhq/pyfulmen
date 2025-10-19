@@ -134,6 +134,7 @@ PyFulmen implements these cross-language architectural decisions from Crucible. 
 | [ADR-0005](../../crucible-py/architecture/decisions/ADR-0005-camelcase-to-language-conventions.md) | CamelCase to Language Conventions | Proposal | Verified          |
 
 **Adoption Status Levels**:
+
 - **Verified** (40): Implemented and validated through tests/production use
 - **Implemented** (30): Fully implemented, ready for validation
 - **In Progress** (20): Active implementation underway

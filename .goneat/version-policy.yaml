@@ -1,40 +1,35 @@
 # PyFulmen Version Policy
 # Controls how VERSION file propagates to package manager manifests
 # Schema: schemas/crucible-py/config/goneat/v1.0.0/version-policy.schema.yaml
-
 # Version scheme configuration
 version:
-  scheme: semver          # Semantic versioning (MAJOR.MINOR.PATCH)
-  allow_extended: true    # Enable prerelease identifiers and build metadata
-
+  scheme: semver # Semantic versioning (MAJOR.MINOR.PATCH)
+  allow_extended: true # Enable prerelease identifiers and build metadata
 # Propagation rules for package manager files
 propagation:
   defaults:
     include:
-      - pyproject.toml    # Primary package manager for Python
+      - pyproject.toml # Primary package manager for Python
     exclude:
-      - "**/node_modules/**"  # Standard exclusions
+      - "**/node_modules/**" # Standard exclusions
       - "docs/**"
       - "tests/**"
       - ".venv/**"
     backup:
-      enabled: true       # Create .bak files before changes
-      retention: 5        # Keep last 5 backups
-
+      enabled: true # Create .bak files before changes
+      retention: 5 # Keep last 5 backups
   # Python-specific configuration
   targets:
     pyproject.toml:
-      mode: project       # Use [project] section (not [tool.poetry])
+      mode: project # Use [project] section (not [tool.poetry])
       include:
-        - ./pyproject.toml  # Root pyproject.toml only
-
+        - ./pyproject.toml # Root pyproject.toml only
   # Workspace strategy (single library, not a monorepo)
   workspace:
-    strategy: single-version  # All files use root VERSION
-
+    strategy: single-version # All files use root VERSION
 # Safety guards
 guards:
   required_branches:
-    - main                # Allow on main branch
-    - "release/*"         # Allow on release branches
-  disallow_dirty_worktree: false  # Allow with uncommitted changes for testing
+    - main # Allow on main branch
+    - "release/*" # Allow on release branches
+  disallow_dirty_worktree: false # Allow with uncommitted changes for testing

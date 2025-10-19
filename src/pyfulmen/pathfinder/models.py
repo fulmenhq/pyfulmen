@@ -58,9 +58,7 @@ class PathResult(FulmenDataModel):
     source_path: str = Field(..., description="Absolute path to the file")
     logical_path: str = Field(..., description="Logical path")
     loader_type: str = Field(default="local", description="Type of loader used")
-    metadata: dict[str, Any] = Field(
-        default_factory=dict, description="Additional metadata"
-    )
+    metadata: dict[str, Any] = Field(default_factory=dict, description="Additional metadata")
 
 
 class FinderConfig(FulmenConfigModel):
@@ -80,9 +78,5 @@ class FinderConfig(FulmenConfigModel):
     cache_enabled: bool = Field(default=False, description="Enable result caching")
     cache_ttl: int = Field(default=3600, description="Cache TTL in seconds")
     loader_type: str = Field(default="local", description="Default loader type")
-    validate_inputs: bool = Field(
-        default=False, description="Validate FindQuery inputs"
-    )
-    validate_outputs: bool = Field(
-        default=False, description="Validate PathResult outputs"
-    )
+    validate_inputs: bool = Field(default=False, description="Validate FindQuery inputs")
+    validate_outputs: bool = Field(default=False, description="Validate PathResult outputs")

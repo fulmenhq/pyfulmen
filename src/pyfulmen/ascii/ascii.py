@@ -8,6 +8,7 @@ from typing import Optional
 
 try:
     import wcwidth
+
     HAS_WCWIDTH = True
 except ImportError:
     HAS_WCWIDTH = False

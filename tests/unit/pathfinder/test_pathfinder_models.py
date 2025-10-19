@@ -31,7 +31,7 @@ class TestFindQuery:
             exclude=["*.pyc"],
             max_depth=5,
             follow_symlinks=True,
-            include_hidden=True
+            include_hidden=True,
         )
         assert query.root == "/path/to/root"
         assert query.include == ["*.py", "*.txt"]
@@ -42,6 +42,7 @@ class TestFindQuery:
 
     def test_find_query_with_callbacks(self):
         """FindQuery should accept callback functions."""
+
         def error_handler(path: str, err: Exception) -> None:
             pass
 
@@ -52,19 +53,14 @@ class TestFindQuery:
             root=".",
             include=["*.py"],
             error_handler=error_handler,
-            progress_callback=progress_callback
+            progress_callback=progress_callback,
         )
         assert query.error_handler is error_handler
         assert query.progress_callback is progress_callback
 
     def test_find_query_serialization(self):
         """FindQuery should serialize to JSON (excluding callbacks)."""
-        query = FindQuery(
-            root=".",
-            include=["*.py"],
-            exclude=["*.pyc"],
-            max_depth=3
-        )
+        query = FindQuery(root=".", include=["*.py"], exclude=["*.pyc"], max_depth=3)
         data = query.model_dump()
         assert data["root"] == "."
         assert data["include"] == ["*.py"]
@@ -87,7 +83,7 @@ class TestPathResult:
         result = PathResult(
             relative_path="test/file.py",
             source_path="/abs/test/file.py",
-            logical_path="test/file.py"
+            logical_path="test/file.py",
         )
         assert result.relative_path == "test/file.py"
         assert result.source_path == "/abs/test/file.py"
@@ -102,7 +98,7 @@ class TestPathResult:
             source_path="/abs/test/file.py",
             logical_path="logical/path.py",
             loader_type="remote",
-            metadata={"size": 1024, "mtime": 1234567890}
+            metadata={"size": 1024, "mtime": 1234567890},
         )
         assert result.relative_path == "test/file.py"
         assert result.source_path == "/abs/test/file.py"
@@ -117,7 +113,7 @@ class TestPathResult:
             relative_path="test/file.py",
             source_path="/abs/test/file.py",
             logical_path="test/file.py",
-            metadata={"key": "value"}
+            metadata={"key": "value"},
         )
         data = result.model_dump()
         assert data["relative_path"] == "test/file.py"
@@ -152,7 +148,7 @@ class TestFinderConfig:
             cache_ttl=7200,
             loader_type="remote",
             validate_inputs=True,
-            validate_outputs=True
+            validate_outputs=True,
         )
         assert config.max_workers == 8
         assert config.cache_enabled is True
@@ -182,7 +178,7 @@ class TestModelInteraction:
             relative_path="file.py",
             source_path="/abs/file.py",
             logical_path="file.py",
-            loader_type=config.loader_type
+            loader_type=config.loader_type,
         )
 
         assert result.loader_type == config.loader_type
@@ -193,9 +189,7 @@ class TestModelInteraction:
         # Create original objects
         query = FindQuery(root=".", include=["*.py"], max_depth=3)
         result = PathResult(
-            relative_path="test.py",
-            source_path="/abs/test.py",
-            logical_path="test.py"
+            relative_path="test.py", source_path="/abs/test.py", logical_path="test.py"
         )
 
         # Serialize to dict

@@ -105,6 +105,7 @@ bold = BoxChars(
 Draw a box around content with optional minimum width.
 
 **Parameters:**
+
 - `content` (str): Content to box (supports multi-line with `\n`)
 - `width` (int): Minimum width in cells (0 = auto-size to content)
 
@@ -127,6 +128,7 @@ box = draw_box("Status: OK", width=30)
 Draw a box with advanced configuration.
 
 **Parameters:**
+
 - `content` (str): Content to box
 - `options` (BoxOptions): Box configuration
 
@@ -159,6 +161,7 @@ box = draw_box_with_options("Hello", options)
 Calculate display width accounting for Unicode and terminal overrides.
 
 **Parameters:**
+
 - `s` (str): String to measure
 
 **Returns:** Width in terminal columns (int)
@@ -175,6 +178,7 @@ width = string_width("🎉")             # 2 (emoji width varies by terminal)
 ```
 
 **Features:**
+
 - Uses `wcwidth` library if available (fallback to `len()`)
 - Applies terminal-specific width overrides
 - Handles double-width CJK characters correctly
@@ -185,6 +189,7 @@ width = string_width("🎉")             # 2 (emoji width varies by terminal)
 Find maximum display width across multiple strings.
 
 **Parameters:**
+
 - `contents` (list[str]): List of content strings
 
 **Returns:** Maximum width in terminal columns (int)
@@ -212,6 +217,7 @@ for content in contents:
 Unicode box drawing characters.
 
 **Attributes:**
+
 - `top_left` (str): Top-left corner (default: "┌")
 - `top_right` (str): Top-right corner (default: "┐")
 - `bottom_left` (str): Bottom-left corner (default: "└")
@@ -241,6 +247,7 @@ chars = BoxChars(
 Box drawing configuration.
 
 **Attributes:**
+
 - `min_width` (int): Minimum box width (0 = auto-size to content)
 - `max_width` (int): Maximum box width (0 = unlimited, exceeding raises error)
 - `chars` (Optional[BoxChars]): Custom box characters (None = use defaults)
@@ -270,6 +277,7 @@ options = BoxOptions(
 Terminal-specific configuration.
 
 **Attributes:**
+
 - `name` (str): Human-readable terminal name
 - `overrides` (dict[str, int]): Character to width mapping
 - `notes` (str): Additional notes about this terminal
@@ -291,6 +299,7 @@ config = TerminalConfig(
 Terminal configuration catalog.
 
 **Attributes:**
+
 - `version` (str): Schema version
 - `last_updated` (str): Last update date
 - `notes` (str): Catalog-level notes
@@ -305,6 +314,7 @@ Get the current terminal configuration.
 **Returns:** `TerminalConfig` for detected terminal, or `None` if unknown
 
 **Detection Method:**
+
 1. Checks `TERM_PROGRAM` environment variable
 2. Falls back to `TERM` for special cases (e.g., ghostty)
 3. Returns `None` if no match found
@@ -331,15 +341,16 @@ else:
 
 Built-in configuration for common terminals:
 
-| TERM_PROGRAM | Terminal Name | Emoji Overrides |
-|--------------|---------------|-----------------|
-| `Apple_Terminal` | macOS Terminal | None |
-| `ghostty` | Ghostty | 10 emoji chars |
-| `iTerm.app` | iTerm2 | 10 emoji chars |
+| TERM_PROGRAM     | Terminal Name  | Emoji Overrides |
+| ---------------- | -------------- | --------------- |
+| `Apple_Terminal` | macOS Terminal | None            |
+| `ghostty`        | Ghostty        | 10 emoji chars  |
+| `iTerm.app`      | iTerm2         | 10 emoji chars  |
 
 **Emoji Width Overrides:**
 
 Certain emoji with text presentation selectors render as width-2 in some terminals:
+
 - ⏱️ ☠️ ☹️ ⚠️ ✌️ 🎗️ 🎟️ 🖐️ 🛠️ ℹ️
 
 ### get_all_terminal_configs()
@@ -405,6 +416,7 @@ Application-provided runtime configuration.
 Replace entire terminal configuration catalog.
 
 **Parameters:**
+
 - `overrides` (TerminalOverrides): Complete configuration
 
 **Example:**
@@ -430,6 +442,7 @@ set_terminal_overrides(my_config)
 Set configuration for a specific terminal.
 
 **Parameters:**
+
 - `terminal_name` (str): Terminal identifier
 - `config` (TerminalConfig): Terminal configuration
 
@@ -580,6 +593,7 @@ Terminal-specific overrides ensure boxes align correctly across all environments
 3. **BYOC**: Application-specific overrides for special requirements
 
 This pattern enables:
+
 - Zero-configuration defaults (just works)
 - User customization without code changes
 - Application control when needed
@@ -588,16 +602,16 @@ This pattern enables:
 
 PyFulmen ASCII implements core box drawing features with gofulmen parity, but some advanced features are not yet implemented:
 
-| Feature | gofulmen | pyfulmen | Status |
-|---------|----------|----------|--------|
-| Box drawing | ✅ | ✅ | ✅ Full Parity |
-| Unicode width calculation | ✅ | ✅ | ✅ Full Parity |
-| Terminal detection | ✅ | ✅ | ✅ Full Parity |
-| Three-layer config | ✅ | ✅ | ✅ Full Parity |
-| Custom box chars | ✅ | ✅ | ✅ Full Parity |
-| Width overrides | ✅ | ✅ | ✅ Full Parity |
-| Analysis helpers (Analyze, IsPrintable) | ✅ | ❌ | ⚠️ Not Implemented |
-| Sanitize helper | ✅ | ❌ | ⚠️ Not Implemented |
+| Feature                                 | gofulmen | pyfulmen | Status             |
+| --------------------------------------- | -------- | -------- | ------------------ |
+| Box drawing                             | ✅       | ✅       | ✅ Full Parity     |
+| Unicode width calculation               | ✅       | ✅       | ✅ Full Parity     |
+| Terminal detection                      | ✅       | ✅       | ✅ Full Parity     |
+| Three-layer config                      | ✅       | ✅       | ✅ Full Parity     |
+| Custom box chars                        | ✅       | ✅       | ✅ Full Parity     |
+| Width overrides                         | ✅       | ✅       | ✅ Full Parity     |
+| Analysis helpers (Analyze, IsPrintable) | ✅       | ❌       | ⚠️ Not Implemented |
+| Sanitize helper                         | ✅       | ❌       | ⚠️ Not Implemented |
 
 ### Parity Gaps
 
@@ -626,6 +640,7 @@ These features are planned for future releases. Current focus is on core box dra
 **Coverage**: 48 comprehensive tests, 90%+ coverage
 
 **Test Categories:**
+
 - String width calculation (15 tests)
 - Box drawing basics (10 tests)
 - Custom characters (8 tests)

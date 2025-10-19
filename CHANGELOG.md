@@ -7,12 +7,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-No unreleased changes.
-
----
-
-## [0.1.3] - 2025-10-17
-
 ### Added
 
 - **Pathfinder Extension Module**: Safe filesystem discovery with glob patterns and proper path normalization
@@ -66,7 +60,7 @@ No unreleased changes.
 - **Test Organization**: Renamed pathfinder test file to avoid pytest collection errors
   - Renamed `tests/unit/pathfinder/test_models.py` to `test_pathfinder_models.py`
   - Prevents collision with `tests/unit/foundry/test_models.py`
-  - Fixes pytest "imported module has this __file__ attribute" error
+  - Fixes pytest "imported module has this **file** attribute" error
 
 - **Version Alignment**: Updated version to 0.1.3 across all files
   - `VERSION`: 0.1.3
@@ -75,14 +69,28 @@ No unreleased changes.
 
 ### Fixed
 
+- **ASCII Emoji Crash**: Fixed TypeError in string_width() with multi-codepoint emoji (✌️, ☠️, ⚠️)
+  - wcwidth.wcwidth() only accepts single characters, now using wcwidth.wcswidth() for multi-codepoint grapheme clusters
+  - Added 7 regression tests covering emoji variation selectors and CJK/emoji truncation
+
+- **ASCII SSOT Drift**: Terminal defaults now load from Crucible asset instead of embedded YAML
+  - Changed from embedded DEFAULT_TERMINAL_OVERRIDES to load_config_defaults("terminal", "v1.0.0")
+  - Ensures terminal configuration stays in sync with ecosystem standards
+
+- **ASCII max_width Parity**: Changed max_width behavior to truncate instead of raising ValueError
+  - Matches gofulmen behavior (lines 31-35, 51-54 of gofulmen/ascii/ascii.go)
+  - Cross-language behavioral consistency maintained
+
+- **ASCII Width-Aware Truncation**: Fixed truncation to respect display width for CJK/emoji characters
+  - Added \_truncate_to_width() helper that accumulates display width character-by-character
+  - Prevents misaligned boxes when truncating double-width characters
+
 - **Path Traversal Detection**: Fixed to check for ".." BEFORE normalization
-  - `os.path.normpath()` resolves ".." sequences, hiding traversal attempts
+  - os.path.normpath() resolves ".." sequences, hiding traversal attempts
   - Now checks for ".." in original path first, then normalizes
-  - Prevents false negatives in path safety validation
 
 - **Import Paths**: Fixed config module import for ASCII terminal configuration
-  - Changed from `from pyfulmen.config import get_fulmen_config_dir` to `from pyfulmen.config.paths import get_fulmen_config_dir`
-  - Accounts for config module submodule structure
+  - Changed from pyfulmen.config to pyfulmen.config.paths for get_fulmen_config_dir()
 
 ### Dependencies
 
@@ -151,7 +159,7 @@ No unreleased changes.
   - `.goneat/version-policy.yaml` configuration for automatic pyproject.toml sync
   - VERSION file as single source of truth with goneat version propagate
   - Policy controls: semver scheme, branch guards, backup retention, workspace strategy
-  - Safety features: dirty worktree checks, required branches (main, release/*)
+  - Safety features: dirty worktree checks, required branches (main, release/\*)
 
 ### Changed
 
