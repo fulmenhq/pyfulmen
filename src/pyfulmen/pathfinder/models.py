@@ -4,11 +4,32 @@ Data models for pyfulmen.pathfinder.
 Defines the core data structures for file discovery operations.
 """
 
+from __future__ import annotations
+
+from enum import Enum
 from typing import Any, Callable, Optional
 
-from pydantic import Field
+from pydantic import ConfigDict, Field
 
 from pyfulmen.foundry import FulmenConfigModel, FulmenDataModel
+
+
+def _to_camel(value: str) -> str:
+    """Convert snake_case strings to camelCase for schema parity."""
+    parts = value.split("_")
+    return parts[0] + "".join(part.capitalize() for part in parts[1:])
+
+
+def _data_model_config(**updates: Any) -> ConfigDict:
+    cfg = FulmenDataModel.model_config.copy()
+    cfg.update(updates)
+    return cfg
+
+
+def _config_model_config(**updates: Any) -> ConfigDict:
+    cfg = FulmenConfigModel.model_config.copy()
+    cfg.update(updates)
+    return cfg
 
 
 class FindQuery(FulmenDataModel):
@@ -25,6 +46,8 @@ class FindQuery(FulmenDataModel):
         error_handler: Callback for handling errors during discovery
         progress_callback: Callback for reporting discovery progress
     """
+
+    model_config = _data_model_config(alias_generator=_to_camel, populate_by_name=True)
 
     root: str = Field(..., description="Root directory to search from")
     include: list[str] = Field(..., description="Glob patterns to include")
@@ -54,11 +77,83 @@ class PathResult(FulmenDataModel):
         metadata: Additional metadata about the path
     """
 
+    model_config = _data_model_config(alias_generator=_to_camel, populate_by_name=True)
+
     relative_path: str = Field(..., description="Path relative to search root")
     source_path: str = Field(..., description="Absolute path to the file")
     logical_path: str = Field(..., description="Logical path")
     loader_type: str = Field(default="local", description="Type of loader used")
-    metadata: dict[str, Any] = Field(default_factory=dict, description="Additional metadata")
+    metadata: "PathMetadata" = Field(default_factory=lambda: PathMetadata(), description="Additional metadata")
+
+
+class ConstraintType(str, Enum):
+    """Constraint classification for enforcement context."""
+
+    REPOSITORY = "repository"
+    WORKSPACE = "workspace"
+    CLOUD = "cloud"
+
+
+class EnforcementLevel(str, Enum):
+    """Enforcement severity levels for constraint violations."""
+
+    STRICT = "strict"
+    WARN = "warn"
+    PERMISSIVE = "permissive"
+
+
+class PathConstraint(FulmenConfigModel):
+    """
+    Path constraint configuration describing permissible filesystem boundaries.
+
+    Attributes:
+        root: Canonical root directory for the constraint
+        constraint_type: Classification of boundary (repository/workspace/cloud)
+        enforcement_level: Severity when paths escape boundary
+        allowed_patterns: Overrides that permit additional paths
+        blocked_patterns: Patterns that should always be rejected
+    """
+
+    model_config = _config_model_config(alias_generator=_to_camel, populate_by_name=True)
+
+    root: str = Field(..., description="Root path for the constraint boundary")
+    constraint_type: ConstraintType = Field(
+        default=ConstraintType.REPOSITORY, alias="type", description="Type of constraint"
+    )
+    enforcement_level: EnforcementLevel = Field(
+        default=EnforcementLevel.STRICT,
+        alias="enforcementLevel",
+        description="Constraint enforcement strictness",
+    )
+    allowed_patterns: list[str] = Field(
+        default_factory=list,
+        alias="allowedPatterns",
+        description="Additional allowed path patterns",
+    )
+    blocked_patterns: list[str] = Field(
+        default_factory=list,
+        alias="blockedPatterns",
+        description="Blocked path patterns",
+    )
+
+
+class PathMetadata(FulmenDataModel):
+    """
+    File metadata captured during discovery operations.
+
+    Attributes mirror the Crucible metadata schema.
+    """
+
+    model_config = _data_model_config(alias_generator=_to_camel, populate_by_name=True)
+
+    size: Optional[int] = Field(default=None, ge=0, description="File size in bytes")
+    modified: Optional[str] = Field(default=None, description="Last modification timestamp (RFC3339)")
+    permissions: Optional[str] = Field(default=None, description="File permissions (octal or symbolic)")
+    mime_type: Optional[str] = Field(default=None, description="MIME type of the file", alias="mimeType")
+    encoding: Optional[str] = Field(default=None, description="Character encoding")
+    checksum: Optional[str] = Field(default=None, description="Checksum or hash")
+    tags: list[str] = Field(default_factory=list, description="User-defined tags")
+    custom: dict[str, Any] = Field(default_factory=dict, description="Custom metadata fields")
 
 
 class FinderConfig(FulmenConfigModel):
@@ -74,9 +169,25 @@ class FinderConfig(FulmenConfigModel):
         validate_outputs: Whether to validate PathResult outputs against schema
     """
 
+    model_config = _config_model_config(alias_generator=_to_camel, populate_by_name=True)
+
     max_workers: int = Field(default=4, description="Maximum concurrent workers")
     cache_enabled: bool = Field(default=False, description="Enable result caching")
     cache_ttl: int = Field(default=3600, description="Cache TTL in seconds")
     loader_type: str = Field(default="local", description="Default loader type")
     validate_inputs: bool = Field(default=False, description="Validate FindQuery inputs")
     validate_outputs: bool = Field(default=False, description="Validate PathResult outputs")
+    constraint: Optional[PathConstraint] = Field(
+        default=None, description="Constraint configuration for permissible paths"
+    )
+
+
+__all__ = [
+    "FindQuery",
+    "PathResult",
+    "FinderConfig",
+    "PathConstraint",
+    "ConstraintType",
+    "EnforcementLevel",
+    "PathMetadata",
+]

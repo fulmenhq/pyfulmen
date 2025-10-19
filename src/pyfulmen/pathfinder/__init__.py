@@ -30,7 +30,15 @@ Example:
 """
 
 from .finder import Finder
-from .models import FindQuery, FinderConfig, PathResult
+from .models import (
+    ConstraintType,
+    EnforcementLevel,
+    FindQuery,
+    FinderConfig,
+    PathConstraint,
+    PathMetadata,
+    PathResult,
+)
 from .safety import (
     InvalidPathError,
     PathTraversalError,
@@ -45,6 +53,10 @@ __all__ = [
     "FindQuery",
     "PathResult",
     "FinderConfig",
+    "PathConstraint",
+    "ConstraintType",
+    "EnforcementLevel",
+    "PathMetadata",
     # Safety functions
     "validate_path",
     "is_safe_path",

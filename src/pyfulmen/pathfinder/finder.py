@@ -5,12 +5,26 @@ Provides the Finder class for safe, pattern-based file discovery with
 proper path normalization using pathlib.
 """
 
+from __future__ import annotations
+
 import os
+from datetime import datetime, timezone
+from fnmatch import fnmatch
 from pathlib import Path
 from typing import Optional
 
-from .models import FindQuery, FinderConfig, PathResult
-from .safety import validate_path
+from pyfulmen.schema import validator as schema_validator
+
+from .ignore import IgnoreMatcher
+from .models import (
+    EnforcementLevel,
+    FindQuery,
+    FinderConfig,
+    PathConstraint,
+    PathMetadata,
+    PathResult,
+)
+from .safety import PathTraversalError, validate_path
 
 
 class Finder:
@@ -55,29 +69,49 @@ class Finder:
         """
         # Validate input if enabled
         if self.config.validate_inputs:
-            # TODO: Implement schema validation when pathfinder schemas are available
-            pass
+            schema_validator.validate_against_schema(
+                query.model_dump(by_alias=True, exclude_none=True),
+                "pathfinder",
+                "v1.0.0",
+                "find-query",
+            )
 
         results: list[PathResult] = []
 
         # Normalize root path using pathlib
         root_path = Path(query.root).resolve()
 
+        ignore_matcher: IgnoreMatcher | None = None
+        try:
+            ignore_matcher = IgnoreMatcher(root_path)
+        except OSError as err:
+            if query.error_handler:
+                query.error_handler(str(root_path / ".fulmenignore"), err)
+
+        constraint = self.config.constraint
+        constraint_root: Optional[Path] = None
+        if constraint:
+            constraint_root = Path(constraint.root).resolve()
+
         # For each include pattern, find matching files
         for pattern in query.include:
-            # Use rglob for recursive patterns, glob for non-recursive
-            if "**" in pattern:
-                matches = root_path.rglob(pattern.replace("**/", ""))
-            else:
-                matches = root_path.glob(pattern)
+            matches = root_path.glob(pattern)
 
             for match in matches:
                 try:
-                    # Resolve to absolute path for safety checks
-                    abs_match = match.resolve()
+                    # Ensure we are working with absolute paths without resolving symlinks
+                    abs_match = match if match.is_absolute() else root_path / match
+
+                    # Skip directories (Path.glob can yield directories)
+                    if abs_match.is_dir():
+                        continue
 
                     # Validate path safety using string representation
                     validate_path(str(abs_match))
+
+                    # Skip symlinks unless explicitly following them
+                    if abs_match.is_symlink() and not query.follow_symlinks:
+                        continue
 
                     # Get relative path using pathlib
                     try:
@@ -95,19 +129,41 @@ class Finder:
                     if query.exclude and any(rel_path.match(excl) for excl in query.exclude):
                         continue
 
+                    # Honour .fulmenignore patterns
+                    if ignore_matcher and ignore_matcher.is_ignored(rel_path):
+                        continue
+
                     # Skip hidden files/directories unless explicitly included
                     if not query.include_hidden and any(
                         part.startswith(".") for part in rel_path.parts
                     ):
                         continue
 
-                    # Skip symlinks unless explicitly following them
-                    if abs_match.is_symlink() and not query.follow_symlinks:
-                        continue
-
                     # Check max depth if specified
                     if query.max_depth > 0 and len(rel_path.parts) > query.max_depth:
                         continue
+
+                    # Enforce path constraints if configured
+                    if constraint_root and self._violates_constraint(
+                        constraint, constraint_root, rel_path, abs_match
+                    ):
+                        violation = PathTraversalError(
+                            f"Path {abs_match} violates constraint root {constraint_root}"
+                        )
+
+                        enforcement_value = constraint.enforcement_level
+
+                        if enforcement_value == EnforcementLevel.STRICT.value:
+                            raise violation
+
+                        if enforcement_value == EnforcementLevel.WARN.value:
+                            if query.error_handler:
+                                query.error_handler(str(abs_match), violation)
+                            continue
+
+                        # Permissive enforcement allows the path to pass through.
+
+                    metadata = self._build_metadata(abs_match)
 
                     # Create result using normalized paths
                     result = PathResult(
@@ -115,7 +171,7 @@ class Finder:
                         source_path=str(abs_match),
                         logical_path=str(rel_path),  # Same as relative for now
                         loader_type=self.config.loader_type,
-                        metadata={},
+                        metadata=metadata,
                     )
 
                     results.append(result)
@@ -124,6 +180,8 @@ class Finder:
                     if query.progress_callback:
                         query.progress_callback(len(results), -1, str(abs_match))
 
+                except PathTraversalError:
+                    raise
                 except Exception as err:
                     # Handle errors via callback or continue
                     if query.error_handler:
@@ -136,8 +194,13 @@ class Finder:
 
         # Validate outputs if enabled
         if self.config.validate_outputs:
-            # TODO: Implement schema validation when pathfinder schemas are available
-            pass
+            for result in results:
+                schema_validator.validate_against_schema(
+                    result.model_dump(by_alias=True, exclude_none=True),
+                    "pathfinder",
+                    "v1.0.0",
+                    "path-result",
+                )
 
         return results
 
@@ -221,3 +284,49 @@ class Finder:
             ...     print(file.relative_path)
         """
         return self.find_by_extension(root, ["py"])
+
+    @staticmethod
+    def _build_metadata(path: Path) -> PathMetadata:
+        """Construct metadata for a discovered path."""
+        try:
+            stat_result = path.stat()
+        except OSError:
+            return PathMetadata()
+
+        modified = datetime.fromtimestamp(stat_result.st_mtime, tz=timezone.utc).isoformat()
+        permissions = oct(stat_result.st_mode & 0o777)
+
+        return PathMetadata(
+            size=stat_result.st_size,
+            modified=modified,
+            permissions=permissions,
+        )
+
+    @staticmethod
+    def _violates_constraint(
+        constraint: PathConstraint,
+        constraint_root: Path,
+        relative_path: Path,
+        absolute_path: Path,
+    ) -> bool:
+        """Check whether a discovered path violates the configured constraint."""
+        path_posix = relative_path.as_posix()
+
+        # Allowed patterns override constraint failures.
+        if constraint.allowed_patterns and any(
+            fnmatch(path_posix, pattern) for pattern in constraint.allowed_patterns
+        ):
+            return False
+
+        # Blocked patterns cause immediate violation.
+        if constraint.blocked_patterns and any(
+            fnmatch(path_posix, pattern) for pattern in constraint.blocked_patterns
+        ):
+            return True
+
+        try:
+            absolute_path.resolve().relative_to(constraint_root)
+        except ValueError:
+            return True
+
+        return False

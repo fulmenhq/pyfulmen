@@ -7,7 +7,15 @@ Tests Pydantic data models for pathfinder.
 import pytest
 from pydantic import ValidationError
 
-from pyfulmen.pathfinder.models import FindQuery, FinderConfig, PathResult
+from pyfulmen.pathfinder.models import (
+    ConstraintType,
+    EnforcementLevel,
+    FindQuery,
+    FinderConfig,
+    PathConstraint,
+    PathMetadata,
+    PathResult,
+)
 
 
 class TestFindQuery:
@@ -89,37 +97,39 @@ class TestPathResult:
         assert result.source_path == "/abs/test/file.py"
         assert result.logical_path == "test/file.py"
         assert result.loader_type == "local"  # default
-        assert result.metadata == {}  # default
+        assert isinstance(result.metadata, PathMetadata)
 
     def test_path_result_full(self):
         """PathResult should accept all fields."""
+        metadata = PathMetadata(size=1024, permissions="0755")
         result = PathResult(
             relative_path="test/file.py",
             source_path="/abs/test/file.py",
             logical_path="logical/path.py",
             loader_type="remote",
-            metadata={"size": 1024, "mtime": 1234567890},
+            metadata=metadata,
         )
         assert result.relative_path == "test/file.py"
         assert result.source_path == "/abs/test/file.py"
         assert result.logical_path == "logical/path.py"
         assert result.loader_type == "remote"
-        assert result.metadata["size"] == 1024
-        assert result.metadata["mtime"] == 1234567890
+        assert result.metadata.size == 1024
+        assert result.metadata.permissions == "0755"
 
     def test_path_result_serialization(self):
         """PathResult should serialize to JSON."""
+        metadata = PathMetadata(custom={"key": "value"})
         result = PathResult(
             relative_path="test/file.py",
             source_path="/abs/test/file.py",
             logical_path="test/file.py",
-            metadata={"key": "value"},
+            metadata=metadata,
         )
-        data = result.model_dump()
-        assert data["relative_path"] == "test/file.py"
-        assert data["source_path"] == "/abs/test/file.py"
-        assert data["loader_type"] == "local"
-        assert data["metadata"]["key"] == "value"
+        data = result.model_dump(by_alias=True, exclude_none=True)
+        assert data["relativePath"] == "test/file.py"
+        assert data["sourcePath"] == "/abs/test/file.py"
+        assert data["loaderType"] == "local"
+        assert data["metadata"]["custom"]["key"] == "value"
 
     def test_path_result_validation_error(self):
         """PathResult should validate required fields."""
@@ -160,11 +170,26 @@ class TestFinderConfig:
     def test_finder_config_serialization(self):
         """FinderConfig should serialize to JSON."""
         config = FinderConfig(max_workers=8, loader_type="test")
-        data = config.model_dump()
-        assert data["max_workers"] == 8
-        assert data["loader_type"] == "test"
-        assert "cache_enabled" in data
-        assert "validate_inputs" in data
+        data = config.model_dump(by_alias=True)
+        assert data["maxWorkers"] == 8
+        assert data["loaderType"] == "test"
+        assert "cacheEnabled" in data
+        assert "validateInputs" in data
+
+    def test_path_constraint_model(self):
+        """PathConstraint should support enum fields and aliases."""
+        constraint = PathConstraint(
+            root="/repo",
+            constraint_type=ConstraintType.REPOSITORY,
+            enforcement_level=EnforcementLevel.WARN,
+            allowed_patterns=["docs/**"],
+            blocked_patterns=["secret/**"],
+        )
+        data = constraint.model_dump(by_alias=True)
+        assert data["type"] == "repository"
+        assert data["enforcementLevel"] == "warn"
+        assert "allowedPatterns" in data
+        assert "blockedPatterns" in data
 
 
 class TestModelInteraction:

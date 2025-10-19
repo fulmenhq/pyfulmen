@@ -10,7 +10,16 @@ from pathlib import Path
 
 import pytest
 
-from pyfulmen.pathfinder import Finder, FindQuery, FinderConfig, PathResult
+from pyfulmen.pathfinder import (
+    ConstraintType,
+    EnforcementLevel,
+    Finder,
+    FindQuery,
+    FinderConfig,
+    PathConstraint,
+    PathResult,
+    PathTraversalError,
+)
 
 
 @pytest.fixture
@@ -46,6 +55,11 @@ def temp_file_tree(tmp_path):
     (subdir / "nested.py").write_text("# nested python")
     (subdir / "data.json").write_text('{"data": true}')
 
+    # Create deeper nested structure for recursive glob testing
+    nested_dir = subdir / "nested_dir"
+    nested_dir.mkdir()
+    (nested_dir / "nested.json").write_text('{"nested": true}')
+
     # Create deep nested structure
     deep = root / "deep" / "deeper"
     deep.mkdir(parents=True)
@@ -55,6 +69,17 @@ def temp_file_tree(tmp_path):
     hidden = root / ".hidden"
     hidden.mkdir()
     (hidden / "secret.txt").write_text("secret")
+
+    # Create symlink for testing follow_symlinks behavior (skip if unsupported)
+    target = subdir / "nested.py"
+    symlink_path = root / "link_to_nested.py"
+    try:
+        if symlink_path.exists():
+            symlink_path.unlink()
+        os.symlink(target, symlink_path)
+    except (AttributeError, NotImplementedError, OSError):
+        # Symlinks may require elevated privileges on Windows; ignore if creation fails
+        symlink_path = None
 
     return root
 
@@ -112,6 +137,15 @@ class TestFindFiles:
         assert any("file1.py" in p for p in paths)
         assert any("nested.py" in p for p in paths)
 
+    def test_recursive_with_prefix_pattern(self, temp_file_tree):
+        """Recursive patterns with directory prefixes should include nested matches."""
+        finder = Finder()
+        query = FindQuery(root=str(temp_file_tree), include=["subdir/**/*.json"])
+        results = finder.find_files(query)
+
+        paths = sorted(r.relative_path for r in results)
+        assert "subdir/nested_dir/nested.json" in paths
+
     def test_exclude_patterns(self, temp_file_tree):
         """Should exclude files matching exclude patterns."""
         finder = Finder()
@@ -151,6 +185,90 @@ class TestFindFiles:
         paths = [r.relative_path for r in results]
         # Should find both file2.txt and .hidden/secret.txt
         assert len(results) >= 2
+
+    def test_symlink_skipped_when_not_following(self, temp_file_tree):
+        """Symlinks should be skipped when follow_symlinks is False."""
+        # Skip test if symlinks unsupported (common on Windows without privileges)
+        if not hasattr(os, "symlink"):
+            pytest.skip("os.symlink not supported on this platform")
+
+        finder = Finder()
+        query = FindQuery(root=str(temp_file_tree), include=["**/*.py"], follow_symlinks=False)
+        results = finder.find_files(query)
+
+        # Should include physical file but not duplicate entries originating from the symlink
+        paths = [r.relative_path for r in results]
+        assert "file1.py" in paths
+
+        nested_instances = [
+            r for r in results if r.source_path.endswith("subdir/nested.py")
+        ]
+        assert len(nested_instances) == 1
+
+    def test_fulmenignore_patterns(self, temp_file_tree):
+        """Paths matching .fulmenignore patterns should be excluded."""
+        ignore_file = temp_file_tree / ".fulmenignore"
+        ignore_file.write_text("subdir/\n*.txt\n", encoding="utf-8")
+
+        finder = Finder()
+        query = FindQuery(root=str(temp_file_tree), include=["**/*.py", "**/*.txt"])
+        results = finder.find_files(query)
+
+        paths = [r.relative_path for r in results]
+        assert "file1.py" in paths
+        assert "subdir/nested.py" not in paths
+        assert "file2.txt" not in paths
+
+    def test_metadata_populated(self, temp_file_tree):
+        """Metadata should include basic file information."""
+        finder = Finder()
+        query = FindQuery(root=str(temp_file_tree), include=["file1.py"])
+        results = finder.find_files(query)
+
+        assert len(results) == 1
+        metadata = results[0].metadata
+        assert metadata.size is not None and metadata.size > 0
+        assert metadata.modified is not None and "T" in metadata.modified
+        assert metadata.permissions.startswith("0")
+
+    def test_constraint_enforcement_strict(self, temp_file_tree):
+        """Strict enforcement should raise when blocked patterns match."""
+        constraint = PathConstraint(
+            root=str(temp_file_tree),
+            constraint_type=ConstraintType.REPOSITORY,
+            enforcement_level=EnforcementLevel.STRICT,
+            blocked_patterns=["subdir/**"],
+        )
+        finder = Finder(FinderConfig(constraint=constraint))
+
+        with pytest.raises(PathTraversalError):
+            finder.find_files(
+                FindQuery(root=str(temp_file_tree), include=["subdir/**/*.py"])
+            )
+
+    def test_constraint_enforcement_warn(self, temp_file_tree):
+        """Warn enforcement should skip blocked paths without raising."""
+        constraint = PathConstraint(
+            root=str(temp_file_tree),
+            constraint_type=ConstraintType.REPOSITORY,
+            enforcement_level=EnforcementLevel.WARN,
+            blocked_patterns=["subdir/**"],
+        )
+        finder = Finder(FinderConfig(constraint=constraint))
+        results = finder.find_files(
+            FindQuery(root=str(temp_file_tree), include=["**/*.py"])
+        )
+
+        paths = [r.relative_path for r in results]
+        assert all(not p.startswith("subdir/") for p in paths)
+
+    def test_schema_validation_enabled(self, temp_file_tree):
+        """Schema validation flags should validate inputs/outputs without errors."""
+        finder = Finder(FinderConfig(validate_inputs=True, validate_outputs=True))
+        results = finder.find_files(
+            FindQuery(root=str(temp_file_tree), include=["file1.py"])
+        )
+        assert len(results) == 1
 
     def test_error_handler_called(self, temp_file_tree):
         """Error handler should be called on errors."""
@@ -203,7 +321,7 @@ class TestPathResult:
         assert result.source_path
         assert result.logical_path
         assert result.loader_type == "local"
-        assert isinstance(result.metadata, dict)
+        assert result.metadata.size is not None
 
     def test_path_result_serialization(self):
         """PathResult should serialize to JSON."""
