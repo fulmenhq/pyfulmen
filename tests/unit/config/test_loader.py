@@ -3,22 +3,23 @@
 import tempfile
 from pathlib import Path
 
-from pyfulmen.config.loader import ConfigLoader
+from pyfulmen.config.loader import ConfigLoader, ConfigLoadResult
 
 
 def test_config_loader_init():
     """Test ConfigLoader initialization."""
     loader = ConfigLoader()
-    assert loader.app_name == "fulmen"
+    assert loader.app == "fulmen"
     assert isinstance(loader.user_config_dir, Path)
-    assert "fulmen" in str(loader.user_config_dir).lower()
+    assert "fulmen" in str(loader.user_config_dir)
 
 
 def test_config_loader_custom_app():
     """Test ConfigLoader with custom app name."""
-    loader = ConfigLoader(app_name="myapp")
-    assert loader.app_name == "myapp"
-    assert "myapp" in str(loader.user_config_dir).lower()
+    loader = ConfigLoader(app="myapp", vendor="acme")
+    assert loader.app == "myapp"
+    assert loader.vendor == "acme"
+    assert "acme" in str(loader.user_config_dir)
 
 
 def test_load_crucible_defaults():
@@ -26,7 +27,9 @@ def test_load_crucible_defaults():
     loader = ConfigLoader()
 
     # Load known config from Crucible
-    config = loader.load("terminal/v1.0.0/terminal-overrides-defaults")
+    result = loader.load_with_metadata("terminal/v1.0.0/terminal-overrides-defaults")
+    assert isinstance(result, ConfigLoadResult)
+    config = result.data
 
     assert isinstance(config, dict)
     # Should have terminal-related config
@@ -39,7 +42,7 @@ def test_load_with_user_config():
 
     user_config = {"custom": {"setting": "value"}}
 
-    config = loader.load("terminal/v1.0.0/terminal-overrides-defaults", user_config=user_config)
+    config = loader.load("terminal/v1.0.0/terminal-overrides-defaults", app_config=user_config)
 
     # Should include user config
     assert "custom" in config
@@ -90,7 +93,7 @@ def test_three_layer_merge():
         override_path.parent.mkdir(parents=True)
         override_path.write_text("user_layer:\n  value: 2\n")
 
-        loader = ConfigLoader(app_name="testapp")
+        loader = ConfigLoader(app="testapp")
         loader.user_config_dir = user_config_dir
 
         # Layer 1: Crucible defaults
@@ -98,10 +101,41 @@ def test_three_layer_merge():
         # Layer 3: App config
         app_config = {"app_layer": {"value": 3}}
 
-        config = loader.load("terminal/v1.0.0/terminal-overrides-defaults", user_config=app_config)
+        result = loader.load_with_metadata(
+            "terminal/v1.0.0/terminal-overrides-defaults", app_config=app_config
+        )
+        config = result.data
 
         # Should have all layers
         assert "user_layer" in config  # Layer 2
         assert "app_layer" in config  # Layer 3
-        # Layer 1 (Crucible defaults) should also be present
-        assert len(config) > 2  # More than just our two test layers
+        assert len(result.sources) == 3
+        assert result.sources[0].layer == "defaults"
+        assert result.sources[1].layer == "user"
+        assert result.sources[2].layer == "application"
+
+
+def test_user_override_with_yml(tmp_path):
+    """Loader should pick up .yml overrides."""
+    user_config_dir = tmp_path / "fulmen"
+    override = user_config_dir / "terminal" / "v1.0.0" / "terminal-overrides-defaults.yml"
+    override.parent.mkdir(parents=True)
+    override.write_text("""test:\n  value: 1\n""")
+
+    loader = ConfigLoader()
+    loader.user_config_dir = user_config_dir
+
+    result = loader.load_with_metadata("terminal/v1.0.0/terminal-overrides-defaults")
+    assert result.data.get("test", {}).get("value") == 1
+    assert result.sources[1].applied is True
+
+
+def test_load_with_metadata_no_layers(tmp_path):
+    """Metadata should reflect missing layers."""
+    loader = ConfigLoader(app="app", vendor="acme")
+    loader.user_config_dir = tmp_path / "empty"
+
+    result = loader.load_with_metadata("nonexistent/config")
+    assert result.data == {}
+    assert len(result.sources) == 3
+    assert not any(source.applied for source in result.sources)

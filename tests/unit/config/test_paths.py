@@ -41,16 +41,16 @@ def test_get_xdg_base_dirs_with_env_override():
 
 def test_get_app_config_dir():
     """Test getting app config directory."""
-    config_dir = paths.get_app_config_dir("myapp")
+    config_dir = paths.get_app_config_dir("fulmenhq/myapp")
 
     assert isinstance(config_dir, Path)
-    # Should end with app name (case may vary by platform)
-    assert "myapp" in str(config_dir).lower()
+    assert "fulmenhq" in str(config_dir)
+    assert "myapp" in str(config_dir)
 
 
 def test_get_app_data_dir():
     """Test getting app data directory."""
-    data_dir = paths.get_app_data_dir("myapp")
+    data_dir = paths.get_app_data_dir("fulmenhq/myapp")
 
     assert isinstance(data_dir, Path)
     assert "myapp" in str(data_dir).lower()
@@ -58,7 +58,7 @@ def test_get_app_data_dir():
 
 def test_get_app_cache_dir():
     """Test getting app cache directory."""
-    cache_dir = paths.get_app_cache_dir("myapp")
+    cache_dir = paths.get_app_cache_dir("fulmenhq/myapp")
 
     assert isinstance(cache_dir, Path)
     assert "myapp" in str(cache_dir).lower()
@@ -75,16 +75,18 @@ def test_get_app_config_paths_no_legacy():
 
 def test_get_app_config_paths_with_legacy():
     """Test getting app config paths with legacy names."""
-    config_paths = paths.get_app_config_paths("myapp", legacy_names=["oldapp", "ancientapp"])
+    config_paths = paths.get_app_config_paths(
+        "fulmenhq/myapp", legacy_names=["fulmenhq/oldapp", "fulmenhq/ancientapp"]
+    )
 
     assert isinstance(config_paths, list)
     assert len(config_paths) == 3
 
     # First should be current name
-    assert "myapp" in str(config_paths[0]).lower()
+    assert "myapp" in str(config_paths[0])
     # Rest should be legacy names in order
-    assert "oldapp" in str(config_paths[1]).lower()
-    assert "ancientapp" in str(config_paths[2]).lower()
+    assert "oldapp" in str(config_paths[1])
+    assert "ancientapp" in str(config_paths[2])
 
 
 def test_get_fulmen_config_dir():
@@ -92,7 +94,7 @@ def test_get_fulmen_config_dir():
     fulmen_config = paths.get_fulmen_config_dir()
 
     assert isinstance(fulmen_config, Path)
-    assert "fulmen" in str(fulmen_config).lower()
+    assert "fulmen" in str(fulmen_config)
 
 
 def test_get_fulmen_data_dir():
@@ -100,7 +102,7 @@ def test_get_fulmen_data_dir():
     fulmen_data = paths.get_fulmen_data_dir()
 
     assert isinstance(fulmen_data, Path)
-    assert "fulmen" in str(fulmen_data).lower()
+    assert "fulmen" in str(fulmen_data)
 
 
 def test_get_fulmen_cache_dir():
@@ -108,7 +110,7 @@ def test_get_fulmen_cache_dir():
     fulmen_cache = paths.get_fulmen_cache_dir()
 
     assert isinstance(fulmen_cache, Path)
-    assert "fulmen" in str(fulmen_cache).lower()
+    assert "fulmen" in str(fulmen_cache)
 
 
 @patch("pyfulmen.config.paths.detect_platform")
@@ -145,3 +147,29 @@ def test_windows_paths(mock_detect):
 
     # Windows cache should include Cache subdirectory
     assert "Cache" in str(cache_dir)
+
+
+def test_fulmen_env_overrides(tmp_path, monkeypatch):
+    """FULMEN_* environment overrides should take precedence."""
+    monkeypatch.setenv("FULMEN_CONFIG_HOME", str(tmp_path / "cfg"))
+    monkeypatch.setenv("FULMEN_DATA_HOME", str(tmp_path / "data"))
+    monkeypatch.setenv("FULMEN_CACHE_HOME", str(tmp_path / "cache"))
+
+    assert paths.get_fulmen_config_dir() == tmp_path / "cfg"
+    assert paths.get_fulmen_data_dir() == tmp_path / "data"
+    assert paths.get_fulmen_cache_dir() == tmp_path / "cache"
+
+
+def test_ensure_dir(tmp_path):
+    """ensure_dir should create directories."""
+    target = tmp_path / "nested" / "dir"
+    assert not target.exists()
+    paths.ensure_dir(target)
+    assert target.exists()
+
+
+def test_config_search_paths_alias():
+    """get_config_search_paths should match get_app_config_paths."""
+    assert paths.get_config_search_paths(
+        "fulmenhq/myapp", vendor="fulmenhq"
+    ) == paths.get_app_config_paths("fulmenhq/myapp", vendor="fulmenhq")

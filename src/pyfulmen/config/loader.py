@@ -1,16 +1,9 @@
-"""Three-layer configuration loader.
+"""Three-layer configuration loader utilities."""
 
-Implements the Fulmen config loading pattern:
-  Layer 1: Crucible defaults (embedded from sync)
-  Layer 2: User overrides from ~/.config/fulmen/
-  Layer 3: Application-provided config (BYOC)
+from __future__ import annotations
 
-Example:
-    >>> from pyfulmen.config.loader import ConfigLoader
-    >>> loader = ConfigLoader()
-    >>> config = loader.load('terminal/v1.0.0/terminal-overrides-defaults')
-"""
-
+from dataclasses import dataclass
+from pathlib import Path
 from typing import Any
 
 import yaml
@@ -19,135 +12,155 @@ from .. import crucible
 from . import paths
 from .merger import merge_configs
 
+DEFAULT_APP_NAMESPACE = "fulmen"
+
+
+@dataclass(slots=True)
+class ConfigSource:
+    """Metadata describing a configuration layer."""
+
+    layer: str  # defaults | user | application
+    source: Path | str
+    applied: bool
+
+
+@dataclass(slots=True)
+class ConfigLoadResult:
+    """Result containing merged configuration and layer metadata."""
+
+    data: dict[str, Any]
+    sources: list[ConfigSource]
+
 
 class ConfigLoader:
-    """Three-layer configuration loader.
+    """Load configuration using Crucible defaults + user overrides + BYOC."""
 
-    Loads configuration with the following precedence (later overrides earlier):
-      1. Crucible defaults (Layer 1)
-      2. User overrides from ~/.config/fulmen/ (Layer 2)
-      3. Application-provided config (Layer 3 - BYOC)
+    def __init__(
+        self,
+        app: str | None = None,
+        *,
+        vendor: str | None = None,
+        app_name: str | None = None,
+    ) -> None:
+        if app is None:
+            app = app_name or DEFAULT_APP_NAMESPACE
+        elif app_name and app_name != app:
+            raise ValueError("app and app_name arguments refer to different applications")
 
-    Example:
-        >>> loader = ConfigLoader()
-        >>> config = loader.load('terminal/v1.0.0/terminal-overrides-defaults')
-        >>> # With user override:
-        >>> config = loader.load(
-        ...     'terminal/v1.0.0/terminal-overrides-defaults',
-        ...     user_config={'ghostty': {'enabled': False}}
-        ... )
-    """
+        self.app = app
+        self.vendor = vendor
+        self.user_config_dir = paths.get_app_config_dir(app, vendor=vendor)
 
-    def __init__(self, app_name: str = "fulmen"):
-        """Initialize config loader.
+    def load(self, crucible_path: str, app_config: dict[str, Any] | None = None) -> dict[str, Any]:
+        """Return merged configuration data (no metadata)."""
+        return self.load_with_metadata(crucible_path, app_config=app_config).data
 
-        Args:
-            app_name: Application name for user config directory
-                     (default: 'fulmen' for shared Fulmen configs)
-        """
-        self.app_name = app_name
-        self.user_config_dir = paths.get_app_config_dir(app_name)
-
-    def load(
+    def load_with_metadata(
         self,
         crucible_path: str,
-        user_config: dict[str, Any] | None = None,
-    ) -> dict[str, Any]:
-        """Load configuration with three-layer merge.
+        app_config: dict[str, Any] | None = None,
+    ) -> ConfigLoadResult:
+        """Load configuration and return metadata about each applied layer."""
+        sources: list[ConfigSource] = []
+        configs: list[dict[str, Any]] = []
 
-        Args:
-            crucible_path: Path to Crucible config
-                (e.g., 'terminal/v1.0.0/terminal-overrides-defaults')
-            user_config: Optional application-provided config (Layer 3)
+        defaults = self._load_crucible_defaults(crucible_path)
+        sources.append(
+            ConfigSource(
+                layer="defaults",
+                source=defaults.path if defaults else crucible_path,
+                applied=bool(defaults),
+            )
+        )
+        if defaults:
+            configs.append(defaults.data)
 
-        Returns:
-            Merged configuration dictionary
-
-        Example:
-            >>> loader = ConfigLoader()
-            >>> config = loader.load('terminal/v1.0.0/terminal-overrides-defaults')
-        """
-        configs_to_merge = []
-
-        # Layer 1: Crucible defaults
-        crucible_defaults = self._load_crucible_defaults(crucible_path)
-        if crucible_defaults:
-            configs_to_merge.append(crucible_defaults)
-
-        # Layer 2: User overrides
         user_overrides = self._load_user_overrides(crucible_path)
+        sources.append(
+            ConfigSource(
+                layer="user",
+                source=user_overrides.path
+                if user_overrides
+                else self._user_override_path(crucible_path),
+                applied=bool(user_overrides),
+            )
+        )
         if user_overrides:
-            configs_to_merge.append(user_overrides)
+            configs.append(user_overrides.data)
 
-        # Layer 3: Application config (BYOC)
-        if user_config:
-            configs_to_merge.append(user_config)
+        sources.append(
+            ConfigSource(layer="application", source="runtime", applied=bool(app_config))
+        )
+        if app_config:
+            configs.append(app_config)
 
-        # Merge all layers
-        if not configs_to_merge:
-            return {}
+        merged = merge_configs(*configs) if configs else {}
+        return ConfigLoadResult(data=merged, sources=sources)
 
-        return merge_configs(*configs_to_merge)
+    # Internal helpers -----------------------------------------------------
 
-    def _load_crucible_defaults(self, crucible_path: str) -> dict[str, Any] | None:
-        """Load Crucible config defaults (Layer 1).
+    @dataclass(slots=True)
+    class _LoadedLayer:
+        data: dict[str, Any]
+        path: Path
 
-        Args:
-            crucible_path: Path to Crucible config
-                (e.g., 'terminal/v1.0.0/terminal-overrides-defaults')
+    def _parse_crucible_path(self, crucible_path: str) -> tuple[str, str, str] | None:
+        parts = crucible_path.split("/")
+        if len(parts) == 3:
+            return parts[0], parts[1], parts[2]
+        if len(parts) == 2:
+            category, name = parts
+            versions = crucible.config.list_config_versions(category)
+            version = versions[-1] if versions else "v1.0.0"
+            return category, version, name
+        return None
 
-        Returns:
-            Config dict or None if not found
-        """
+    def _load_crucible_defaults(self, crucible_path: str) -> _LoadedLayer | None:
+        """Return defaults and source path if available."""
+        parsed = self._parse_crucible_path(crucible_path)
+        if not parsed:
+            return None
+        category, version, name = parsed
         try:
-            # Parse category/version/name from path
-            parts = crucible_path.split("/")
-            if len(parts) == 3:
-                category, version, name = parts
-            elif len(parts) == 2:
-                # Handle category/name format (assume latest version)
-                category, name = parts
-                versions = crucible.config.list_config_versions(category)
-                version = versions[-1] if versions else "v1.0.0"
-            else:
-                # Single name - try to find it
-                name = crucible_path
-                # For now, return None - would need more sophisticated discovery
-                return None
-
-            return crucible.config.load_config_defaults(category, version, name)
+            config_path = crucible.config.get_config_path(category, version, name)
+            data = crucible.config.load_config_defaults(category, version, name)
+            return ConfigLoader._LoadedLayer(data=data or {}, path=config_path)
         except FileNotFoundError:
-            # Config not found in Crucible - return None
             return None
 
-    def _load_user_overrides(self, crucible_path: str) -> dict[str, Any] | None:
-        """Load user config overrides (Layer 2).
+    def _user_override_candidates(self, crucible_path: str) -> list[Path]:
+        base = self.user_config_dir
+        candidates = [
+            base / f"{crucible_path}.yaml",
+            base / f"{crucible_path}.yml",
+            base / f"{crucible_path}.json",
+            base / crucible_path,
+        ]
+        return candidates
 
-        Looks for user overrides in ~/.config/{app_name}/{crucible_path}.yaml
+    def _user_override_path(self, crucible_path: str) -> Path:
+        return self.user_config_dir / f"{crucible_path}.yaml"
 
-        Args:
-            crucible_path: Path to config file (e.g., 'terminal/v1.0.0/terminal-overrides-defaults')
-
-        Returns:
-            Config dict or None if not found
-        """
-        # Construct user override path
-        user_file = self.user_config_dir / f"{crucible_path}.yaml"
-
-        if not user_file.exists():
-            # Try without .yaml extension
-            user_file = self.user_config_dir / crucible_path
-            if not user_file.exists():
-                return None
-
-        try:
-            with open(user_file) as f:
-                return yaml.safe_load(f)
-        except (yaml.YAMLError, OSError):
-            # Failed to load user config - skip it
-            return None
+    def _load_user_overrides(self, crucible_path: str) -> _LoadedLayer | None:
+        for candidate in self._user_override_candidates(crucible_path):
+            if not candidate.exists():
+                continue
+            try:
+                with open(candidate) as handle:
+                    if candidate.suffix == ".json":
+                        data = yaml.safe_load(handle)  # json safe via YAML parser
+                    else:
+                        data = yaml.safe_load(handle)
+                if data is None:
+                    data = {}
+                return ConfigLoader._LoadedLayer(data=data, path=candidate)
+            except (yaml.YAMLError, OSError):
+                continue
+        return None
 
 
 __all__ = [
     "ConfigLoader",
+    "ConfigLoadResult",
+    "ConfigSource",
 ]

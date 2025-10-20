@@ -1,217 +1,214 @@
 """Config path utilities for PyFulmen.
 
-Provides platform-aware config, data, and cache path resolution following
-the XDG Base Directory Specification and Fulmen Config Path Standard.
+Implements the Fulmen Config Path Standard with platform-aware helpers for
+config/data/cache discovery, vendor/app namespace handling, and optional
+directory creation. Functions accept identifiers in the form
+`<app>` or `<vendor>/<app>` and normalise names to kebab-case.
 
 Example:
     >>> from pyfulmen.config import paths
     >>> paths.get_fulmen_config_dir()
     PosixPath('/Users/you/.config/fulmen')
-    >>> paths.get_app_config_dir('myapp')
-    PosixPath('/Users/you/.config/myapp')
+    >>> paths.get_app_config_dir('fulmenhq/myapp')
+    PosixPath('/Users/you/.config/fulmenhq/myapp')
 """
 
+from __future__ import annotations
+
 import os
+from collections.abc import Iterable
 from pathlib import Path
 
 from ._platform import Platform, detect_platform
 
+# Defaults align with Fulmen naming conventions
+DEFAULT_VENDOR = "fulmenhq"
+DEFAULT_APP_NAMESPACE = "fulmen"
+
+
+def _normalise_segment(value: str) -> str:
+    """Convert vendor/app segment to kebab-case."""
+    return value.strip().replace(" ", "-").replace("_", "-").lower()
+
+
+def _split_app_identifier(app: str, vendor: str | None = None) -> tuple[str, str]:
+    """Resolve vendor/app tuple from identifier."""
+    app = app.strip()
+    if "/" in app:
+        potential_vendor, app_name = app.split("/", 1)
+        vendor = vendor or potential_vendor
+    else:
+        app_name = app
+
+    vendor_segment = _normalise_segment(vendor or DEFAULT_VENDOR)
+    app_segment = _normalise_segment(app_name or DEFAULT_APP_NAMESPACE)
+    return vendor_segment, app_segment
+
+
+def _apply_fulmen_override(kind: str, default: Path) -> Path:
+    """Apply FULMEN_* environment overrides for config/data/cache roots."""
+    env_var = {
+        "config": "FULMEN_CONFIG_HOME",
+        "data": "FULMEN_DATA_HOME",
+        "cache": "FULMEN_CACHE_HOME",
+    }[kind]
+    override = os.getenv(env_var)
+    if override:
+        candidate = Path(override).expanduser()
+        if candidate.is_absolute():
+            return candidate
+    return default
+
 
 def get_xdg_base_dirs() -> dict[str, Path]:
-    """Get XDG base directories with platform-specific defaults.
-
-    Respects XDG_CONFIG_HOME, XDG_DATA_HOME, and XDG_CACHE_HOME environment
-    variables. Falls back to platform-specific defaults if not set.
-
-    Returns:
-        Dictionary with 'config', 'data', and 'cache' paths
-
-    Example:
-        >>> get_xdg_base_dirs()
-        {'config': PosixPath('/Users/you/.config'),
-         'data': PosixPath('/Users/you/.local/share'),
-         'cache': PosixPath('/Users/you/.cache')}
-    """
+    """Get XDG base directories with platform-specific defaults."""
     platform_type = detect_platform()
     home = Path.home()
 
-    # Linux/Unix defaults
     if platform_type == Platform.LINUX:
         config_default = home / ".config"
         data_default = home / ".local" / "share"
         cache_default = home / ".cache"
-
-    # macOS defaults
     elif platform_type == Platform.MACOS:
         config_default = home / "Library" / "Application Support"
         data_default = home / "Library" / "Application Support"
         cache_default = home / "Library" / "Caches"
-
-    # Windows defaults
     elif platform_type == Platform.WINDOWS:
         appdata = os.getenv("APPDATA", str(home / "AppData" / "Roaming"))
         localappdata = os.getenv("LOCALAPPDATA", str(home / "AppData" / "Local"))
         config_default = Path(appdata)
         data_default = Path(appdata)
         cache_default = Path(localappdata)
-
-    # Unknown platform - use Unix-like defaults
     else:
         config_default = home / ".config"
         data_default = home / ".local" / "share"
         cache_default = home / ".cache"
 
-    # Respect XDG environment overrides
     config_home = os.getenv("XDG_CONFIG_HOME")
     data_home = os.getenv("XDG_DATA_HOME")
     cache_home = os.getenv("XDG_CACHE_HOME")
 
-    return {
-        "config": Path(config_home) if config_home else config_default,
-        "data": Path(data_home) if data_home else data_default,
-        "cache": Path(cache_home) if cache_home else cache_default,
+    base_dirs = {
+        "config": Path(config_home).expanduser() if config_home else config_default,
+        "data": Path(data_home).expanduser() if data_home else data_default,
+        "cache": Path(cache_home).expanduser() if cache_home else cache_default,
     }
 
+    for kind in ("config", "data", "cache"):
+        base_dirs[kind] = _apply_fulmen_override(kind, base_dirs[kind])
 
-def get_app_config_dir(app_name: str) -> Path:
-    """Get configuration directory for an application.
+    return base_dirs
 
-    Args:
-        app_name: Application name (e.g., 'myapp', 'fulmen')
 
-    Returns:
-        Path to app config directory
+def ensure_dir(path: Path) -> Path:
+    """Ensure a directory exists, creating parents if needed."""
+    path.mkdir(parents=True, exist_ok=True)
+    return path
 
-    Example:
-        >>> get_app_config_dir('myapp')
-        PosixPath('/Users/you/.config/myapp')
-    """
+
+def get_app_config_dir(
+    app: str,
+    *,
+    vendor: str | None = None,
+    ensure: bool = False,
+) -> Path:
+    """Return config directory for vendor/app."""
     base_dirs = get_xdg_base_dirs()
-    platform_type = detect_platform()
-
-    # macOS/Windows: Use capitalized app name
-    if platform_type in (Platform.MACOS, Platform.WINDOWS):
-        app_name = app_name.capitalize()
-
-    return base_dirs["config"] / app_name
+    vendor_segment, app_segment = _split_app_identifier(app, vendor=vendor)
+    config_path = base_dirs["config"] / vendor_segment / app_segment
+    return ensure_dir(config_path) if ensure else config_path
 
 
-def get_app_data_dir(app_name: str) -> Path:
-    """Get data directory for an application.
-
-    Args:
-        app_name: Application name (e.g., 'myapp', 'fulmen')
-
-    Returns:
-        Path to app data directory
-
-    Example:
-        >>> get_app_data_dir('myapp')
-        PosixPath('/Users/you/.local/share/myapp')
-    """
+def get_app_data_dir(
+    app: str,
+    *,
+    vendor: str | None = None,
+    ensure: bool = False,
+) -> Path:
+    """Return data directory for vendor/app."""
     base_dirs = get_xdg_base_dirs()
-    platform_type = detect_platform()
-
-    # macOS/Windows: Use capitalized app name
-    if platform_type in (Platform.MACOS, Platform.WINDOWS):
-        app_name = app_name.capitalize()
-
-    return base_dirs["data"] / app_name
+    vendor_segment, app_segment = _split_app_identifier(app, vendor=vendor)
+    data_path = base_dirs["data"] / vendor_segment / app_segment
+    return ensure_dir(data_path) if ensure else data_path
 
 
-def get_app_cache_dir(app_name: str) -> Path:
-    """Get cache directory for an application.
-
-    Args:
-        app_name: Application name (e.g., 'myapp', 'fulmen')
-
-    Returns:
-        Path to app cache directory
-
-    Example:
-        >>> get_app_cache_dir('myapp')
-        PosixPath('/Users/you/.cache/myapp')
-    """
+def get_app_cache_dir(
+    app: str,
+    *,
+    vendor: str | None = None,
+    ensure: bool = False,
+) -> Path:
+    """Return cache directory for vendor/app."""
     base_dirs = get_xdg_base_dirs()
-    platform_type = detect_platform()
-
-    # macOS/Windows: Use capitalized app name
-    if platform_type in (Platform.MACOS, Platform.WINDOWS):
-        app_name = app_name.capitalize()
-
-    # Windows: Add Cache subdirectory
-    if platform_type == Platform.WINDOWS:
-        return base_dirs["cache"] / app_name / "Cache"
-
-    return base_dirs["cache"] / app_name
+    vendor_segment, app_segment = _split_app_identifier(app, vendor=vendor)
+    cache_root = base_dirs["cache"] / vendor_segment / app_segment
+    if detect_platform() == Platform.WINDOWS:
+        cache_root = cache_root / "Cache"
+    return ensure_dir(cache_root) if ensure else cache_root
 
 
-def get_app_config_paths(app_name: str, legacy_names: list[str] | None = None) -> list[Path]:
-    """Get ordered list of config search paths for an application.
-
-    Returns paths in priority order: current name first, then legacy names.
-
-    Args:
-        app_name: Current application name
-        legacy_names: Optional list of legacy app names to check
-
-    Returns:
-        List of paths to search (ordered by priority)
-
-    Example:
-        >>> get_app_config_paths('myapp', legacy_names=['oldapp'])
-        [PosixPath('/Users/you/.config/myapp'),
-         PosixPath('/Users/you/.config/oldapp')]
-    """
-    paths = [get_app_config_dir(app_name)]
-
+def get_app_config_paths(
+    app: str,
+    legacy_names: Iterable[str] | None = None,
+    *,
+    vendor: str | None = None,
+) -> list[Path]:
+    """Return ordered list of config search paths for vendor/app and legacy names."""
+    paths = [get_app_config_dir(app, vendor=vendor)]
     if legacy_names:
-        for legacy_name in legacy_names:
-            paths.append(get_app_config_dir(legacy_name))
-
+        for legacy in legacy_names:
+            paths.append(get_app_config_dir(legacy, vendor=vendor))
     return paths
 
 
-def get_fulmen_config_dir() -> Path:
-    """Get Fulmen ecosystem configuration directory.
-
-    Returns:
-        Path to fulmen config directory
-
-    Example:
-        >>> get_fulmen_config_dir()
-        PosixPath('/Users/you/.config/fulmen')  # Linux
-        PosixPath('/Users/you/Library/Application Support/Fulmen')  # macOS
-    """
-    return get_app_config_dir("fulmen")
+def get_config_search_paths(app: str, *, vendor: str | None = None) -> list[Path]:
+    """Alias matching Config Path API standard."""
+    return get_app_config_paths(app, vendor=vendor)
 
 
-def get_fulmen_data_dir() -> Path:
-    """Get Fulmen ecosystem data directory.
-
-    Returns:
-        Path to fulmen data directory
-
-    Example:
-        >>> get_fulmen_data_dir()
-        PosixPath('/Users/you/.local/share/fulmen')  # Linux
-        PosixPath('/Users/you/Library/Application Support/Fulmen')  # macOS
-    """
-    return get_app_data_dir("fulmen")
+def get_fulmen_config_dir(*, ensure: bool = False) -> Path:
+    """Return Fulmen ecosystem config directory."""
+    override = os.getenv("FULMEN_CONFIG_HOME")
+    if override:
+        override_path = Path(override).expanduser()
+        return ensure_dir(override_path) if ensure else override_path
+    path = get_app_config_dir(DEFAULT_APP_NAMESPACE, vendor=DEFAULT_VENDOR)
+    return ensure_dir(path) if ensure else path
 
 
-def get_fulmen_cache_dir() -> Path:
-    """Get Fulmen ecosystem cache directory.
+def get_fulmen_data_dir(*, ensure: bool = False) -> Path:
+    """Return Fulmen ecosystem data directory."""
+    override = os.getenv("FULMEN_DATA_HOME")
+    if override:
+        override_path = Path(override).expanduser()
+        return ensure_dir(override_path) if ensure else override_path
+    path = get_app_data_dir(DEFAULT_APP_NAMESPACE, vendor=DEFAULT_VENDOR)
+    return ensure_dir(path) if ensure else path
 
-    Returns:
-        Path to fulmen cache directory
 
-    Example:
-        >>> get_fulmen_cache_dir()
-        PosixPath('/Users/you/.cache/fulmen')  # Linux
-        PosixPath('/Users/you/Library/Caches/Fulmen')  # macOS
-    """
-    return get_app_cache_dir("fulmen")
+def get_fulmen_cache_dir(*, ensure: bool = False) -> Path:
+    """Return Fulmen ecosystem cache directory."""
+    override = os.getenv("FULMEN_CACHE_HOME")
+    if override:
+        override_path = Path(override).expanduser()
+        return ensure_dir(override_path) if ensure else override_path
+    path = get_app_cache_dir(DEFAULT_APP_NAMESPACE, vendor=DEFAULT_VENDOR)
+    return ensure_dir(path) if ensure else path
+
+
+def ensure_fulmen_config_dir() -> Path:
+    """Ensure Fulmen config directory exists."""
+    return ensure_dir(get_fulmen_config_dir())
+
+
+def ensure_fulmen_data_dir() -> Path:
+    """Ensure Fulmen data directory exists."""
+    return ensure_dir(get_fulmen_data_dir())
+
+
+def ensure_fulmen_cache_dir() -> Path:
+    """Ensure Fulmen cache directory exists."""
+    return ensure_dir(get_fulmen_cache_dir())
 
 
 __all__ = [
@@ -220,7 +217,12 @@ __all__ = [
     "get_app_data_dir",
     "get_app_cache_dir",
     "get_app_config_paths",
+    "get_config_search_paths",
     "get_fulmen_config_dir",
     "get_fulmen_data_dir",
     "get_fulmen_cache_dir",
+    "ensure_dir",
+    "ensure_fulmen_config_dir",
+    "ensure_fulmen_data_dir",
+    "ensure_fulmen_cache_dir",
 ]
