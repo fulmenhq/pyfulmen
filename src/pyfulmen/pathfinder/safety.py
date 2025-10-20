@@ -6,7 +6,6 @@ and ensure safe filesystem operations.
 """
 
 import os
-from pathlib import Path
 
 
 class PathTraversalError(Exception):

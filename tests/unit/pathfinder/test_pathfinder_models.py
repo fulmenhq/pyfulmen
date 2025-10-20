@@ -10,8 +10,8 @@ from pydantic import ValidationError
 from pyfulmen.pathfinder.models import (
     ConstraintType,
     EnforcementLevel,
-    FindQuery,
     FinderConfig,
+    FindQuery,
     PathConstraint,
     PathMetadata,
     PathResult,

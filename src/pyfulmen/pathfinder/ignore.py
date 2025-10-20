@@ -7,9 +7,9 @@ pathfinder to skip files and directories defined by glob-style patterns.
 
 from __future__ import annotations
 
+from collections.abc import Iterable
 from fnmatch import fnmatch
 from pathlib import Path
-from typing import Iterable
 
 
 class IgnoreMatcher:

@@ -7,7 +7,6 @@ configuration (defaults, user overrides, BYOC).
 
 import os
 from pathlib import Path
-from typing import Optional
 
 import yaml
 
@@ -17,8 +16,8 @@ from pyfulmen.crucible.config import load_config_defaults
 from .models import TerminalConfig, TerminalOverrides
 
 # Module-level state for terminal configuration
-_terminal_catalog: Optional[TerminalOverrides] = None
-_current_terminal_config: Optional[TerminalConfig] = None
+_terminal_catalog: TerminalOverrides | None = None
+_current_terminal_config: TerminalConfig | None = None
 
 
 def _load_terminal_catalog() -> None:
@@ -51,7 +50,7 @@ def _load_terminal_catalog() -> None:
 
     if user_config_path.exists():
         try:
-            with open(user_config_path, "r") as f:
+            with open(user_config_path) as f:
                 user_data = yaml.safe_load(f)
             user_overrides = TerminalOverrides(**user_data)
             _merge_terminal_configs(_terminal_catalog, user_overrides)
@@ -126,7 +125,7 @@ _load_terminal_catalog()
 _detect_current_terminal()
 
 
-def get_terminal_config() -> Optional[TerminalConfig]:
+def get_terminal_config() -> TerminalConfig | None:
     """
     Get the current terminal configuration.
 

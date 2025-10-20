@@ -2,7 +2,7 @@
 
 Python Fulmen libraries for enterprise-scale development.
 
-**Lifecycle Phase**: `alpha` | **Version**: 0.1.0 | **Coverage**: 93%
+**Lifecycle Phase**: `alpha` | **Version**: 0.1.3 | **Coverage**: 93%
 
 ## Overview
 
@@ -39,10 +39,10 @@ make build
 
 # Install in another project
 cd /path/to/your/project
-pip install /path/to/pyfulmen/dist/pyfulmen-0.1.0-py3-none-any.whl
+pip install /path/to/pyfulmen/dist/pyfulmen-0.1.3-py3-none-any.whl
 
 # Or with uv
-uv add /path/to/pyfulmen/dist/pyfulmen-0.1.0-py3-none-any.whl
+uv add /path/to/pyfulmen/dist/pyfulmen-0.1.3-py3-none-any.whl
 ```
 
 ### Editable Install (for library development)
@@ -126,15 +126,15 @@ schema.validator.validate_against_schema(
 from pyfulmen import version
 
 # Read version from VERSION file
-ver = version.read_version()  # "0.1.0"
+ver = version.read_version()  # "0.1.3"
 
 # Get detailed version info
 info = version.get_version_info()
-# {'version': '0.1.0', 'source': 'VERSION', 'valid': True}
+# {'version': '0.1.3', 'source': 'VERSION', 'valid': True}
 
 # Validate version sync across files
 sync = version.validate_version_sync()
-# {'synced': True, 'version_file': '0.1.0', ...}
+# {'synced': True, 'version_file': '0.1.3', ...}
 ```
 
 ## Development
@@ -180,7 +180,7 @@ make bootstrap
 
 # 3. Verify setup
 make tools  # Check that goneat and other tools are available
-make test   # Run test suite (should see 136 tests passing)
+make test   # Run test suite (should see 613 tests passing)
 
 # 4. Development cycle
 make fmt              # Format code with Ruff
@@ -284,7 +284,7 @@ cd pyfulmen
 make bootstrap
 
 # 3. Verify setup
-make test  # Should see 136 tests passing
+make test  # Should see 613 tests passing
 ```
 
 The `.venv/` virtual environment is created automatically by `make bootstrap` (via `uv sync`).
@@ -293,7 +293,7 @@ The `.venv/` virtual environment is created automatically by `make bootstrap` (v
 
 We provide opinionated `.vscode/settings.json` configuration to eliminate false positive linter errors and configure the development environment optimally. This is a **convenience only** - the actual quality gates are enforced via:
 
-- `make test` - Test suite (currently 143 tests, 93% coverage)
+- `make test` - Test suite (currently 613 tests, 93% coverage)
 - `make lint` - Ruff linting
 - `make fmt` - Code formatting
 - `make check-all` - All quality checks

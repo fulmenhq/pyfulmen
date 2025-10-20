@@ -9,7 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- **Pathfinder Extension Module**: Safe filesystem discovery with glob patterns and proper path normalization
+- **Pathfinder Extension Module** (Phase 1-2 Complete): Safe filesystem discovery with .fulmenignore support and schema compliance
   - `Finder` class with configuration-based discovery (maxWorkers, caching, validation)
   - `FindQuery` model with include/exclude patterns, maxDepth, followSymlinks, includeHidden options
   - `PathResult` model with relativePath, sourcePath, logicalPath, loaderType, metadata
@@ -17,10 +17,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Proper `pathlib.Path` usage throughout (no string manipulation - addresses Go implementation bugs)
   - Recursive `**` glob pattern support via pathlib.rglob()
   - Convenience methods: `find_go_files()`, `find_config_files()`, `find_schema_files()`, `find_by_extension()`
+  - **Phase 1-2 Enhancements**:
+    - `.fulmenignore` support with gitignore-style pattern matching (`IgnoreMatcher` class)
+    - `PathConstraint` model with enforcement levels (strict/warn/permissive)
+    - Metadata collection for discovered files (size, modified, permissions via `Path.stat()`)
+    - CamelCase field aliases for schema compatibility (`_to_camel` generator)
+    - Schema validation for FindQuery/PathResult inputs/outputs when configured
+    - Fixed recursive glob handling to preserve intermediate path segments
+    - Fixed symlink detection to check before resolution when follow_symlinks=False
+    - Enhanced test coverage with constraint enforcement and ignore pattern tests
   - Schema validation support for FindQuery and PathResult against Crucible schemas
   - Error handlers and progress callbacks for streaming discovery
-  - 47 comprehensive tests with 90%+ coverage
-  - 100% gofulmen pathfinder behavioral parity
+  - 54 comprehensive tests with 88% coverage (249 statements)
+  - Phase 1-2 complete per pathfinder-remediation-feature-brief.md
 
 - **ASCII Helpers Extension Module**: Unicode-aware console formatting with terminal-specific width overrides
   - `string_width()`: wcwidth-based display width calculation with terminal overrides
@@ -34,6 +43,38 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - wcwidth library integration for accurate Unicode width calculation
   - 48 comprehensive tests with 90%+ coverage
   - 100% gofulmen ASCII implementation alignment
+
+- **Config Three-Layer System** (Complete Implementation): Production-ready configuration loading with metadata tracking
+  - `ConfigLoader` class with three-layer merge (Crucible defaults → User overrides → Application config)
+  - `ConfigLoadResult` with source tracking metadata for diagnostics
+  - `ConfigSource` dataclass tracking layer, source path, and application status
+  - Vendor/app namespace support with kebab-case normalization
+  - `FULMEN_CONFIG_HOME`, `FULMEN_DATA_HOME`, `FULMEN_CACHE_HOME` environment overrides
+  - YAML/JSON format auto-detection for user overrides (.yaml, .yml, .json)
+  - `ensure` parameter for automatic directory creation
+  - `get_config_search_paths()` alias for standard compliance
+  - Platform-specific path resolution (macOS, Linux, Windows)
+  - `load()` method for simple merged config access
+  - `load_with_metadata()` method for full diagnostics
+  - 34 comprehensive tests with 93% coverage
+  - Full compliance with Three-Layer Configuration Standard
+
+- **Schema Catalog & Validation** (Enhanced Implementation): Discovery and validation with optional goneat integration
+  - `SchemaInfo` dataclass with schema metadata (id, category, version, name, path, description)
+  - `list_schemas()` for discovery with optional prefix filtering
+  - `get_schema()` for metadata retrieval by schema ID
+  - `parse_schema_id()` for identifier parsing (category/version/name)
+  - `validate_data()` function with `ValidationResult` and `Diagnostic` tracking
+  - `validate_file()` function supporting JSON/YAML auto-detection
+  - Optional goneat CLI integration with automatic fallback to jsonschema
+  - `format_diagnostics()` helper with text/json output modes
+  - Click-based CLI with `list`, `info`, `validate` commands
+  - `validate-schema.sh` helper script (defaults to goneat, falls back to PyFulmen CLI)
+  - `--use-goneat`/`--no-goneat` flags for integration control
+  - Test fixtures for schema validation (box-chars valid/invalid payloads)
+  - 20 comprehensive tests with 78% coverage (283 statements)
+  - Catalog module: 93% coverage (75 statements)
+  - Validator module: 92% coverage (106 statements)
 
 - **Ecosystem ADR Adoption Tracking**: Comprehensive architectural decision tracking
   - `docs/development/adr/ecosystem-adoption-status.md`: New comprehensive adoption status document
@@ -97,14 +138,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **wcwidth**: Added `wcwidth>=0.2.0` for Unicode character width calculation
   - Enables accurate terminal width calculation for CJK, emojis, box-drawing characters
   - Required for ASCII helpers module
+- **click**: Added `click>=8.1.0` for CLI framework
+  - Powers schema catalog CLI (list/info/validate commands)
+  - Provides argument parsing, help generation, and error handling
 
 ### Documentation
 
 - **Release Notes**: Comprehensive v0.1.3 release documentation
   - `docs/releases/v0.1.3.md`: Complete release notes with feature descriptions, examples, migration guide
   - Pathfinder and ASCII module documentation
+  - Config three-layer system documentation with examples
+  - Schema catalog and validation CLI documentation
   - Ecosystem ADR adoption tracking documentation
-  - Quality metrics: 615 tests, 90%+ coverage across all modules
+  - `docs/pyfulmen_overview.md`: Updated with schema CLI usage examples and current module statuses
+  - Quality metrics: 613 tests, 90%+ coverage across all modules
   - Cross-language parity verification with gofulmen
 
 ---

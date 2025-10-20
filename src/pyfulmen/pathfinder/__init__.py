@@ -33,8 +33,8 @@ from .finder import Finder
 from .models import (
     ConstraintType,
     EnforcementLevel,
-    FindQuery,
     FinderConfig,
+    FindQuery,
     PathConstraint,
     PathMetadata,
     PathResult,

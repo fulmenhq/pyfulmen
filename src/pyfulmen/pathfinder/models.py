@@ -6,8 +6,9 @@ Defines the core data structures for file discovery operations.
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from enum import Enum
-from typing import Any, Callable, Optional
+from typing import Any
 
 from pydantic import ConfigDict, Field
 
@@ -57,10 +58,10 @@ class FindQuery(FulmenDataModel):
     include_hidden: bool = Field(default=False, description="Include hidden files/directories")
 
     # Note: Callbacks can't be serialized to JSON, so we mark them as excluded
-    error_handler: Optional[Callable[[str, Exception], Optional[Exception]]] = Field(
+    error_handler: Callable[[str, Exception], Exception | None] | None = Field(
         default=None, exclude=True, description="Error handler callback"
     )
-    progress_callback: Optional[Callable[[int, int, str], None]] = Field(
+    progress_callback: Callable[[int, int, str], None] | None = Field(
         default=None, exclude=True, description="Progress callback"
     )
 
@@ -83,7 +84,9 @@ class PathResult(FulmenDataModel):
     source_path: str = Field(..., description="Absolute path to the file")
     logical_path: str = Field(..., description="Logical path")
     loader_type: str = Field(default="local", description="Type of loader used")
-    metadata: "PathMetadata" = Field(default_factory=lambda: PathMetadata(), description="Additional metadata")
+    metadata: PathMetadata = Field(
+        default_factory=lambda: PathMetadata(), description="Additional metadata"
+    )
 
 
 class ConstraintType(str, Enum):
@@ -146,12 +149,16 @@ class PathMetadata(FulmenDataModel):
 
     model_config = _data_model_config(alias_generator=_to_camel, populate_by_name=True)
 
-    size: Optional[int] = Field(default=None, ge=0, description="File size in bytes")
-    modified: Optional[str] = Field(default=None, description="Last modification timestamp (RFC3339)")
-    permissions: Optional[str] = Field(default=None, description="File permissions (octal or symbolic)")
-    mime_type: Optional[str] = Field(default=None, description="MIME type of the file", alias="mimeType")
-    encoding: Optional[str] = Field(default=None, description="Character encoding")
-    checksum: Optional[str] = Field(default=None, description="Checksum or hash")
+    size: int | None = Field(default=None, ge=0, description="File size in bytes")
+    modified: str | None = Field(default=None, description="Last modification timestamp (RFC3339)")
+    permissions: str | None = Field(
+        default=None, description="File permissions (octal or symbolic)"
+    )
+    mime_type: str | None = Field(
+        default=None, description="MIME type of the file", alias="mimeType"
+    )
+    encoding: str | None = Field(default=None, description="Character encoding")
+    checksum: str | None = Field(default=None, description="Checksum or hash")
     tags: list[str] = Field(default_factory=list, description="User-defined tags")
     custom: dict[str, Any] = Field(default_factory=dict, description="Custom metadata fields")
 
@@ -177,7 +184,7 @@ class FinderConfig(FulmenConfigModel):
     loader_type: str = Field(default="local", description="Default loader type")
     validate_inputs: bool = Field(default=False, description="Validate FindQuery inputs")
     validate_outputs: bool = Field(default=False, description="Validate PathResult outputs")
-    constraint: Optional[PathConstraint] = Field(
+    constraint: PathConstraint | None = Field(
         default=None, description="Constraint configuration for permissible paths"
     )
 

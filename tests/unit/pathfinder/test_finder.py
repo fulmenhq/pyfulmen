@@ -5,7 +5,6 @@ Tests file discovery operations with glob patterns and path normalization.
 """
 
 import os
-import tempfile
 from pathlib import Path
 
 import pytest
@@ -14,8 +13,8 @@ from pyfulmen.pathfinder import (
     ConstraintType,
     EnforcementLevel,
     Finder,
-    FindQuery,
     FinderConfig,
+    FindQuery,
     PathConstraint,
     PathResult,
     PathTraversalError,

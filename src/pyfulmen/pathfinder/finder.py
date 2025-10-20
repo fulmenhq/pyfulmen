@@ -7,19 +7,17 @@ proper path normalization using pathlib.
 
 from __future__ import annotations
 
-import os
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from fnmatch import fnmatch
 from pathlib import Path
-from typing import Optional
 
 from pyfulmen.schema import validator as schema_validator
 
 from .ignore import IgnoreMatcher
 from .models import (
     EnforcementLevel,
-    FindQuery,
     FinderConfig,
+    FindQuery,
     PathConstraint,
     PathMetadata,
     PathResult,
@@ -42,7 +40,7 @@ class Finder:
         ...     print(result.relative_path)
     """
 
-    def __init__(self, config: Optional[FinderConfig] = None):
+    def __init__(self, config: FinderConfig | None = None):
         """
         Initialize a new Finder instance.
 
@@ -89,7 +87,7 @@ class Finder:
                 query.error_handler(str(root_path / ".fulmenignore"), err)
 
         constraint = self.config.constraint
-        constraint_root: Optional[Path] = None
+        constraint_root: Path | None = None
         if constraint:
             constraint_root = Path(constraint.root).resolve()
 
@@ -188,7 +186,7 @@ class Finder:
                         error_result = query.error_handler(str(match), err)
                         if error_result:
                             # If error handler returns an error, propagate it
-                            raise error_result
+                            raise error_result from err
                     # Otherwise continue to next file
                     continue
 
@@ -293,7 +291,7 @@ class Finder:
         except OSError:
             return PathMetadata()
 
-        modified = datetime.fromtimestamp(stat_result.st_mtime, tz=timezone.utc).isoformat()
+        modified = datetime.fromtimestamp(stat_result.st_mtime, tz=UTC).isoformat()
         permissions = oct(stat_result.st_mode & 0o777)
 
         return PathMetadata(

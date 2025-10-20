@@ -4,7 +4,6 @@ Data models for pyfulmen.ascii module.
 Defines box drawing characters and configuration models.
 """
 
-from typing import Optional
 
 from pydantic import Field
 
@@ -46,7 +45,7 @@ class BoxOptions(FulmenDataModel):
 
     min_width: int = Field(default=0, description="Minimum width (0 = auto)")
     max_width: int = Field(default=0, description="Maximum width (0 = unlimited)")
-    chars: Optional[BoxChars] = Field(default=None, description="Custom box characters")
+    chars: BoxChars | None = Field(default=None, description="Custom box characters")
 
 
 class TerminalConfig(FulmenConfigModel):
