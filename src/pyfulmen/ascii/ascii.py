@@ -4,7 +4,6 @@ Box drawing and string width utilities for pyfulmen.ascii.
 Provides Unicode-aware box drawing with terminal-specific width adjustments.
 """
 
-
 try:
     import wcwidth
 

@@ -100,6 +100,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - `docs/development/adr/README.md`: Updated ecosystem ADR adoption statuses from "In Progress" to "Verified"
   - Added link to ecosystem-adoption-status.md with adoption status level definitions
 
+- **Development Tooling**: Enhanced code quality and demo script support
+  - `Makefile`: Added `scripts/` directory to `fmt` and `lint` targets
+  - `ruff.toml`: Added `scripts/demos/*.py` exception for E402 (imports not at top)
+  - Enables proper formatting and linting of demo scripts while allowing necessary sys.path manipulation
+  - Demo scripts now included in quality gates (make prepush)
+
 - **Test Organization**: Renamed pathfinder test file to avoid pytest collection errors
   - Renamed `tests/unit/pathfinder/test_models.py` to `test_pathfinder_models.py`
   - Prevents collision with `tests/unit/foundry/test_models.py`
@@ -155,6 +161,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - `docs/pyfulmen_overview.md`: Updated with schema CLI usage examples and current module statuses
   - Quality metrics: 613 tests, 90%+ coverage across all modules
   - Cross-language parity verification with gofulmen
+
+- **Logging Demo Script**: Comprehensive progressive logging demonstration
+  - `scripts/demos/logging_demo.py`: Interactive demo showcasing all logging capabilities
+  - Demonstrates all three progressive profiles (SIMPLE, STRUCTURED, ENTERPRISE)
+  - Shows all severity levels (TRACE, DEBUG, INFO, WARN, ERROR, FATAL)
+  - Examples of context propagation and correlation IDs
+  - Error handling with exception details
+  - Profile comparison showing same log event across profiles
+  - Executable with shebang (`#!/usr/bin/env -S uv run python`) for direct invocation
+  - Includes comprehensive inline documentation and usage instructions
 
 ---
 

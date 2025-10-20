@@ -4,7 +4,6 @@ Tests for pyfulmen.ascii box drawing functionality.
 Tests box drawing, string width calculation, and Unicode handling.
 """
 
-
 from pyfulmen.ascii import (
     BoxChars,
     BoxOptions,

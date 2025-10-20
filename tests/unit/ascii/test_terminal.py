@@ -4,8 +4,6 @@ Tests for pyfulmen.ascii terminal detection and configuration.
 Tests terminal type detection, configuration loading, and overrides.
 """
 
-
-
 from pyfulmen.ascii import TerminalConfig, TerminalOverrides
 from pyfulmen.ascii.terminal import (
     get_all_terminal_configs,

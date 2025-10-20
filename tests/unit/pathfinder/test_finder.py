@@ -199,9 +199,7 @@ class TestFindFiles:
         paths = [r.relative_path for r in results]
         assert "file1.py" in paths
 
-        nested_instances = [
-            r for r in results if r.source_path.endswith("subdir/nested.py")
-        ]
+        nested_instances = [r for r in results if r.source_path.endswith("subdir/nested.py")]
         assert len(nested_instances) == 1
 
     def test_fulmenignore_patterns(self, temp_file_tree):
@@ -241,9 +239,7 @@ class TestFindFiles:
         finder = Finder(FinderConfig(constraint=constraint))
 
         with pytest.raises(PathTraversalError):
-            finder.find_files(
-                FindQuery(root=str(temp_file_tree), include=["subdir/**/*.py"])
-            )
+            finder.find_files(FindQuery(root=str(temp_file_tree), include=["subdir/**/*.py"]))
 
     def test_constraint_enforcement_warn(self, temp_file_tree):
         """Warn enforcement should skip blocked paths without raising."""
@@ -254,9 +250,7 @@ class TestFindFiles:
             blocked_patterns=["subdir/**"],
         )
         finder = Finder(FinderConfig(constraint=constraint))
-        results = finder.find_files(
-            FindQuery(root=str(temp_file_tree), include=["**/*.py"])
-        )
+        results = finder.find_files(FindQuery(root=str(temp_file_tree), include=["**/*.py"]))
 
         paths = [r.relative_path for r in results]
         assert all(not p.startswith("subdir/") for p in paths)
@@ -264,9 +258,7 @@ class TestFindFiles:
     def test_schema_validation_enabled(self, temp_file_tree):
         """Schema validation flags should validate inputs/outputs without errors."""
         finder = Finder(FinderConfig(validate_inputs=True, validate_outputs=True))
-        results = finder.find_files(
-            FindQuery(root=str(temp_file_tree), include=["file1.py"])
-        )
+        results = finder.find_files(FindQuery(root=str(temp_file_tree), include=["file1.py"]))
         assert len(results) == 1
 
     def test_error_handler_called(self, temp_file_tree):

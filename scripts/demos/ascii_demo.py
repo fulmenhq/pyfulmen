@@ -225,9 +225,7 @@ def demo_status_dashboard() -> None:
         "Queue:       ⚠ 42 messages pending"
     )
 
-    box = draw_box_with_options(
-        status_content, BoxOptions(min_width=40, chars=status_chars)
-    )
+    box = draw_box_with_options(status_content, BoxOptions(min_width=40, chars=status_chars))
     print(box)
 
 

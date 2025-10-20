@@ -28,6 +28,8 @@ select = [
 "tests/**/*.py" = ["S101", "B017", "F841"]
 # Example files: allow imports not at top (E402) for pedagogical inline demonstrations
 "examples/**/*.py" = ["E402"]
+# Demo scripts: allow imports not at top (E402) for sys.path manipulation
+"scripts/demos/*.py" = ["E402"]
 
 [format]
 quote-style = "double"

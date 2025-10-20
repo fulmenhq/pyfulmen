@@ -337,6 +337,17 @@ This document tracks release notes and checklists for PyFulmen releases.
 - ✅ **Test Growth**: 613 tests passing (up from 520 in v0.1.2)
 - ✅ **Dependencies**: Added wcwidth>=0.2.0, click>=8.1.0
 
+**Demonstrations & Tooling**:
+
+- ✅ **Logging Demo Script**: Comprehensive interactive demo showcasing progressive logging
+  - `scripts/demos/logging_demo.py`: Demonstrates all three profiles (SIMPLE, STRUCTURED, ENTERPRISE)
+  - Shows all severity levels, context propagation, correlation IDs, and error handling
+  - Profile comparison showing same log event across different profiles
+  - Direct invocation via shebang or `uv run python`
+- ✅ **Development Tooling**: Enhanced Makefile and ruff configuration
+  - Added `scripts/` to formatting and linting targets
+  - Demo scripts properly formatted and included in quality gates
+
 #### Breaking Changes
 
 - None (fully backward compatible with v0.1.2)

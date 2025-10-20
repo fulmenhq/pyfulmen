@@ -4,7 +4,6 @@ Data models for pyfulmen.ascii module.
 Defines box drawing characters and configuration models.
 """
 
-
 from pydantic import Field
 
 from pyfulmen.foundry import FulmenConfigModel, FulmenDataModel

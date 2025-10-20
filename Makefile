@@ -96,7 +96,7 @@ sync-ssot: sync-crucible
 .PHONY: fmt
 fmt: bin/goneat
 	@echo "Formatting code..."
-	@uv run ruff format src/ tests/
+	@uv run ruff format src/ tests/ scripts/
 	@echo "Formatting docs and config..."
 	@bin/goneat format --types yaml,json,markdown
 	@echo "✓ All files formatted"
@@ -104,7 +104,7 @@ fmt: bin/goneat
 .PHONY: lint
 lint:
 	@echo "Running linter..."
-	@uv run ruff check src/ tests/
+	@uv run ruff check src/ tests/ scripts/
 
 .PHONY: test
 test:
@@ -122,7 +122,7 @@ lifecycle:
 	@echo "Required test coverage: $(COVERAGE_MIN)%"
 
 .PHONY: check-all
-check-all: lint test
+check-all: fmt lint test
 	@echo "✓ All checks passed"
 
 .PHONY: version
