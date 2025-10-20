@@ -5,8 +5,7 @@ development in Python, following the Fulmen ecosystem standards.
 
 Example:
     >>> import pyfulmen
-    >>> print(pyfulmen.__version__)
-    0.1.2
+    >>> pyfulmen.__version__  # e.g., '0.1.4'
 """
 
 from importlib.metadata import version as _get_version
