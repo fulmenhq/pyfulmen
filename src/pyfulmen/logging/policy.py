@@ -20,6 +20,8 @@ from pathlib import Path
 
 import yaml
 
+from pyfulmen.config.paths import get_org_config_dir
+
 from ._models import LoggingConfig, LoggingPolicy
 
 
@@ -29,9 +31,9 @@ def load_policy(policy_file: str | Path) -> LoggingPolicy:
     Searches for policy file in standard locations if not found at
     specified path:
     1. Specified path (exact match)
-    2. .goneat/logging-policy.yaml
-    3. /etc/fulmen/logging-policy.yaml
-    4. /org/fulmen/logging-policy.yaml
+    2. .fulmen/logging-policy.yaml (repository-local)
+    3. /etc/fulmen/logging-policy.yaml (system-wide)
+    4. $FULMEN_ORG_PATH/logging-policy.yaml (organization-level, default /opt/fulmen)
 
     Args:
         policy_file: Path to policy file (relative or absolute)
@@ -51,12 +53,12 @@ def load_policy(policy_file: str | Path) -> LoggingPolicy:
     # Convert to Path for easier handling
     path = Path(policy_file)
 
-    # Search locations in order
+    # Search locations in order per updated logging standard
     search_paths = [
         path,  # Exact path specified
-        Path(".goneat") / "logging-policy.yaml",
+        Path(".fulmen") / "logging-policy.yaml",
         Path("/etc/fulmen") / "logging-policy.yaml",
-        Path("/org/fulmen") / "logging-policy.yaml",
+        get_org_config_dir() / "logging-policy.yaml",
     ]
 
     # Find first existing policy file

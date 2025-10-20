@@ -196,6 +196,31 @@ def get_fulmen_cache_dir(*, ensure: bool = False) -> Path:
     return ensure_dir(path) if ensure else path
 
 
+def get_org_config_dir(*, ensure: bool = False) -> Path:
+    """Return organization-level config directory.
+
+    Defaults to /opt/fulmen but can be overridden via FULMEN_ORG_PATH
+    environment variable for multi-tenant deployments.
+
+    Returns:
+        Path to organization config directory
+
+    Example:
+        >>> get_org_config_dir()
+        PosixPath('/opt/fulmen')
+        >>> os.environ['FULMEN_ORG_PATH'] = '/shared/acme/fulmen'
+        >>> get_org_config_dir()
+        PosixPath('/shared/acme/fulmen')
+    """
+    override = os.getenv("FULMEN_ORG_PATH")
+    if override:
+        org_path = Path(override).expanduser()
+        return ensure_dir(org_path) if ensure else org_path
+
+    default_org_path = Path("/opt/fulmen")
+    return ensure_dir(default_org_path) if ensure else default_org_path
+
+
 def ensure_fulmen_config_dir() -> Path:
     """Ensure Fulmen config directory exists."""
     return ensure_dir(get_fulmen_config_dir())
@@ -221,6 +246,7 @@ __all__ = [
     "get_fulmen_config_dir",
     "get_fulmen_data_dir",
     "get_fulmen_cache_dir",
+    "get_org_config_dir",
     "ensure_dir",
     "ensure_fulmen_config_dir",
     "ensure_fulmen_data_dir",
