@@ -7,6 +7,92 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.4] - 2025-10-20
+
+### Added
+
+- **Documentation Module Enhancement**: Frontmatter parsing and clean content access for Crucible markdown assets
+  - `crucible.get_documentation(path)` - Returns clean markdown body with YAML frontmatter stripped
+  - `crucible.get_documentation_metadata(path)` - Extracts YAML frontmatter as dict, returns None if absent
+  - `crucible.get_documentation_with_metadata(path)` - Combined tuple (clean_content, metadata) for efficiency
+  - `crucible.AssetNotFoundError` - Enhanced error with suggestions for similar asset IDs
+  - `crucible.ParseError` - Exception for malformed YAML/JSON parsing failures
+  - `crucible.CrucibleVersionError` - Exception for Crucible version metadata errors
+  - Lightweight frontmatter parser (~50 LOC) using `pyyaml.safe_load()` for security
+  - Suggestion algorithm for AssetNotFoundError (finds similar paths using set intersection)
+  - Error handling converts FileNotFoundError to AssetNotFoundError with helpful suggestions
+  - 62 unit tests covering frontmatter extraction, content stripping, error scenarios, edge cases
+  - 12 integration tests against real Crucible docs including performance benchmarks
+  - Phase 1 complete per documentation-module-implementation-plan.md
+
+- **Synced Crucible Standard**: Documentation Module Standard
+  - `docs/crucible-py/standards/library/modules/documentation.md` - Cross-language API contract
+  - Defines mandatory Phase 1 APIs: get_documentation, get_documentation_metadata, get_documentation_with_metadata
+  - Defines recommended Phase 2 APIs: load_config (with validation), list_documents, find_documents (deferred to v0.1.5)
+  - Frontmatter format standardization (title, description, author, date, last_updated, status, tags)
+  - Testing requirements: 80%+ coverage, platform path handling, fuzzy suggestions
+  - Performance targets: list_documents <50ms, cache hits instant
+  - Error handling patterns with AssetNotFoundError suggestions
+
+### Changed
+
+- **Crucible Package Exports**: Enhanced top-level API surface
+  - Added `get_documentation`, `get_documentation_metadata`, `get_documentation_with_metadata` to `crucible.__all__`
+  - Added `AssetNotFoundError`, `ParseError`, `CrucibleVersionError` to public API
+  - Updated module docstring with enhanced API examples (v0.1.4+)
+  - Backward compatibility maintained: legacy `docs.read_doc()` unchanged
+
+- **Documentation Module (`crucible.docs`)**: Enhanced with new functions
+  - Added `get_documentation()` - strips frontmatter from markdown
+  - Added `get_documentation_metadata()` - extracts YAML frontmatter only
+  - Added `get_documentation_with_metadata()` - combined access for efficiency
+  - Added `_get_similar_docs()` helper - simple string similarity for suggestions
+  - Updated `__all__` to include new functions
+  - Legacy functions (`read_doc`, `list_available_docs`, `get_doc_path`) unchanged
+
+### Enhanced
+
+- **Documentation Access**: All new documentation functions provide suggestions when assets not found
+  - Suggestions use path part matching (split on `/`, compare sets)
+  - Up to 3 suggestions included in AssetNotFoundError messages
+  - Example: "standards/observability/loging.md" → suggests "standards/observability/logging.md"
+
+- **Error Handling**: Consistent error types across all Crucible access APIs
+  - FileNotFoundError converted to AssetNotFoundError with category and suggestions
+  - ParseError for YAML/JSON malformed content with descriptive messages
+  - CrucibleVersionError for version metadata issues
+
+- **Test Coverage**: 74 new tests added for documentation module
+  - Unit tests: 62 tests (errors, frontmatter, documentation APIs)
+  - Integration tests: 12 tests against real Crucible docs
+  - Performance test: <10ms frontmatter extraction target (measured <5ms average)
+  - Edge cases: empty frontmatter, Windows/Unix line endings, Unicode, malformed YAML
+  - Backward compatibility: legacy APIs tested to ensure no breaking changes
+  - Total test count: 720+ tests passing across all modules
+
+### Fixed
+
+- **Version Test**: Updated `tests/test_basic.py` to expect v0.1.4 instead of v0.1.3
+  - Fixes test failure after version bump
+
+### Documentation
+
+- **PyFulmen Overview**: Comprehensive documentation module section
+  - Added "Documentation Module APIs (v0.1.4+)" section with Core APIs, Error Handling, Frontmatter Format
+  - Backward Compatibility section showing legacy vs enhanced API usage
+  - Config Loading section with Phase 1/Phase 2 roadmap
+  - Performance characteristics documented (~50 LOC parser, <10ms extraction)
+  - Updated frontmatter: version to 0.1.4, last_updated to 2025-10-20
+  - Updated Module Catalog: added documentation module entry
+  - Updated Roadmap: Current Release (v0.1.4) with 720+ tests, documentation module complete
+
+- **Integration Tests**: New test suite against real Crucible assets
+  - `tests/integration/crucible/test_documentation_integration.py` - 12 tests
+  - Tests real document access (logging standard, guides, architecture docs)
+  - Tests error handling with suggestions for typos and wrong categories
+  - Tests backward compatibility between legacy and enhanced APIs
+  - Performance benchmarks: 100 extractions in <1s, <10ms per extraction
+
 ## [0.1.3] - 2025-10-20
 
 ### Added

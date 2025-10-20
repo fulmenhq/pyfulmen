@@ -3,10 +3,10 @@ title: "PyFulmen Overview"
 description: "Python foundation library for the Fulmen ecosystem"
 author: "PyFulmen Architect"
 date: "2025-10-11"
-last_updated: "2025-10-17"
+last_updated: "2025-10-20"
 status: "active"
 lifecycle_phase: "alpha"
-version: "0.1.3"
+version: "0.1.4"
 tags: ["python", "library", "fulmen", "enterprise"]
 ---
 
@@ -37,6 +37,7 @@ PyFulmen implements the mandatory core modules defined in the [Module Manifest](
 | Module ID                 | Status    | Coverage Target | Specification                                                            | Description                                                                          |
 | ------------------------- | --------- | --------------- | ------------------------------------------------------------------------ | ------------------------------------------------------------------------------------ |
 | **crucible-shim**         | ✅ Stable | 90%             | [Spec](docs/crucible-py/standards/library/modules/crucible-shim.md)      | Idiomatic Python access to Crucible schemas, docs, and config defaults               |
+| **documentation**         | ✅ Stable | 90%             | [Spec](docs/crucible-py/standards/library/modules/documentation.md)      | Frontmatter parsing and clean content access for Crucible markdown assets (v0.1.4+)  |
 | **config-path-api**       | ✅ Stable | 90%             | [Spec](docs/crucible-py/standards/config/fulmen-config-paths.md)         | Platform-aware config/data/cache paths (XDG-compliant on Linux/macOS, Windows-aware) |
 | **three-layer-config**    | ✅ Stable | 90%             | [Spec](docs/crucible-py/standards/library/modules/three-layer-config.md) | Crucible defaults → User overrides → Runtime config with YAML/JSON support           |
 | **schema-validation**     | ✅ Stable | 90%             | [Spec](docs/crucible-py/standards/library/modules/schema-validation.md)  | JSON Schema validation helpers using jsonschema library                              |
@@ -150,6 +151,114 @@ Crucible logging severity enum maps to Python logging levels:
 | FATAL    | 50      | CRITICAL | Unrecoverable failure, program exit expected |
 | NONE     | 60      | -        | Explicitly disable emission                  |
 
+## Documentation Module APIs (v0.1.4+)
+
+PyFulmen provides enhanced documentation access with frontmatter parsing and clean content reads. These APIs enable tools to extract structured metadata (YAML headers) and markdown bodies separately, supporting runtime doc discovery and integration with rendering tools.
+
+### Core APIs
+
+All new documentation functions are exported at the top level of the `crucible` package:
+
+```python
+from pyfulmen import crucible
+
+# Get clean markdown body (frontmatter stripped)
+content = crucible.get_documentation('standards/observability/logging.md')
+render_markdown(content)  # No YAML noise
+
+# Get metadata only
+metadata = crucible.get_documentation_metadata('standards/observability/logging.md')
+print(f"Status: {metadata['status']}")
+print(f"Tags: {metadata['tags']}")
+
+# Get both together (more efficient)
+content, metadata = crucible.get_documentation_with_metadata('guides/bootstrap-goneat.md')
+if metadata:
+    print(f"Reading guide by {metadata.get('author', 'Unknown')}")
+    print(f"Last updated: {metadata.get('last_updated', 'N/A')}")
+display(content)
+```
+
+### Error Handling
+
+Documentation APIs provide helpful error messages with suggestions:
+
+```python
+from pyfulmen.crucible import AssetNotFoundError, ParseError
+
+try:
+    content = crucible.get_documentation('invalid/path.md')
+except AssetNotFoundError as e:
+    print(f"Not found: {e.asset_id}")
+    print(f"Did you mean: {', '.join(e.suggestions)}")
+
+try:
+    metadata = crucible.get_documentation_metadata('malformed.md')
+except ParseError as e:
+    print(f"Invalid YAML: {e}")
+```
+
+### Frontmatter Format
+
+Documentation files may include YAML frontmatter delimited by `---`:
+
+```markdown
+---
+title: "My Document"
+author: "Jane Doe"
+date: "2025-10-20"
+status: "stable"
+tags: ["python", "documentation"]
+---
+
+# Document Content
+
+The actual markdown content starts here...
+```
+
+The `get_documentation()` function returns only the markdown body (below the closing `---`), while `get_documentation_metadata()` returns the parsed YAML as a dictionary.
+
+### Backward Compatibility
+
+Legacy APIs remain available for code that needs raw content with frontmatter included:
+
+```python
+from pyfulmen.crucible import docs
+
+# Legacy API - returns raw content WITH frontmatter
+raw_content = docs.read_doc('standards/observability/logging.md')
+assert raw_content.startswith('---')
+
+# Enhanced API - returns clean content WITHOUT frontmatter
+clean_content = crucible.get_documentation('standards/observability/logging.md')
+assert not clean_content.startswith('---')
+```
+
+### Config Loading (Phase 2 - Coming in v0.1.5)
+
+**Note**: `crucible.load_config()` wrapper with schema validation is planned for Phase 2. For now, use the existing Three-Layer Config system:
+
+```python
+from pyfulmen.config.loader import ConfigLoader
+
+# Load config using three-layer system
+loader = ConfigLoader()
+config = loader.load('observability/logging/v1.0.0/logging-policy')
+
+# Or load with metadata tracking
+result = loader.load_with_metadata('observability/logging/v1.0.0/logging-policy')
+print(f"Loaded from: {[s.layer for s in result.sources]}")
+```
+
+Phase 2 will add a convenience wrapper at `crucible.load_config()` that integrates frontmatter-aware config loading with schema validation.
+
+### Performance
+
+Frontmatter extraction is lightweight (~50 LOC parser using `pyyaml`):
+- Average extraction: <10ms per document
+- 100 iterations: <1s total
+- Module-level caching for repeated access (future enhancement)
+
 ## Dependency Map
 
 PyFulmen's dependency structure follows the Fulmen ecosystem model to prevent circular dependencies:
@@ -192,9 +301,9 @@ PyFulmen's dependency structure follows the Fulmen ecosystem model to prevent ci
 
 ## Roadmap & Gaps
 
-### Current Release (v0.1.3)
+### Current Release (v0.1.4)
 
-**Status**: Alpha - Core modules stable, two extension modules added
+**Status**: Alpha - Core modules stable, documentation module enhanced
 
 **Completed**:
 
@@ -210,8 +319,9 @@ PyFulmen's dependency structure follows the Fulmen ecosystem model to prevent ci
 - ✅ Foundry patterns module (pattern catalogs, MIME detection, HTTP status helpers)
 - ✅ Pathfinder module (filesystem scanning with glob patterns, 47 tests)
 - ✅ ASCII helpers (console formatting, box drawing, 48 tests)
+- ✅ Documentation module enhancement (frontmatter parsing, clean content access, 74 tests)
 
-**Test Coverage**: 615 tests passing, 90%+ coverage across all modules
+**Test Coverage**: 720+ tests passing, 90%+ coverage across all modules
 
 ### Next Release (v0.2.0)
 

@@ -77,10 +77,65 @@ Applies to language-specific Fulmen helper libraries (gofulmen, tsfulmen, pyfulm
    - Optional but recommended: integrate with language-native validation libraries.
    - Refer to the [Schema Validation Helper Standard](../standards/library/modules/schema-validation.md).
 
-7. **Observability Integration**
-   - Consume logging schemas/defaults from `config/observability/logging/`.
-   - Map shared severity enum and throttling settings to language-specific logging implementation.
-   - Refer to the [Fulmen Logging Standard](../standards/observability/logging.md).
+8. **Documentation Module**
+   - Provide APIs for accessing Crucible documentation assets, including frontmatter extraction and clean content reads.
+   - Integrate with Crucible Shim for asset discovery and Schema Validation for config processing.
+   - Refer to the [Documentation Module Standard](../standards/library/modules/documentation.md).
+
+## Ecosystem Tool Integration
+
+Helper libraries serve as the primary access point for Crucible assets in the broader Fulmen ecosystem. Tools and applications MUST access Crucible indirectly through helper libraries to ensure version alignment and consistent APIs.
+
+### Tool Integration Pattern
+
+1. **Depend on Helper Library**: Tools declare dependency on appropriate helper library (pyfulmen, gofulmen, tsfulmen)
+2. **Use Shim APIs**: Access Crucible assets through library-provided APIs (see API Surface Requirements)
+3. **Delegate Bootstrap**: Helper library handles goneat installation and SSOT sync
+4. **Version Reporting**: Tools can report embedded Crucible version for compatibility
+
+### Asset Discovery & Access
+
+Tools discover and access Crucible content through standardized shim APIs:
+
+**Finding Content:**
+
+```python
+# List available categories and assets
+categories = crucible.list_categories()  # ['docs', 'schemas', 'config']
+docs = crucible.list_assets('docs')      # Asset metadata array
+
+# Search by pattern
+logging_docs = [asset for asset in docs if 'logging' in asset.id]
+```
+
+**Accessing Content:**
+
+```python
+# Direct content access
+doc_content = crucible.get_documentation('standards/observability/logging')
+schema = crucible.load_schema('observability', 'logging', 'v1.0.0', 'logger-config')
+
+# Streaming for large content
+with crucible.open_asset('docs/architecture/fulmen-technical-manifesto.md') as stream:
+    for chunk in stream:
+        process(chunk)
+```
+
+**Error Handling:**
+
+```python
+try:
+    doc = crucible.get_documentation('standards/observability/missing-doc')
+except AssetNotFoundError as e:
+    print(f"Suggestions: {e.suggestions}")  # Helpful suggestions provided
+```
+
+### Prohibited Patterns
+
+- Direct imports of Crucible assets
+- Custom SSOT sync configurations in tools
+- Version pinning that bypasses helper library coordination
+- Manual file system access to embedded assets
 
 ## Optional (Recommended) Capabilities
 
@@ -214,6 +269,7 @@ make bootstrap
   | Module          | Tier | Summary                                  | Spec Link                                                       |
   | --------------- | ---- | ---------------------------------------- | --------------------------------------------------------------- |
   | config-path-api | Core | Platform-aware config/data/cache helpers | [config-path-api](standards/library/modules/config-path-api.md) |
+  | documentation   | Core | Access and processing of Crucible documentation assets including frontmatter extraction | [documentation](standards/library/modules/documentation.md)     |
   | ...             | ...  | ...                                      | ...                                                             |
 
   ## Observability & Logging Integration
@@ -232,6 +288,11 @@ make bootstrap
 
   - Bullet list of planned enhancements or known limitations.
   ```
+
+- **Asset Catalog**: Document available Crucible assets with examples of shim API usage
+- **Integration Examples**: Code samples showing common tool integration patterns (see Ecosystem Tool Integration section)
+- **Version Compatibility**: Guidance on handling Crucible version changes
+- **Frontmatter Parsing**: Libraries MUST provide frontmatter parsing capability for markdown documents (YAML header extraction)
 
 - Development operations documentation located under `docs/development/`. Every library MUST provide:
 
