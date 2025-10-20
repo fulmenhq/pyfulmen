@@ -1,12 +1,19 @@
 """Tests for pyfulmen.schema.validator module."""
 
+import json
+
 import pytest
 
 from pyfulmen.schema.validator import (
+    Diagnostic,
     SchemaValidationError,
+    ValidationResult,
+    format_diagnostics,
     is_valid,
     load_validator,
     validate_against_schema,
+    validate_data,
+    validate_file,
 )
 
 
@@ -86,3 +93,29 @@ def test_schema_validation_error_no_errors():
 
     assert str(error) == "Test error"
     assert error.errors == []
+
+
+def test_validate_data_returns_result():
+    result = validate_data("observability/logging/v1.0.0/logger-config", {})
+    assert isinstance(result, ValidationResult)
+    assert result.schema.id.startswith("observability/logging")
+
+
+def test_validate_file(tmp_path):
+    payload = tmp_path / "payload.json"
+    payload.write_text(json.dumps({}))
+    result = validate_file("observability/logging/v1.0.0/logger-config", payload)
+    assert result.is_valid in (True, False)
+
+
+def test_format_diagnostics_text():
+    diagnostics = [Diagnostic(pointer="/foo", message="Invalid", keyword="type")]
+    output = format_diagnostics(diagnostics)
+    assert "/foo" in output
+    assert "Invalid" in output
+
+
+def test_format_diagnostics_json():
+    diagnostics = [Diagnostic(pointer="", message="error", keyword=None)]
+    output = format_diagnostics(diagnostics, style="json")
+    assert "error" in output

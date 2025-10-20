@@ -1,19 +1,9 @@
-"""Schema validation utilities for PyFulmen.
+"""Schema utilities for PyFulmen."""
 
-Provides helpers for validating data against JSON schemas from Crucible.
-
-Example:
-    >>> from pyfulmen import schema
-    >>> schema.validator.validate_against_schema(
-    ...     data={'severity': 'info'},
-    ...     category='observability/logging',
-    ...     version='v1.0.0',
-    ...     name='logger-config'
-    ... )
-"""
-
-from . import validator
+from . import catalog, cli, validator
 
 __all__ = [
+    "catalog",
+    "cli",
     "validator",
 ]
