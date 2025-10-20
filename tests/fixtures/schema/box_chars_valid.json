@@ -1,0 +1,9 @@
+{
+  "topLeft": "┌",
+  "topRight": "┐",
+  "bottomLeft": "└",
+  "bottomRight": "┘",
+  "horizontal": "─",
+  "vertical": "│",
+  "cross": "┼"
+}

@@ -201,7 +201,7 @@ PyFulmen's dependency structure follows the Fulmen ecosystem model to prevent ci
 - ✅ Crucible shim with schema/doc/config access
 - ✅ Config path API (XDG-compliant, Windows-aware)
 - ✅ Three-layer config loading
-- ✅ Schema validation utilities
+- ✅ Schema validation utilities (catalog + CLI)
 - ✅ Goneat bootstrap automation
 - ✅ Progressive logging profiles (SIMPLE/STRUCTURED/ENTERPRISE)
 - ✅ Logging policy enforcement
@@ -275,14 +275,43 @@ loader = config.loader.ConfigLoader()
 cfg = loader.load('terminal/v1.0.0/terminal-overrides-defaults')
 
 schema.validator.validate_against_schema(
-    data={'severity': 'info'},
-    category='observability/logging',
+    data={
+        'topLeft': '┌',
+        'topRight': '┐',
+        'bottomLeft': '└',
+        'bottomRight': '┘',
+        'horizontal': '─',
+        'vertical': '│',
+        'cross': '┼',
+    },
+    category='ascii',
     version='v1.0.0',
-    name='log-event'
+    name='box-chars'
 )
 
 logger = logging.logger.configure_logging(app_name='myapp', level='debug')
 logger.info('Application started')
+```
+
+### Schema CLI (Experimental)
+
+PyFulmen ships a lightweight Click-based CLI for exploring schemas and running ad-hoc validation locally. For CI/CD pipelines continue to use `goneat schema validate-*` as the authoritative validator.
+
+```bash
+# list schemas with a prefix filter
+python -m pyfulmen.schema.cli list --prefix ascii/
+
+# view metadata
+python -m pyfulmen.schema.cli info ascii/v1.0.0/box-chars
+
+# validate a payload using the built-in jsonschema engine
+python -m pyfulmen.schema.cli validate ascii/v1.0.0/box-chars --file payload.json --no-goneat
+
+# opt-in to goneat integration when the binary is available
+python -m pyfulmen.schema.cli validate ascii/v1.0.0/box-chars --file payload.json --use-goneat
+
+# pipeline helper (defaults to goneat, falls back to CLI)
+./scripts/validate-schema.sh ascii/v1.0.0/box-chars --file payload.json
 ```
 
 ## References
