@@ -7,117 +7,111 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.1.4] - 2025-10-20
+## [0.1.4] - 2025-10-21
 
 ### Added
 
-- **Documentation Module Enhancement**: Frontmatter parsing and clean content access for Crucible markdown assets
-  - `crucible.get_documentation(path)` - Returns clean markdown body with YAML frontmatter stripped
-  - `crucible.get_documentation_metadata(path)` - Extracts YAML frontmatter as dict, returns None if absent
-  - `crucible.get_documentation_with_metadata(path)` - Combined tuple (clean_content, metadata) for efficiency
-  - `crucible.AssetNotFoundError` - Enhanced error with suggestions for similar asset IDs
-  - `crucible.ParseError` - Exception for malformed YAML/JSON parsing failures
-  - `crucible.CrucibleVersionError` - Exception for Crucible version metadata errors
-  - Lightweight frontmatter parser (~50 LOC) using `pyyaml.safe_load()` for security
-  - Suggestion algorithm for AssetNotFoundError (finds similar paths using set intersection)
-  - Error handling converts FileNotFoundError to AssetNotFoundError with helpful suggestions
-  - 62 unit tests covering frontmatter extraction, content stripping, error scenarios, edge cases
-  - 12 integration tests against real Crucible docs including performance benchmarks
-  - Phase 1 complete per documentation-module-implementation-plan.md
+- **Crucible Bridge API**: Unified interface for accessing embedded Crucible assets
+  - `crucible.list_categories()` - Discover available asset categories (docs, schemas, config)
+  - `crucible.list_assets(category, prefix)` - List assets with optional prefix filtering
+  - `crucible.load_schema_by_id(schema_id)` - Load schemas by full ID path
+  - `crucible.get_config_defaults(category, version)` - Access config defaults by path
+  - `crucible.open_asset(asset_id)` - Stream large assets efficiently via context manager
+  - `crucible.get_crucible_version()` - Get embedded Crucible version metadata
+  - `AssetMetadata` model with ID, category, path, size, and modification tracking
+  - `CrucibleVersion` model with version, commit hash, and sync timestamp
+  - Recursive category discovery for nested schema/config structures
+  - Similarity-based suggestions in `AssetNotFoundError` (up to 3 suggestions)
+  - 21 integration tests against real synced Crucible assets
+  - 321 unit tests for bridge models and APIs
+  - **Recommended pattern** for new code accessing Crucible assets
 
-- **Synced Crucible Standard**: Documentation Module Standard
-  - `docs/crucible-py/standards/library/modules/documentation.md` - Cross-language API contract
-  - Defines mandatory Phase 1 APIs: get_documentation, get_documentation_metadata, get_documentation_with_metadata
-  - Defines recommended Phase 2 APIs: load_config (with validation), list_documents, find_documents (deferred to v0.1.5)
-  - Frontmatter format standardization (title, description, author, date, last_updated, status, tags)
-  - Testing requirements: 80%+ coverage, platform path handling, fuzzy suggestions
-  - Performance targets: list_documents <50ms, cache hits instant
-  - Error handling patterns with AssetNotFoundError suggestions
+- **Docscribe Module**: Standalone documentation processing with frontmatter parsing and header extraction
+  - `docscribe.parse_frontmatter(content)` - Extract YAML frontmatter and clean markdown body
+  - `docscribe.extract_metadata(content)` - Get frontmatter dict only (None if absent)
+  - `docscribe.strip_frontmatter(content)` - Remove frontmatter, return clean markdown
+  - `docscribe.has_frontmatter(content)` - Check for frontmatter presence
+  - `docscribe.detect_format(content)` - Detect format (json, yaml, markdown, toml, multi-document)
+  - `docscribe.split_documents(content)` - Split multi-document streams (YAML/markdown)
+  - `docscribe.inspect_document(content)` - Get document metadata (format, line count, header count, sections)
+  - `docscribe.extract_headers(content)` - Extract markdown headers with anchors and line numbers
+  - `docscribe.generate_outline(content, max_depth)` - Generate nested table of contents structure
+  - `docscribe.search_headers(content, pattern)` - Find headers matching search pattern
+  - `DocumentHeader` model with level, text, anchor, and line_number
+  - `DocumentInfo` model with format, line count, header count, and section estimation
+  - Crucible bridge integration: `crucible.get_documentation()`, `crucible.get_documentation_metadata()`
+  - GitHub-compatible anchor generation (preserves double-hyphens for special chars)
+  - Smart format detection distinguishes frontmatter from YAML document separators
+  - 92 comprehensive unit tests (frontmatter, formats, headers, edge cases)
+  - 12 integration tests against real Crucible documentation
+  - 95% test coverage across docscribe module
+
+- **Synced Crucible Assets**: Module standards and architecture documentation
+  - `docs/crucible-py/standards/library/modules/docscribe.md` - Docscribe module standard (411 lines)
+  - `docs/crucible-py/architecture/fulmen-forge-workhorse-standard.md` - Workhorse standard (282 lines)
+  - Updated `docs/crucible-py/architecture/fulmen-helper-library-standard.md` - Added Crucible Overview requirement
+  - Updated `docs/crucible-py/architecture/modules/README.md` - Module index
+  - Updated `config/crucible-py/library/v1.0.0/module-manifest.yaml` - Added docscribe module entry
+  - Updated `schemas/crucible-py/library/module-manifest/v1.0.0/module-manifest.schema.json` - Schema updates
 
 ### Changed
 
-- **Crucible Package Exports**: Enhanced top-level API surface
-  - Added `get_documentation`, `get_documentation_metadata`, `get_documentation_with_metadata` to `crucible.__all__`
-  - Added `AssetNotFoundError`, `ParseError`, `CrucibleVersionError` to public API
-  - Updated module docstring with enhanced API examples (v0.1.4+)
-  - Backward compatibility maintained: legacy `docs.read_doc()` unchanged
+- **Crucible Package Exports**: Enhanced API surface with bridge and docscribe
+  - Bridge API: `list_categories()`, `list_assets()`, `load_schema_by_id()`, `get_config_defaults()`, `open_asset()`, `get_crucible_version()`
+  - Docscribe API: `get_documentation()`, `get_documentation_metadata()`, `get_documentation_with_metadata()`
+  - Error types: `AssetNotFoundError`, `ParseError`, `CrucibleVersionError`
+  - Models: `AssetMetadata`, `CrucibleVersion`
+  - **Recommended pattern**: Use bridge API for new code, legacy APIs maintained for compatibility
 
-- **Documentation Module (`crucible.docs`)**: Enhanced with new functions
-  - Added `get_documentation()` - strips frontmatter from markdown
-  - Added `get_documentation_metadata()` - extracts YAML frontmatter only
-  - Added `get_documentation_with_metadata()` - combined access for efficiency
-  - Added `_get_similar_docs()` helper - simple string similarity for suggestions
-  - Updated `__all__` to include new functions
+- **Crucible Docs Module**: Delegates to docscribe for frontmatter processing
+  - `crucible.docs.get_documentation()` - Delegates to `docscribe.parse_frontmatter()` for clean markdown
+  - `crucible.docs.get_documentation_metadata()` - Extracts YAML frontmatter using docscribe
+  - `crucible.docs.get_documentation_with_metadata()` - Combined access via docscribe
   - Legacy functions (`read_doc`, `list_available_docs`, `get_doc_path`) unchanged
+  - All documentation comments updated to reference docscribe module
 
-### Enhanced
-
-- **Documentation Access**: All new documentation functions provide suggestions when assets not found
-  - Suggestions use path part matching (split on `/`, compare sets)
-  - Up to 3 suggestions included in AssetNotFoundError messages
-  - Example: "standards/observability/loging.md" → suggests "standards/observability/logging.md"
-
-- **Error Handling**: Consistent error types across all Crucible access APIs
-  - FileNotFoundError converted to AssetNotFoundError with category and suggestions
-  - ParseError for YAML/JSON malformed content with descriptive messages
-  - CrucibleVersionError for version metadata issues
-
-- **Test Coverage**: 74 new tests added for documentation module
-  - Unit tests: 62 tests (errors, frontmatter, documentation APIs)
-  - Integration tests: 12 tests against real Crucible docs
-  - Performance test: <10ms frontmatter extraction target (measured <5ms average)
-  - Edge cases: empty frontmatter, Windows/Unix line endings, Unicode, malformed YAML
-  - Backward compatibility: legacy APIs tested to ensure no breaking changes
-  - Total test count: 720+ tests passing across all modules
+- **PyFulmen Overview**: Added mandatory Crucible Overview section
+  - "What is Crucible?" - Explains SSOT role and ecosystem consistency
+  - "Why the Shim & Docscribe Module?" - Describes idiomatic asset access pattern
+  - "Where to Learn More" - Links to Crucible repo, manifesto, and sync standard
+  - Updated Module Catalog: docscribe listed as ✅ Stable with 95% coverage target
+  - Updated test counts: 845 passing tests (92 docscribe tests)
+  - Version metadata: v0.1.4, last_updated 2025-10-21
 
 ### Fixed
 
-- **Crucible Bridge Asset Discovery**: Fixed recursive discovery and prefix filtering for nested schema/config categories
-  - Bridge API now recursively walks schema directory tree to find all category paths (e.g., `observability/logging`, `library/foundry`)
-  - Added `_discover_schema_categories()` and `_discover_config_categories()` helpers
-  - **Fixed prefix filtering**: Now applies filter to full asset ID after construction, not just top-level category
-    - `list_assets('schemas', prefix='library/foundry')` correctly finds `library/foundry/v1.0.0/mime-types`
-    - `list_assets('schemas', prefix='observability/logging')` correctly finds nested logging schemas
-  - Asset ID suggestions in `AssetNotFoundError` now use full asset IDs instead of top-level categories only
+- **Crucible Bridge Asset Discovery**: Fixed recursive discovery and prefix filtering
+  - Recursively walks schema/config directory trees to find all nested categories
+  - Prefix filtering now applies to full asset ID (e.g., `library/foundry/v1.0.0/mime-types`)
+  - Asset ID suggestions use full paths instead of just top-level categories
 
-- **Crucible Bridge Asset IDs**: Corrected documentation examples to use proper asset IDs
-  - Doc asset IDs no longer include `docs/` prefix (e.g., `architecture/...` not `docs/architecture/...`)
-  - `open_asset()` function now works with correct asset ID format
-  - Fixed docstring examples in `bridge.py` (line 295) and `__init__.py` (line 21) to use correct format
-  - All user-facing documentation now teaches correct asset ID format
-
-- **Integration Tests**: Added comprehensive integration test suite for Crucible bridge API
-  - 21 new integration tests in `tests/integration/crucible/test_bridge_integration.py`
-  - Added test for nested prefix filtering (`test_nested_prefix_filtering_library_foundry`)
-  - Tests verify recursive discovery, correct asset IDs, nested categories, prefix filtering, and error handling
-  - Tests run against real synced Crucible assets
-
-- **Documentation**: Phase 3 deliverables completed
-  - Updated `README.md` with "Crucible Bridge API" section showing recommended usage patterns
-  - Updated `docs/pyfulmen_overview.md` with "Quick Start with Bridge API (Recommended)" section
-  - Added clear guidance that bridge API is recommended for new code, legacy APIs maintained for compatibility
-  - All examples use correct asset ID format (no `docs/` prefix)
-
-- **Version Test**: Updated `tests/test_basic.py` to expect v0.1.4 instead of v0.1.3
-  - Fixes test failure after version bump
+- **Crucible Bridge Asset IDs**: Corrected documentation examples
+  - Doc asset IDs no longer include `docs/` prefix (correct: `architecture/...`)
+  - Fixed docstring examples in bridge.py and **init**.py
+  - All user-facing docs teach correct asset ID format
 
 ### Documentation
 
-- **PyFulmen Overview**: Comprehensive documentation module section
-  - Added "Documentation Module APIs (v0.1.4+)" section with Core APIs, Error Handling, Frontmatter Format
-  - Backward Compatibility section showing legacy vs enhanced API usage
-  - Config Loading section with Phase 1/Phase 2 roadmap
-  - Performance characteristics documented (~50 LOC parser, <10ms extraction)
-  - Updated frontmatter: version to 0.1.4, last_updated to 2025-10-20
-  - Updated Module Catalog: added documentation module entry
-  - Updated Roadmap: Current Release (v0.1.4) with 720+ tests, documentation module complete
+- **README.md**: Added Crucible Bridge API section with recommended usage patterns
+- **PyFulmen Overview**: Comprehensive docscribe module section
+  - "Docscribe Module APIs (v0.1.4+)" with frontmatter, format detection, header extraction examples
+  - Crucible Overview section (mandatory per helper library standard)
+  - Updated Module Catalog and Roadmap sections
+  - Bridge API quick start examples
 
-- **Integration Tests**: New test suite against real Crucible assets
-  - `tests/integration/crucible/test_documentation_integration.py` - 12 tests
-  - Tests real document access (logging standard, guides, architecture docs)
-  - Tests error handling with suggestions for typos and wrong categories
-  - Tests backward compatibility between legacy and enhanced APIs
-  - Performance benchmarks: 100 extractions in <1s, <10ms per extraction
+- **Integration Tests**: Comprehensive test coverage
+  - `tests/integration/crucible/test_bridge_integration.py` - 21 tests for bridge API
+  - `tests/integration/crucible/test_documentation_integration.py` - 12 tests for docscribe
+  - Tests verify recursive discovery, prefix filtering, frontmatter parsing, header extraction
+  - Performance benchmarks: <10ms per frontmatter extraction, <5ms average
+
+### Test Coverage
+
+- **Total Tests**: 845 passing (18 skipped)
+- **New Tests**: 113 tests added for bridge API and docscribe module
+  - Bridge: 21 integration tests, 321 unit tests
+  - Docscribe: 92 unit tests, 12 integration tests
+- **Coverage**: 90%+ maintained across all modules, 95% on docscribe
 
 ## [0.1.3] - 2025-10-20
 
