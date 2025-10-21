@@ -1,13 +1,18 @@
-"""Tests for frontmatter parsing."""
+"""Tests for frontmatter parsing in docscribe module."""
 
 import pytest
 
-from pyfulmen.crucible._frontmatter import extract_frontmatter, has_frontmatter
-from pyfulmen.crucible.errors import ParseError
+from pyfulmen.docscribe import (
+    ParseError,
+    extract_metadata,
+    has_frontmatter,
+    parse_frontmatter,
+    strip_frontmatter,
+)
 
 
-class TestExtractFrontmatter:
-    """Tests for extract_frontmatter function."""
+class TestParseFrontmatter:
+    """Tests for parse_frontmatter function."""
 
     def test_basic_frontmatter(self):
         """Extract basic YAML frontmatter."""
@@ -17,14 +22,14 @@ author: Jane Doe
 ---
 # Content here"""
 
-        clean, meta = extract_frontmatter(content)
+        clean, meta = parse_frontmatter(content)
         assert clean == "# Content here"
         assert meta == {"title": "Test Doc", "author": "Jane Doe"}
 
     def test_no_frontmatter(self):
         """Content without frontmatter returns unchanged."""
         content = "# Just content"
-        clean, meta = extract_frontmatter(content)
+        clean, meta = parse_frontmatter(content)
         assert clean == content
         assert meta is None
 
@@ -33,7 +38,7 @@ author: Jane Doe
         content = """---
 ---
 # Content"""
-        clean, meta = extract_frontmatter(content)
+        clean, meta = parse_frontmatter(content)
         assert clean == "# Content"
         assert meta == {}
 
@@ -47,7 +52,7 @@ tags:
 ---
 # Content"""
 
-        clean, meta = extract_frontmatter(content)
+        clean, meta = parse_frontmatter(content)
         assert meta["tags"] == ["python", "testing"]
         assert clean == "# Content"
 
@@ -62,7 +67,7 @@ metadata:
 ---
 # Content"""
 
-        clean, meta = extract_frontmatter(content)
+        clean, meta = parse_frontmatter(content)
         assert meta["metadata"]["nested"] == "value"
         assert meta["metadata"]["another"]["deeply"] == "nested"
 
@@ -75,7 +80,7 @@ broken: [unclosed
 # Content"""
 
         with pytest.raises(ParseError, match="Invalid YAML frontmatter"):
-            extract_frontmatter(content)
+            parse_frontmatter(content)
 
     def test_no_closing_delimiter(self):
         """Content starting with --- but no closing treated as no frontmatter."""
@@ -83,7 +88,7 @@ broken: [unclosed
 title: Test
 # Content without closing ---"""
 
-        clean, meta = extract_frontmatter(content)
+        clean, meta = parse_frontmatter(content)
         # Treated as content without frontmatter
         assert meta is None
         assert clean == content
@@ -91,14 +96,14 @@ title: Test
     def test_windows_line_endings(self):
         """Handle Windows (CRLF) line endings."""
         content = "---\r\ntitle: Test\r\n---\r\n# Content"
-        clean, meta = extract_frontmatter(content)
+        clean, meta = parse_frontmatter(content)
         assert meta == {"title": "Test"}
         assert clean == "# Content"
 
     def test_mixed_line_endings(self):
         """Handle mixed line endings gracefully."""
         content = "---\ntitle: Test\r\n---\r\n# Content"
-        clean, meta = extract_frontmatter(content)
+        clean, meta = parse_frontmatter(content)
         assert meta == {"title": "Test"}
         assert clean == "# Content"
 
@@ -110,7 +115,7 @@ author: François Müller
 ---
 # Content with émojis 🎉"""
 
-        clean, meta = extract_frontmatter(content)
+        clean, meta = parse_frontmatter(content)
         assert meta["title"] == "日本語タイトル"
         assert meta["author"] == "François Müller"
         assert "🎉" in clean
@@ -126,7 +131,7 @@ Paragraph 1
 
 Paragraph 2"""
 
-        clean, meta = extract_frontmatter(content)
+        clean, meta = parse_frontmatter(content)
         assert "# Header" in clean
         assert "Paragraph 1" in clean
         assert "Paragraph 2" in clean
@@ -141,7 +146,7 @@ title: Test
 
 # Content"""
 
-        clean, meta = extract_frontmatter(content)
+        clean, meta = parse_frontmatter(content)
         assert clean == "# Content"
 
     def test_frontmatter_with_booleans(self):
@@ -152,7 +157,7 @@ published: false
 ---
 # Content"""
 
-        clean, meta = extract_frontmatter(content)
+        clean, meta = parse_frontmatter(content)
         assert meta["draft"] is True
         assert meta["published"] is False
 
@@ -164,7 +169,7 @@ count: 42
 ---
 # Content"""
 
-        clean, meta = extract_frontmatter(content)
+        clean, meta = parse_frontmatter(content)
         assert meta["version"] == 1.0
         assert meta["count"] == 42
 
@@ -176,7 +181,7 @@ last_updated: 2025-10-20
 ---
 # Content"""
 
-        clean, meta = extract_frontmatter(content)
+        clean, meta = parse_frontmatter(content)
         # YAML may parse dates, but we're using safe_load which keeps them as strings
         assert "date" in meta
         assert "last_updated" in meta
@@ -187,9 +192,70 @@ last_updated: 2025-10-20
 title: Test
 ---"""
 
-        clean, meta = extract_frontmatter(content)
+        clean, meta = parse_frontmatter(content)
         assert clean == ""
         assert meta == {"title": "Test"}
+
+    def test_bytes_input(self):
+        """parse_frontmatter accepts bytes input."""
+        content = b"---\ntitle: Test\n---\n# Content"
+        clean, meta = parse_frontmatter(content)
+        assert meta == {"title": "Test"}
+        assert clean == "# Content"
+
+
+class TestExtractMetadata:
+    """Tests for extract_metadata convenience function."""
+
+    def test_extract_metadata_only(self):
+        """Extract only metadata, ignore content."""
+        content = """---
+title: Test
+author: Jane
+---
+# Long content that we don't care about"""
+
+        meta = extract_metadata(content)
+        assert meta == {"title": "Test", "author": "Jane"}
+
+    def test_extract_metadata_none(self):
+        """Returns None when no frontmatter."""
+        content = "# No frontmatter"
+        meta = extract_metadata(content)
+        assert meta is None
+
+    def test_extract_metadata_bytes(self):
+        """extract_metadata accepts bytes."""
+        content = b"---\ntitle: Test\n---\nContent"
+        meta = extract_metadata(content)
+        assert meta == {"title": "Test"}
+
+
+class TestStripFrontmatter:
+    """Tests for strip_frontmatter convenience function."""
+
+    def test_strip_frontmatter_only(self):
+        """Strip frontmatter, return clean content."""
+        content = """---
+title: Test
+---
+# Content here"""
+
+        clean = strip_frontmatter(content)
+        assert clean == "# Content here"
+        assert not clean.startswith("---")
+
+    def test_strip_frontmatter_none(self):
+        """Returns content unchanged when no frontmatter."""
+        content = "# No frontmatter"
+        clean = strip_frontmatter(content)
+        assert clean == content
+
+    def test_strip_frontmatter_bytes(self):
+        """strip_frontmatter accepts bytes."""
+        content = b"---\ntitle: Test\n---\n# Content"
+        clean = strip_frontmatter(content)
+        assert clean == "# Content"
 
 
 class TestHasFrontmatter:
@@ -219,6 +285,10 @@ class TestHasFrontmatter:
         """Marker not at start doesn't count."""
         assert not has_frontmatter("Some text\n---\ntitle: Test")
 
+    def test_has_frontmatter_bytes(self):
+        """has_frontmatter accepts bytes."""
+        assert has_frontmatter(b"---\ntitle: Test\n---\nContent")
+
 
 class TestEdgeCases:
     """Edge case tests for frontmatter parsing."""
@@ -226,19 +296,19 @@ class TestEdgeCases:
     def test_only_opening_delimiter(self):
         """Only opening --- with no closing."""
         content = "---\ntitle: Test\n# Content"
-        clean, meta = extract_frontmatter(content)
+        clean, meta = parse_frontmatter(content)
         assert meta is None
 
     def test_empty_string(self):
         """Empty string."""
-        clean, meta = extract_frontmatter("")
+        clean, meta = parse_frontmatter("")
         assert clean == ""
         assert meta is None
 
     def test_only_delimiters(self):
         """Just the delimiters with no content."""
         content = "---\n---"
-        clean, meta = extract_frontmatter(content)
+        clean, meta = parse_frontmatter(content)
         assert clean == ""
         assert meta == {}
 
@@ -251,7 +321,7 @@ class TestEdgeCases:
         yaml_lines.append("# Content")
         content = "\n".join(yaml_lines)
 
-        clean, meta = extract_frontmatter(content)
+        clean, meta = parse_frontmatter(content)
         assert len(meta) == 100
         assert meta["key0"] == "value0"
         assert meta["key99"] == "value99"
@@ -265,6 +335,6 @@ description: 'Test with "quotes"'
 ---
 # Content"""
 
-        clean, meta = extract_frontmatter(content)
+        clean, meta = parse_frontmatter(content)
         assert meta["title"] == "Test: With Colon"
         assert 'Test with "quotes"' in meta["description"]

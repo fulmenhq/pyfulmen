@@ -2,6 +2,9 @@
 
 Provides ~50 LOC parser for YAML frontmatter without heavy dependencies.
 Uses pyyaml for safe parsing of frontmatter blocks.
+
+This module is source-agnostic - it works with content from Crucible,
+Cosmography, local files, or any other documentation source.
 """
 
 from __future__ import annotations
@@ -13,7 +16,7 @@ import yaml
 from .errors import ParseError
 
 
-def extract_frontmatter(content: str) -> tuple[str, dict[str, Any] | None]:
+def parse_frontmatter(content: str | bytes) -> tuple[str, dict[str, Any] | None]:
     """Extract YAML frontmatter from markdown content.
 
     Frontmatter must be delimited by --- at start and end, e.g.:
@@ -25,6 +28,7 @@ def extract_frontmatter(content: str) -> tuple[str, dict[str, Any] | None]:
 
     Args:
         content: Raw markdown content (may or may not have frontmatter)
+                Can be string or bytes (will be decoded as UTF-8)
 
     Returns:
         Tuple of (clean_content, frontmatter_dict)
@@ -36,12 +40,16 @@ def extract_frontmatter(content: str) -> tuple[str, dict[str, Any] | None]:
 
     Example:
         >>> content = "---\\ntitle: Test\\n---\\n# Hello"
-        >>> clean, meta = extract_frontmatter(content)
+        >>> clean, meta = parse_frontmatter(content)
         >>> print(clean)
         # Hello
         >>> print(meta)
         {'title': 'Test'}
     """
+    # Handle bytes input
+    if isinstance(content, bytes):
+        content = content.decode("utf-8")
+
     # Check for frontmatter start marker
     if not content.startswith("---\n") and not content.startswith("---\r\n"):
         return content, None
@@ -114,7 +122,55 @@ def extract_frontmatter(content: str) -> tuple[str, dict[str, Any] | None]:
         raise ParseError(f"Invalid YAML frontmatter: {e}") from e
 
 
-def has_frontmatter(content: str) -> bool:
+def extract_metadata(content: str | bytes) -> dict[str, Any] | None:
+    """Extract only metadata from frontmatter.
+
+    Convenience function for when you only need the metadata
+    and don't care about the clean content.
+
+    Args:
+        content: Raw markdown content
+
+    Returns:
+        Frontmatter metadata dict, or None if no frontmatter
+
+    Raises:
+        ParseError: If frontmatter contains malformed YAML
+
+    Example:
+        >>> metadata = extract_metadata("---\\ntitle: Test\\n---\\nContent")
+        >>> print(metadata)
+        {'title': 'Test'}
+    """
+    _, metadata = parse_frontmatter(content)
+    return metadata
+
+
+def strip_frontmatter(content: str | bytes) -> str:
+    """Strip frontmatter and return clean content.
+
+    Convenience function for when you only need the content
+    and don't care about the metadata.
+
+    Args:
+        content: Raw markdown content
+
+    Returns:
+        Clean markdown content with frontmatter removed
+
+    Raises:
+        ParseError: If frontmatter contains malformed YAML
+
+    Example:
+        >>> clean = strip_frontmatter("---\\ntitle: Test\\n---\\n# Hello")
+        >>> print(clean)
+        # Hello
+    """
+    clean_content, _ = parse_frontmatter(content)
+    return clean_content
+
+
+def has_frontmatter(content: str | bytes) -> bool:
     """Check if content has frontmatter without parsing.
 
     Fast check to determine if content starts with frontmatter markers.
@@ -131,10 +187,14 @@ def has_frontmatter(content: str) -> bool:
         >>> has_frontmatter("# Just content")
         False
     """
+    if isinstance(content, bytes):
+        content = content.decode("utf-8")
     return content.startswith("---\n") or content.startswith("---\r\n")
 
 
 __all__ = [
-    "extract_frontmatter",
+    "parse_frontmatter",
+    "extract_metadata",
+    "strip_frontmatter",
     "has_frontmatter",
 ]

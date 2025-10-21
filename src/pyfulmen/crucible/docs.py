@@ -1,8 +1,8 @@
 """Documentation access utilities for Crucible assets.
 
 This module provides helpers to discover and read documentation
-from the synced Crucible repository, including frontmatter parsing
-and clean content access.
+from the synced Crucible repository. It delegates to the standalone
+pyfulmen.docscribe module for frontmatter parsing and processing.
 
 Example:
     >>> from pyfulmen.crucible import docs
@@ -10,10 +10,14 @@ Example:
     ['architecture', 'guides', 'sop', 'standards']
     >>> content = docs.read_doc('guides/bootstrap-goneat.md')
 
-    # Enhanced frontmatter parsing (v0.1.4+)
+    # Enhanced frontmatter parsing (v0.1.4+) - delegates to docscribe module
     >>> clean_content = docs.get_documentation('standards/observability/logging.md')
     >>> metadata = docs.get_documentation_metadata('standards/observability/logging.md')
     >>> content, meta = docs.get_documentation_with_metadata('guides/bootstrap-goneat.md')
+
+Note:
+    For source-agnostic documentation processing, use pyfulmen.docscribe directly.
+    This module is specifically for Crucible asset access.
 """
 
 from __future__ import annotations
@@ -21,8 +25,8 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Any
 
+from .. import docscribe
 from . import _paths
-from ._frontmatter import extract_frontmatter
 from .errors import AssetNotFoundError
 
 
@@ -144,7 +148,8 @@ def get_documentation(path: str) -> str:
         suggestions = _get_similar_docs(path)
         raise AssetNotFoundError(path, category="docs", suggestions=suggestions) from e
 
-    clean_content, _ = extract_frontmatter(raw_content)
+    # Delegate to docscribe module for frontmatter parsing
+    clean_content, _ = docscribe.parse_frontmatter(raw_content)
     return clean_content
 
 
@@ -178,7 +183,8 @@ def get_documentation_metadata(path: str) -> dict[str, Any] | None:
         suggestions = _get_similar_docs(path)
         raise AssetNotFoundError(path, category="docs", suggestions=suggestions) from e
 
-    _, metadata = extract_frontmatter(raw_content)
+    # Delegate to docscribe module for frontmatter parsing
+    _, metadata = docscribe.parse_frontmatter(raw_content)
     return metadata
 
 
@@ -214,7 +220,8 @@ def get_documentation_with_metadata(path: str) -> tuple[str, dict[str, Any] | No
         suggestions = _get_similar_docs(path)
         raise AssetNotFoundError(path, category="docs", suggestions=suggestions) from e
 
-    return extract_frontmatter(raw_content)
+    # Delegate to docscribe module for frontmatter parsing
+    return docscribe.parse_frontmatter(raw_content)
 
 
 def _get_similar_docs(path: str, max_suggestions: int = 3) -> list[str]:

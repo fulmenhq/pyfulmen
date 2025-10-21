@@ -57,9 +57,9 @@ class TestRealDocumentAccess:
         # This doc should have frontmatter (we just saw it)
         assert metadata is not None
         assert "title" in metadata
-        assert "Documentation Module Standard" in metadata["title"]
+        assert "Documentation Processing Module" in metadata["title"]
         assert "status" in metadata
-        assert metadata["status"] == "draft"
+        assert metadata["status"] == "stable"
 
 
 class TestErrorHandlingIntegration:

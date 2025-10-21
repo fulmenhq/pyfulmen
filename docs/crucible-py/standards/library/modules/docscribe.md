@@ -1,8 +1,8 @@
 ---
-title: "Documentation Processing Module"
+title: "Docscribe Module"
 description: "Standalone lightweight module for processing markdown and YAML documentation from any source"
 status: "stable"
-module_id: "documentation"
+module_id: "docscribe"
 tier: "core"
 requirement: "mandatory"
 coverage_targets:
@@ -14,6 +14,7 @@ author: "@fulmen-ea-steward"
 tags:
   [
     "module",
+    "docscribe",
     "documentation",
     "frontmatter",
     "markdown",
@@ -22,11 +23,11 @@ tags:
   ]
 ---
 
-# Documentation Processing Module
+# Docscribe Module
 
 ## Overview
 
-The documentation module provides standalone, lightweight processing capabilities for markdown and YAML documentation from any source. It handles common documentation tasks like frontmatter extraction, header parsing, format detection, and multi-document splitting without coupling to specific storage or access patterns.
+The docscribe module provides standalone, lightweight processing capabilities for markdown and YAML documentation from any source. It handles common documentation tasks like frontmatter extraction, header parsing, format detection, and multi-document splitting without coupling to specific storage or access patterns.
 
 **Key Design Principle**: This module is intentionally **source-agnostic**. It processes content from Crucible, Cosmography, local files, or any other documentation source with equal facility.
 

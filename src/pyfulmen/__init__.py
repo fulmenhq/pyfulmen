@@ -23,7 +23,8 @@ __all__ = [
     "foundry",
     "pathfinder",
     "ascii",
+    "docscribe",
 ]
 
 # Submodules
-from . import ascii, config, crucible, foundry, logging, pathfinder, schema, version
+from . import ascii, config, crucible, docscribe, foundry, logging, pathfinder, schema, version

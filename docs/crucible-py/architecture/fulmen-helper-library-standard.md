@@ -77,10 +77,10 @@ Applies to language-specific Fulmen helper libraries (gofulmen, tsfulmen, pyfulm
    - Optional but recommended: integrate with language-native validation libraries.
    - Refer to the [Schema Validation Helper Standard](../standards/library/modules/schema-validation.md).
 
-7. **Documentation Module**
+7. **Docscribe Module**
    - Provide APIs for accessing Crucible documentation assets, including frontmatter extraction and clean content reads.
    - Integrate with Crucible Shim for asset discovery and Schema Validation for config processing.
-   - Refer to the [Documentation Module Standard](../standards/library/modules/documentation.md).
+   - Refer to the [Docscribe Module Standard](../standards/library/modules/docscribe.md).
 
 ## Ecosystem Tool Integration
 
@@ -255,6 +255,7 @@ make bootstrap
 - Bootstrap strategy documentation (e.g., `docs/BOOTSTRAP-STRATEGY.md`).
 - API reference comments/docstrings per language norms.
 - Notes on dependency flow (SSOT → foundation → consumer) to prevent circular imports.
+- **Crucible Overview**: Every library's overview document MUST include a "Crucible Overview" section explaining (1) what Crucible is, (2) why the shim/docscribe module matters, and (3) where to learn more. This gives downstream users essential context without spawning additional top-level documentation.
 - Architecture overview stored at `docs/<lang>fulmen_overview.md` (for example, `docs/pyfulmen_overview.md`). Use the following template to ensure consistency:
 
   ```markdown
@@ -264,12 +265,28 @@ make bootstrap
 
   - Brief summary of the foundation library and supported environments.
 
+  ## Crucible Overview
+
+  **What is Crucible?**
+
+  Crucible is the FulmenHQ single source of truth (SSOT) for schemas, standards, and configuration templates. It ensures consistent APIs, documentation structures, and behavioral contracts across all language foundations (gofulmen, pyfulmen, tsfulmen, etc.).
+
+  **Why the Shim & Docscribe Module?**
+
+  Rather than copying Crucible assets into every project, helper libraries provide idiomatic access through shim APIs. This keeps your application lightweight, versioned correctly, and aligned with ecosystem-wide standards. The docscribe module lets you discover, parse, and validate Crucible content programmatically without manual file management.
+
+  **Where to Learn More:**
+
+  - [Crucible Repository](https://github.com/fulmenhq/crucible) - SSOT schemas, docs, and configs
+  - [Fulmen Technical Manifesto](../crucible-<lang>/architecture/fulmen-technical-manifesto.md) - Philosophy and design principles
+  - [SSOT Sync Standard](../crucible-<lang>/standards/library/modules/ssot-sync.md) - How libraries stay synchronized
+
   ## Module Catalog
 
   | Module          | Tier | Summary                                                                                 | Spec Link                                                       |
   | --------------- | ---- | --------------------------------------------------------------------------------------- | --------------------------------------------------------------- |
   | config-path-api | Core | Platform-aware config/data/cache helpers                                                | [config-path-api](standards/library/modules/config-path-api.md) |
-  | documentation   | Core | Access and processing of Crucible documentation assets including frontmatter extraction | [documentation](standards/library/modules/documentation.md)     |
+  | docscribe       | Core | Access and processing of Crucible documentation assets including frontmatter extraction | [docscribe](standards/library/modules/docscribe.md)             |
   | ...             | ...  | ...                                                                                     | ...                                                             |
 
   ## Observability & Logging Integration
@@ -292,7 +309,7 @@ make bootstrap
 - **Asset Catalog**: Document available Crucible assets with examples of shim API usage
 - **Integration Examples**: Code samples showing common tool integration patterns (see Ecosystem Tool Integration section)
 - **Version Compatibility**: Guidance on handling Crucible version changes
-- **Frontmatter Parsing**: Libraries MUST provide frontmatter parsing capability for markdown documents (YAML header extraction)
+- **Docscribe Integration**: Demonstrate how the standalone `docscribe` module is used alongside crucible-shim for frontmatter parsing, header extraction, and outline generation.
 
 - Development operations documentation located under `docs/development/`. Every library MUST provide:
 
