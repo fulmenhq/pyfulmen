@@ -72,6 +72,32 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- **Crucible Bridge Asset Discovery**: Fixed recursive discovery and prefix filtering for nested schema/config categories
+  - Bridge API now recursively walks schema directory tree to find all category paths (e.g., `observability/logging`, `library/foundry`)
+  - Added `_discover_schema_categories()` and `_discover_config_categories()` helpers
+  - **Fixed prefix filtering**: Now applies filter to full asset ID after construction, not just top-level category
+    - `list_assets('schemas', prefix='library/foundry')` correctly finds `library/foundry/v1.0.0/mime-types`
+    - `list_assets('schemas', prefix='observability/logging')` correctly finds nested logging schemas
+  - Asset ID suggestions in `AssetNotFoundError` now use full asset IDs instead of top-level categories only
+
+- **Crucible Bridge Asset IDs**: Corrected documentation examples to use proper asset IDs
+  - Doc asset IDs no longer include `docs/` prefix (e.g., `architecture/...` not `docs/architecture/...`)
+  - `open_asset()` function now works with correct asset ID format
+  - Fixed docstring examples in `bridge.py` (line 295) and `__init__.py` (line 21) to use correct format
+  - All user-facing documentation now teaches correct asset ID format
+
+- **Integration Tests**: Added comprehensive integration test suite for Crucible bridge API
+  - 21 new integration tests in `tests/integration/crucible/test_bridge_integration.py`
+  - Added test for nested prefix filtering (`test_nested_prefix_filtering_library_foundry`)
+  - Tests verify recursive discovery, correct asset IDs, nested categories, prefix filtering, and error handling
+  - Tests run against real synced Crucible assets
+
+- **Documentation**: Phase 3 deliverables completed
+  - Updated `README.md` with "Crucible Bridge API" section showing recommended usage patterns
+  - Updated `docs/pyfulmen_overview.md` with "Quick Start with Bridge API (Recommended)" section
+  - Added clear guidance that bridge API is recommended for new code, legacy APIs maintained for compatibility
+  - All examples use correct asset ID format (no `docs/` prefix)
+
 - **Version Test**: Updated `tests/test_basic.py` to expect v0.1.4 instead of v0.1.3
   - Fixes test failure after version bump
 

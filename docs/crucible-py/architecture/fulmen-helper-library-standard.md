@@ -77,7 +77,7 @@ Applies to language-specific Fulmen helper libraries (gofulmen, tsfulmen, pyfulm
    - Optional but recommended: integrate with language-native validation libraries.
    - Refer to the [Schema Validation Helper Standard](../standards/library/modules/schema-validation.md).
 
-8. **Documentation Module**
+7. **Documentation Module**
    - Provide APIs for accessing Crucible documentation assets, including frontmatter extraction and clean content reads.
    - Integrate with Crucible Shim for asset discovery and Schema Validation for config processing.
    - Refer to the [Documentation Module Standard](../standards/library/modules/documentation.md).
@@ -266,11 +266,11 @@ make bootstrap
 
   ## Module Catalog
 
-  | Module          | Tier | Summary                                  | Spec Link                                                       |
-  | --------------- | ---- | ---------------------------------------- | --------------------------------------------------------------- |
-  | config-path-api | Core | Platform-aware config/data/cache helpers | [config-path-api](standards/library/modules/config-path-api.md) |
+  | Module          | Tier | Summary                                                                                 | Spec Link                                                       |
+  | --------------- | ---- | --------------------------------------------------------------------------------------- | --------------------------------------------------------------- |
+  | config-path-api | Core | Platform-aware config/data/cache helpers                                                | [config-path-api](standards/library/modules/config-path-api.md) |
   | documentation   | Core | Access and processing of Crucible documentation assets including frontmatter extraction | [documentation](standards/library/modules/documentation.md)     |
-  | ...             | ...  | ...                                      | ...                                                             |
+  | ...             | ...  | ...                                                                                     | ...                                                             |
 
   ## Observability & Logging Integration
 

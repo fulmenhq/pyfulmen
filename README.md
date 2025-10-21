@@ -95,14 +95,42 @@ logger = Logger(
 
 📖 **[Read the complete Logging Guide](docs/guides/logging.md)** for progressive profiles, middleware, policy enforcement, and best practices.
 
+### Crucible Bridge API (v0.1.4+)
+
+PyFulmen provides a unified bridge API for accessing Crucible assets. **This is the recommended pattern** for new code - legacy APIs are maintained for backward compatibility.
+
+```python
+from pyfulmen import crucible
+
+# Discover available assets
+categories = crucible.list_categories()  # ['docs', 'schemas', 'config']
+schemas = crucible.list_assets('schemas', prefix='observability')
+
+# Load schemas and documentation
+schema = crucible.load_schema_by_id('observability/logging/v1.0.0/logger-config')
+doc = crucible.get_documentation('standards/observability/logging.md')
+
+# Stream large assets efficiently
+with crucible.open_asset('architecture/fulmen-helper-library-standard.md') as f:
+    content = f.read()
+
+# Get version metadata
+version = crucible.get_crucible_version()
+print(f"Crucible v{version.version}")
+```
+
+**Legacy APIs** (still supported):
+
+```python
+# Legacy submodule access (maintained for backward compatibility)
+schemas = crucible.schemas.list_available_schemas()
+doc = crucible.docs.read_doc('guides/bootstrap-goneat.md')
+```
+
 ### Other Features
 
 ```python
-from pyfulmen import crucible, config, schema, version
-
-# Access Crucible assets
-schemas = crucible.schemas.list_available_schemas()
-doc = crucible.docs.read_doc('guides/bootstrap-goneat.md')
+from pyfulmen import config, schema, version
 
 # Get platform-aware config paths
 config_dir = config.paths.get_fulmen_config_dir()

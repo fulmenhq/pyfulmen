@@ -255,6 +255,7 @@ Phase 2 will add a convenience wrapper at `crucible.load_config()` that integrat
 ### Performance
 
 Frontmatter extraction is lightweight (~50 LOC parser using `pyyaml`):
+
 - Average extraction: <10ms per document
 - 100 iterations: <1s total
 - Module-level caching for repeated access (future enhancement)
@@ -372,13 +373,42 @@ Pre-1.0 releases may introduce breaking changes with minor version bumps. All br
 pip install pyfulmen
 ```
 
-### Quick Start
+### Quick Start with Bridge API (Recommended)
+
+PyFulmen v0.1.4+ provides a unified bridge API for accessing Crucible assets. **This is the recommended pattern** for new code:
+
+```python
+from pyfulmen import crucible
+
+# Discover available assets
+categories = crucible.list_categories()  # ['docs', 'schemas', 'config']
+schemas = crucible.list_assets('schemas', prefix='observability')
+
+# Load schemas and documentation
+schema = crucible.load_schema_by_id('observability/logging/v1.0.0/logger-config')
+doc = crucible.get_documentation('standards/observability/logging.md')
+
+# Stream large assets efficiently
+with crucible.open_asset('architecture/fulmen-helper-library-standard.md') as f:
+    content = f.read()
+
+# Get version metadata
+version = crucible.get_crucible_version()
+print(f"Crucible v{version.version}")
+```
+
+### Legacy API (Still Supported)
+
+Legacy APIs are maintained for backward compatibility but bridge API is recommended for new code:
 
 ```python
 from pyfulmen import crucible, config, schema, logging
 
+# Legacy Crucible access (still works)
 schemas = crucible.schemas.list_available_schemas()
+doc = crucible.docs.read_doc('guides/bootstrap-goneat.md')
 
+# Config and schema validation (unchanged)
 config_dir = config.paths.get_fulmen_config_dir()
 
 loader = config.loader.ConfigLoader()
