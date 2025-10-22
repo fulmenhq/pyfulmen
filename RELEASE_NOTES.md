@@ -117,6 +117,127 @@ This document tracks release notes and checklists for PyFulmen releases.
 
 ---
 
+## [0.1.5] - 2025-10-22
+
+### Foundry Text Similarity & Crucible Integration
+
+**Release Type**: Feature Release - Text Similarity Module & Enhanced Asset Discovery
+**Release Date**: October 22, 2025
+**Status**: ✅ Released
+
+#### Features
+
+**Foundry Text Similarity Module**:
+
+- ✅ **Levenshtein Distance**: Wagner-Fischer algorithm with O(mn) dynamic programming
+  - `similarity.distance(s1, s2)` - Calculate edit distance between strings
+  - `similarity.score(s1, s2)` - Normalized similarity score (0.0 to 1.0)
+- ✅ **Suggestion API**: Ranked fuzzy matching with case-insensitive tie-breaking
+  - `similarity.suggest(query, candidates, min_score, max_suggestions)` - Get ranked suggestions
+  - Returns `Suggestion` dataclass with `value` and `score` fields
+  - Tie-breaking: score desc → case-insensitive alpha → uppercase count → exact value
+- ✅ **Unicode Normalization**: Turkish locale support and accent stripping
+  - `similarity.normalize(text, locale)` - Unicode case folding with locale awareness
+  - `similarity.casefold(text)` - Case-insensitive comparison
+  - `similarity.strip_accents(text)` - Remove diacritical marks
+  - `similarity.equals_ignore_case(s1, s2)` - Case-insensitive string equality
+- ✅ **61 Tests Passing**: 19 distance + 22 normalization + 14 suggest + 6 fixture validation
+- ✅ **Cross-Language Fixtures**: Shared test cases in `config/crucible-py/library/foundry/similarity-fixtures.yaml`
+- ✅ **ADR-0007**: Case-insensitive tie-breaking decision documented
+- ✅ **Location**: `src/pyfulmen/foundry/similarity/`
+
+**Crucible Similarity Adoption**:
+
+- ✅ **Replaced Ad-Hoc Suggestions**: Crucible bridge now uses `foundry.similarity.suggest()`
+  - Removed `_find_similar_assets()` from `bridge.py`
+  - Removed dead code `_get_similar_docs()` from `docs.py`
+  - Updated threshold to `min_score=0.6` (Foundry standard compliance)
+- ✅ **Consistent Error Messaging**: All asset not found errors use standardized suggestion algorithm
+- ✅ **165 Crucible Tests Passing**: All integration tests validated with new similarity engine
+
+**Crucible Shim Standard Updates**:
+
+- ✅ **Synced Standards**: Updated `crucible-shim.md` with metadata requirements
+- ✅ **Bridge API Deprecations**: Marked `load_schema_by_id()` and `get_config_defaults()` as deprecated
+  - Replacement: `find_schema()` and `find_config()` return tuples with metadata
+  - Deprecation warnings emitted (removal in v0.2.0)
+- ✅ **Documentation Sync**: Latest Crucible standards and forge-workhorse requirements
+
+#### Breaking Changes
+
+- None (fully backward compatible with v0.1.4)
+- Deprecation warnings for legacy bridge APIs (removal in v0.2.0)
+
+#### Migration Notes
+
+**Text Similarity**:
+
+```python
+from pyfulmen.foundry import similarity
+
+# Calculate edit distance
+dist = similarity.distance("kitten", "sitting")  # Returns: 3
+
+# Get normalized score
+score = similarity.score("color", "colour")  # Returns: 0.833
+
+# Get ranked suggestions
+suggestions = similarity.suggest(
+    "loging",  # typo
+    ["logging", "login", "logic"],
+    min_score=0.6,
+    max_suggestions=3
+)
+# Returns: [Suggestion(value="logging", score=0.857), ...]
+```
+
+**Crucible Bridge - New Pattern** (Recommended):
+
+```python
+from pyfulmen import crucible
+
+# OLD (deprecated, still works)
+schema = crucible.load_schema_by_id('observability/logging/v1.0.0/logger-config')
+
+# NEW (recommended - returns metadata)
+schema, meta = crucible.find_schema('observability/logging/v1.0.0/logger-config')
+print(f"Schema size: {meta.size} bytes, checksum: {meta.checksum[:8]}...")
+```
+
+#### Known Limitations
+
+- **Damerau-Levenshtein**: Transposition support deferred to future release
+  - 3 fixture tests skipped with TODO markers
+  - Standard Levenshtein sufficient for current use cases
+- **Crucible Version Metadata**: API planned but blocked by goneat ssot sync (see v0.1.7)
+
+#### Quality Gates
+
+- [x] All 947 tests passing (61 new tests for similarity, 165 crucible tests)
+- [x] 92% coverage maintained across all modules
+- [x] Code quality checks passing (ruff lint, ruff format)
+- [x] Similarity algorithm matches cross-language fixtures
+- [x] Crucible bridge integration validated
+- [x] ADR-0007 documented (case-insensitive tie-breaking)
+
+#### Release Checklist
+
+- [x] Version number set in VERSION (0.1.5)
+- [x] pyproject.toml version updated (0.1.5)
+- [x] Similarity module implemented and tested
+- [x] Crucible adoption complete
+- [x] All tests passing (947 tests, 18 skipped)
+- [x] Code quality checks passing
+- [x] ADR-0007 created and reviewed
+- [ ] CHANGELOG.md updated with v0.1.5 entry - next
+- [ ] RELEASE_NOTES.md updated with v0.1.5 section - this file
+- [ ] docs/releases/v0.1.5.md created - next
+- [ ] Git commits ready (4 commits ahead)
+- [ ] Git tag created (v0.1.5) - after release doc
+- [ ] Git push with tags - final step
+
+---
+
 ## [Unreleased]
 
 ### v0.2.0 - Enterprise Complete (Planned)

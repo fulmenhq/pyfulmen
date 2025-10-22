@@ -607,13 +607,9 @@ def _find_similar_assets(query: str, candidates: list[str], max_suggestions: int
         List of similar asset IDs (up to max_suggestions)
     """
     suggestions = foundry.similarity.suggest(
-        query,
-        candidates,
-        min_score=0.6,
-        max_suggestions=max_suggestions,
-        normalize_text=True
+        query, candidates, min_score=0.6, max_suggestions=max_suggestions, normalize_text=True
     )
-    
+
     return [s.value for s in suggestions]
 
 

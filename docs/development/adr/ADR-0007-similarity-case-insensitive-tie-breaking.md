@@ -10,9 +10,11 @@
 The `foundry.similarity.suggest()` function returns ranked suggestions sorted by similarity score (descending). When multiple candidates have identical scores (e.g., all 1.0 for exact matches after normalization), we need a deterministic tie-breaking strategy.
 
 The Crucible SSOT fixtures expect case-insensitive alphabetical ordering with lowercase-first preference:
+
 - "docscribe" before "Docscribe" before "DocScribe"
 
 Standard Python string sorting uses lexicographic (ASCII) ordering where uppercase letters come before lowercase:
+
 - "DocScribe" before "Docscribe" before "docscribe"
 
 ## Decision
@@ -31,6 +33,7 @@ scored_candidates.sort(
 ```
 
 This produces the ordering:
+
 1. Highest similarity score first
 2. Case-insensitive alphabetical order (e.g., "docscribe" groups with "Docscribe")
 3. Within same case-folded value, prefer fewer uppercase letters (lowercase → Title Case → camelCase)
@@ -116,7 +119,8 @@ scored_candidates.sort(key=lambda s: (-s.score, s.value.lower(), s.value))
 
 Use `locale.strcoll()` or `PyICU` for locale-aware sorting.
 
-**Rejected**: 
+**Rejected**:
+
 - Adds complexity and dependency
 - Locale behavior varies by system
 - Crucible fixtures don't specify locale requirements beyond Turkish casefold

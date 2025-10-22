@@ -216,9 +216,6 @@ def get_documentation_with_metadata(path: str) -> tuple[str, dict[str, Any] | No
     return docscribe.parse_frontmatter(raw_content)
 
 
-
-
-
 __all__ = [
     # Legacy functions (backward compatibility)
     "list_available_docs",

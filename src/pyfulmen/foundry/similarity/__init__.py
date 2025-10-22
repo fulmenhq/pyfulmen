@@ -13,20 +13,20 @@ Public API:
     casefold(value, locale) -> str - Unicode casefold with locale support
     equals_ignore_case(a, b, ...) -> bool - Case-insensitive equality
     strip_accents(value) -> str - Remove combining accent marks
-    
+
     Suggestion - Data model for ranked suggestions
 
 Example:
     >>> from pyfulmen.foundry import similarity
-    >>> 
+    >>>
     >>> # Calculate edit distance
     >>> similarity.distance("kitten", "sitting")
     3
-    >>> 
+    >>>
     >>> # Calculate normalized similarity score
     >>> similarity.score("hello", "helo")
     0.8
-    >>> 
+    >>>
     >>> # Get ranked suggestions
     >>> suggestions = similarity.suggest(
     ...     "cofnig",
@@ -38,7 +38,7 @@ Example:
     'config'
     >>> suggestions[0].score
     0.8333333333333334
-    >>> 
+    >>>
     >>> # Normalize text
     >>> similarity.normalize("  Café  ", strip_accents=True)
     'cafe'

@@ -9,6 +9,7 @@ This module provides:
 - Text similarity and normalization utilities (similarity submodule)
 """
 
+from . import similarity
 from .catalog import (
     Country,
     FoundryCatalog,
@@ -47,7 +48,6 @@ from .models import (
     generate_correlation_id,
     utc_now_rfc3339nano,
 )
-from . import similarity
 
 __all__ = [
     "FulmenBaseModel",
