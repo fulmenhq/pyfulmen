@@ -251,6 +251,11 @@ make bootstrap
 ## Documentation Requirements
 
 - README with installation, quick start, links to Crucible standards, **and a prominent link to the overview document described below.**
+- **Crucible Version Section**: README MUST include a dedicated section (e.g., "Crucible Version") explaining how to determine the embedded Crucible version. This section MUST:
+  1. Show code example using the Crucible Shim API (e.g., `crucible.get_version()`, `crucible.Version()`, or equivalent)
+  2. Explain the metadata fields: `version` (CalVer), `commit`, `dirty` flag, `syncedAt`, `syncMethod`
+  3. Link to `.crucible/metadata.yaml` location for manual inspection
+  4. Note that `dirty: true` indicates sync from uncommitted changes (development workflow)
 - Goneat bootstrap notes (or reference this standard / `docs/guides/bootstrap-goneat.md`).
 - Bootstrap strategy documentation (e.g., `docs/BOOTSTRAP-STRATEGY.md`).
 - API reference comments/docstrings per language norms.
