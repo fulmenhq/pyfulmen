@@ -6,6 +6,7 @@ This module provides:
 - RFC3339Nano timestamp generation
 - UUIDv7 correlation ID generation
 - Pattern catalog for regex, MIME types, HTTP statuses, country codes
+- Text similarity and normalization utilities (similarity submodule)
 """
 
 from .catalog import (
@@ -46,6 +47,7 @@ from .models import (
     generate_correlation_id,
     utc_now_rfc3339nano,
 )
+from . import similarity
 
 __all__ = [
     "FulmenBaseModel",
@@ -82,4 +84,5 @@ __all__ = [
     "get_country_by_alpha3",
     "get_country_by_numeric",
     "list_countries",
+    "similarity",
 ]
