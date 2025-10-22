@@ -2,7 +2,7 @@
 
 Python Fulmen libraries for enterprise-scale development.
 
-**Lifecycle Phase**: `alpha` | **Version**: 0.1.3 | **Coverage**: 93%
+**Lifecycle Phase**: `alpha` | **Version**: 0.1.5 | **Coverage**: 92%
 
 ## Overview
 
@@ -39,10 +39,10 @@ make build
 
 # Install in another project
 cd /path/to/your/project
-pip install /path/to/pyfulmen/dist/pyfulmen-0.1.3-py3-none-any.whl
+pip install /path/to/pyfulmen/dist/pyfulmen-0.1.5-py3-none-any.whl
 
 # Or with uv
-uv add /path/to/pyfulmen/dist/pyfulmen-0.1.3-py3-none-any.whl
+uv add /path/to/pyfulmen/dist/pyfulmen-0.1.5-py3-none-any.whl
 ```
 
 ### Editable Install (for library development)
@@ -95,36 +95,49 @@ logger = Logger(
 
 📖 **[Read the complete Logging Guide](docs/guides/logging.md)** for progressive profiles, middleware, policy enforcement, and best practices.
 
-### Crucible Bridge API (v0.1.4+)
+### Crucible Bridge API (v0.1.5+)
 
-PyFulmen provides a unified bridge API for accessing Crucible assets. **This is the recommended pattern** for new code - legacy APIs are maintained for backward compatibility.
+PyFulmen provides a unified bridge API for accessing Crucible assets with full metadata support. **This is the recommended pattern** for new code.
 
 ```python
 from pyfulmen import crucible
 
-# Discover available assets
+# Discover available assets with metadata
 categories = crucible.list_categories()  # ['docs', 'schemas', 'config']
-schemas = crucible.list_assets('schemas', prefix='observability')
+assets = crucible.list_assets('schemas', prefix='observability')
+for asset in assets:
+    print(f"{asset.id}: {asset.format}, {asset.size} bytes, checksum: {asset.checksum[:8]}...")
 
-# Load schemas and documentation
-schema = crucible.load_schema_by_id('observability/logging/v1.0.0/logger-config')
-doc = crucible.get_documentation('standards/observability/logging.md')
+# NEW in v0.1.5: Load assets with full metadata
+schema, meta = crucible.find_schema('observability/logging/v1.0.0/logger-config')
+print(f"Schema format: {meta.format}, size: {meta.size} bytes")
 
-# Stream large assets efficiently
-with crucible.open_asset('architecture/fulmen-helper-library-standard.md') as f:
-    content = f.read()
+config, cfg_meta = crucible.find_config('terminal/v1.0.0/terminal-overrides-defaults')
+print(f"Config checksum: {cfg_meta.checksum[:16]}...")
+
+# Get raw documentation (preserves frontmatter for Docscribe)
+doc, doc_meta = crucible.get_doc('standards/agentic-attribution.md')
+print(f"Doc: {len(doc)} chars, format: {doc_meta.format}")
+
+# Documentation with frontmatter processing (via Docscribe)
+clean_content = crucible.get_documentation('standards/observability/logging.md')
+metadata = crucible.get_documentation_metadata('standards/observability/logging.md')
 
 # Get version metadata
 version = crucible.get_crucible_version()
-print(f"Crucible v{version.version}")
+print(f"Crucible v{version.version} (commit: {version.commit})")
 ```
 
-**Legacy APIs** (still supported):
+**Migration from Legacy APIs:**
 
 ```python
-# Legacy submodule access (maintained for backward compatibility)
-schemas = crucible.schemas.list_available_schemas()
-doc = crucible.docs.read_doc('guides/bootstrap-goneat.md')
+# Deprecated (v0.1.5, removal in v0.2.0) - still works but emits warnings
+schema = crucible.load_schema_by_id('observability/logging/v1.0.0/logger-config')
+config = crucible.get_config_defaults('terminal', 'v1.0.0', 'terminal-overrides-defaults')
+
+# Recommended - use new helpers with metadata
+schema, meta = crucible.find_schema('observability/logging/v1.0.0/logger-config')
+config, cfg_meta = crucible.find_config('terminal/v1.0.0/terminal-overrides-defaults')
 ```
 
 ### Other Features

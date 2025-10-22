@@ -36,10 +36,13 @@ Legacy Submodule Access (backward compatibility):
 from . import config, docs, schemas
 from ._version import get_crucible_info, get_crucible_metadata_path
 
-# Bridge API (v0.1.4+)
+# Bridge API (v0.1.4+, v0.1.5+ new helpers)
 from .bridge import (
+    find_config,
+    find_schema,
     get_config_defaults,
     get_crucible_version,
+    get_doc,
     list_assets,
     list_categories,
     load_schema_by_id,
@@ -60,10 +63,14 @@ from .errors import AssetNotFoundError, CrucibleVersionError, ParseError
 from .models import AssetMetadata, CrucibleVersion
 
 __all__ = [
-    # Bridge API (v0.1.4+) - Recommended for new code
+    # Bridge API (v0.1.5+) - Recommended for new code
     "list_categories",
     "list_assets",
     "get_crucible_version",
+    "find_schema",
+    "find_config",
+    "get_doc",
+    # Legacy bridge functions (deprecated in v0.1.5, removal in v0.2.0)
     "load_schema_by_id",
     "get_config_defaults",
     "open_asset",

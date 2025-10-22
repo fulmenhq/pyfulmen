@@ -48,18 +48,24 @@ def get_crucible_version() -> CrucibleVersion:
     """Get version metadata for embedded Crucible assets.
 
     Reads version information from .crucible/metadata/sync-keys.yaml if available.
-    Falls back to placeholder version if metadata cannot be read.
+    Extracts version, commit (defaults to "unknown"), and syncedAt (defaults to None).
+
+    Expected sync-keys.yaml structure:
+        version: "2025.10.0"
+        commit: "abc123def456"      # optional
+        syncedAt: "2025-10-20T18:42:11Z"  # optional
+        keys: [...]
 
     Returns:
-        CrucibleVersion instance with version string and optional metadata
+        CrucibleVersion instance with version, commit, and synced_at
 
     Raises:
         CrucibleVersionError: If version metadata cannot be determined
 
     Example:
         >>> version = get_crucible_version()
-        >>> print(f"Crucible v{version.version}")
-        Crucible v2025.10.0
+        >>> print(f"Crucible v{version.version} (commit: {version.commit})")
+        Crucible v2025.10.0 (commit: unknown)
     """
     metadata_dir = _paths.get_crucible_metadata_dir()
     sync_keys_path = metadata_dir / "sync-keys.yaml"
@@ -78,9 +84,14 @@ def get_crucible_version() -> CrucibleVersion:
         if not version:
             raise CrucibleVersionError(f"Version field not found in {sync_keys_path}")
 
-        # sync_date and commit not currently in sync-keys.yaml
-        # These will be added in future goneat versions
-        return CrucibleVersion(version=str(version), sync_date=None, commit=None)
+        commit = data.get("commit", "unknown")
+        synced_at = data.get("syncedAt")
+
+        return CrucibleVersion(
+            version=str(version),
+            commit=str(commit) if commit else "unknown",
+            synced_at=str(synced_at) if synced_at else None,
+        )
 
     except yaml.YAMLError as e:
         raise CrucibleVersionError(f"Failed to parse {sync_keys_path}: {e}") from e

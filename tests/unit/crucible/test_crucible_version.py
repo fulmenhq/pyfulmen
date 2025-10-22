@@ -3,6 +3,8 @@
 from pathlib import Path
 
 from pyfulmen.crucible import get_crucible_info, get_crucible_metadata_path
+from pyfulmen.crucible._version import get_crucible_version
+from pyfulmen.crucible.models import CrucibleVersion
 
 
 def test_get_crucible_metadata_path():
@@ -32,3 +34,39 @@ def test_get_crucible_info():
 
     # metadata_dir should point to actual metadata location
     assert info["metadata_dir"].endswith(".crucible/metadata")
+
+
+class TestGetCrucibleVersion:
+    """Tests for get_crucible_version function."""
+
+    def test_version_from_real_metadata(self):
+        """Test parsing version from actual sync-keys.yaml."""
+        version = get_crucible_version()
+
+        assert isinstance(version, CrucibleVersion)
+        assert version.version == "2025.10.0"
+        assert version.commit == "unknown"
+        assert version.synced_at is None
+
+    def test_version_with_missing_commit_defaults_to_unknown(self):
+        """Missing commit field should default to 'unknown'."""
+        version = get_crucible_version()
+
+        assert version.commit == "unknown"
+
+    def test_version_with_missing_synced_at_defaults_to_none(self):
+        """Missing syncedAt field should default to None."""
+        version = get_crucible_version()
+
+        assert version.synced_at is None
+
+    def test_version_metadata_structure(self):
+        """Verify version metadata has correct structure."""
+        version = get_crucible_version()
+
+        assert hasattr(version, "version")
+        assert hasattr(version, "commit")
+        assert hasattr(version, "synced_at")
+        assert isinstance(version.version, str)
+        assert isinstance(version.commit, str) or version.commit is None
+        assert isinstance(version.synced_at, str) or version.synced_at is None

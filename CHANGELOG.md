@@ -7,6 +7,54 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.5] - 2025-10-22
+
+### Breaking Changes
+
+- **crucible**: `CrucibleVersion.sync_date` renamed to `synced_at` for Crucible Shim Standard compliance
+
+### Added
+
+- **crucible**: New `find_schema(id)` function returning `(dict, AssetMetadata)` tuple with full metadata
+- **crucible**: New `find_config(id)` function returning `(dict, AssetMetadata)` tuple with full metadata
+- **crucible**: New `get_doc(id)` function returning `(str, AssetMetadata)` with raw markdown (frontmatter preserved)
+- **crucible**: `AssetMetadata` now includes `format`, `size`, and `modified` fields
+- **crucible**: `CrucibleVersion` now parses `commit` and `synced_at` from sync metadata (`.crucible/metadata/sync-keys.yaml`)
+- **crucible**: Full metadata computation - SHA-256 checksums, file sizes, ISO-8601 timestamps
+- **crucible**: JSON-first, YAML-fallback schema resolution per Crucible Shim Standard
+- **crucible**: 23 new unit tests for metadata utilities (100% pass rate)
+- **crucible**: 9 new integration tests for shim helpers (checksums, metadata, Docscribe delegation)
+
+### Changed
+
+- **crucible**: `list_assets()` now populates all metadata fields (format, size, checksum, modified) for every asset
+- **crucible**: `get_crucible_version()` docstring updated (`sync_date` → `synced_at`)
+- **crucible**: Docscribe wrappers now delegate to `get_doc()` for single read path
+  - `get_documentation()` calls `get_doc()` then strips frontmatter via Docscribe
+  - `get_documentation_metadata()` calls `get_doc()` then extracts frontmatter
+  - `get_documentation_with_metadata()` calls `get_doc()` then parses with Docscribe
+
+### Deprecated
+
+- **crucible**: `load_schema_by_id()` deprecated in favor of `find_schema()` (removal in v0.2.0)
+  - Emits `DeprecationWarning` with migration guidance
+  - Still functional, delegates to `find_schema()` internally
+- **crucible**: `get_config_defaults()` deprecated in favor of `find_config()` (removal in v0.2.0)
+  - Emits `DeprecationWarning` with migration guidance
+  - Still functional, delegates to `find_config()` internally
+
+### Documentation
+
+- **README.md**: Updated Crucible Bridge API section with v0.1.5 examples showing metadata-bearing helpers
+- **README.md**: Added migration guide from legacy APIs
+- **README.md**: Version badge updated to 0.1.5, coverage 92%
+
+### Testing
+
+- **Test Coverage**: 92% for crucible module (exceeds 90% target)
+- **Test Count**: 165 crucible tests passing (123 unit + 42 integration)
+- **New Tests**: Metadata computation, version parsing, shim helpers, Docscribe integration
+
 ## [0.1.4] - 2025-10-21
 
 ### Added

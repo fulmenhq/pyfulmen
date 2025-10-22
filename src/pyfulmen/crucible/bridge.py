@@ -8,12 +8,13 @@ custom Crucible integrations or direct filesystem access.
 
 Example:
     >>> from pyfulmen import crucible
-    >>> # Discover assets
+    >>> # Discover assets with metadata
     >>> categories = crucible.list_categories()
-    >>> schemas = crucible.list_assets('schemas', prefix='observability')
-    >>> # Access content
-    >>> schema = crucible.load_schema_by_id('observability/logging/v1.0.0/logger-config')
-    >>> doc = crucible.get_documentation('standards/observability/logging.md')
+    >>> assets = crucible.list_assets('schemas', prefix='observability')
+    >>> # Access content with full metadata (v0.1.5+)
+    >>> schema, meta = crucible.find_schema('observability/logging/v1.0.0/logger-config')
+    >>> print(f"Schema: {meta.format}, {meta.size} bytes, checksum: {meta.checksum[:8]}...")
+    >>> doc, doc_meta = crucible.get_doc('standards/agentic-attribution.md')
     >>> # Stream large assets
     >>> with crucible.open_asset('architecture/fulmen-helper-library-standard.md') as f:
     ...     content = f.read()
@@ -75,53 +76,48 @@ def list_assets(category: str, prefix: str | None = None) -> list[AssetMetadata]
     assets = []
 
     if category == "docs":
-        # List documentation files
+        from . import _metadata
+
         doc_paths = docs.list_available_docs()
         for doc_path in doc_paths:
-            # Filter by prefix if provided
             if prefix and not doc_path.startswith(prefix):
                 continue
 
-            # Build AssetMetadata
             full_path = docs.get_doc_path(doc_path)
-            asset_id = doc_path  # Use relative path as ID
+            asset_id = doc_path
+
             assets.append(
                 AssetMetadata(
                     id=asset_id,
                     category="docs",
                     path=full_path,
                     description=None,
-                    checksum=None,
+                    format=_metadata.get_file_format(full_path),
+                    size=_metadata.get_file_size(full_path),
+                    modified=_metadata.get_modified_time(full_path),
+                    checksum=_metadata.compute_checksum(full_path),
                 )
             )
 
     elif category == "schemas":
-        # Recursively discover all schema categories (including nested ones)
-        from . import _paths
+        from . import _metadata, _paths
 
         schemas_dir = _paths.get_schemas_dir()
         schema_categories = _discover_schema_categories(schemas_dir)
 
         for schema_category in schema_categories:
-            # For each category, list versions
             versions = schemas.list_schema_versions(schema_category)
             for version in versions:
-                # Find schema files in this category/version directory
                 version_dir = schemas_dir / schema_category / version
 
                 if version_dir.exists():
-                    # Find all .schema.json and .schema.yaml files
                     for schema_file in version_dir.glob("*.schema.*"):
-                        # Extract name (remove .schema.json or .schema.yaml)
                         name = schema_file.stem
-                        # Remove .schema suffix if present
                         if name.endswith(".schema"):
                             name = name[: -len(".schema")]
 
-                        # Build schema ID
                         schema_id = f"{schema_category}/{version}/{name}"
 
-                        # Apply prefix filter to full asset ID (not just category)
                         if prefix and not schema_id.startswith(prefix):
                             continue
 
@@ -131,34 +127,29 @@ def list_assets(category: str, prefix: str | None = None) -> list[AssetMetadata]
                                 category="schemas",
                                 path=schema_file,
                                 description=None,
-                                checksum=None,
+                                format=_metadata.get_file_format(schema_file),
+                                size=_metadata.get_file_size(schema_file),
+                                modified=_metadata.get_modified_time(schema_file),
+                                checksum=_metadata.compute_checksum(schema_file),
                             )
                         )
 
     elif category == "config":
-        # Recursively discover all config categories (including nested ones)
-        from . import _paths
+        from . import _metadata, _paths
 
         config_dir = _paths.get_config_dir()
         config_categories = _discover_config_categories(config_dir)
 
         for config_category in config_categories:
-            # For each category, list versions
             versions = config.list_config_versions(config_category)
             for version in versions:
-                # Find config files in this category/version directory
                 version_dir = config_dir / config_category / version
 
                 if version_dir.exists():
-                    # Find all .yaml and .yml files
                     for config_file in version_dir.glob("*.y*ml"):
-                        # Extract name (remove extension)
                         name = config_file.stem
-
-                        # Build config ID
                         config_id = f"{config_category}/{version}/{name}"
 
-                        # Apply prefix filter to full asset ID (not just category)
                         if prefix and not config_id.startswith(prefix):
                             continue
 
@@ -168,7 +159,10 @@ def list_assets(category: str, prefix: str | None = None) -> list[AssetMetadata]
                                 category="config",
                                 path=config_file,
                                 description=None,
-                                checksum=None,
+                                format=_metadata.get_file_format(config_file),
+                                size=_metadata.get_file_size(config_file),
+                                modified=_metadata.get_modified_time(config_file),
+                                checksum=_metadata.compute_checksum(config_file),
                             )
                         )
 
@@ -179,21 +173,198 @@ def get_crucible_version() -> CrucibleVersion:
     """Get version metadata for embedded Crucible assets.
 
     Returns:
-        CrucibleVersion instance with version, sync_date, and commit
+        CrucibleVersion instance with version, commit, and synced_at
 
     Raises:
         CrucibleVersionError: If version metadata cannot be determined
 
     Example:
         >>> version = get_crucible_version()
-        >>> print(f"Crucible v{version.version}")
-        Crucible v2025.10.0
+        >>> print(f"Crucible v{version.version} (commit: {version.commit})")
+        Crucible v2025.10.0 (commit: unknown)
     """
     return _get_version()
 
 
+def find_schema(schema_id: str) -> tuple[dict, AssetMetadata]:
+    """Load schema by ID and return with full metadata.
+
+    Implements JSON-first, YAML-fallback resolution per Crucible Shim Standard.
+    Populates complete AssetMetadata including format, size, checksum, and modified.
+
+    Args:
+        schema_id: Schema ID in format 'category/version/name'
+                  (e.g., 'observability/logging/v1.0.0/logger-config')
+
+    Returns:
+        Tuple of (parsed_schema_dict, asset_metadata)
+
+    Raises:
+        AssetNotFoundError: If schema not found (includes suggestions)
+
+    Example:
+        >>> schema, meta = find_schema('observability/logging/v1.0.0/logger-config')
+        >>> print(f"Schema format: {meta.format}, size: {meta.size} bytes")
+        Schema format: json, size: 2048 bytes
+    """
+    from . import _metadata
+
+    try:
+        parts = schema_id.split("/")
+        if len(parts) < 3:
+            raise ValueError(
+                f"Invalid schema ID format: {schema_id}. Expected format: category/version/name"
+            )
+
+        version = parts[-2]
+        name = parts[-1]
+        category = "/".join(parts[:-2])
+
+        schema_path = schemas.get_schema_path(category, version, name)
+        schema_data = schemas.load_schema(category, version, name)
+
+        metadata = AssetMetadata(
+            id=schema_id,
+            category="schemas",
+            path=schema_path,
+            description=None,
+            format=_metadata.get_file_format(schema_path),
+            size=_metadata.get_file_size(schema_path),
+            modified=_metadata.get_modified_time(schema_path),
+            checksum=_metadata.compute_checksum(schema_path),
+        )
+
+        return (schema_data, metadata)
+
+    except FileNotFoundError as e:
+        all_schema_assets = list_assets("schemas")
+        all_schema_ids = [asset.id for asset in all_schema_assets]
+        suggestions = _find_similar_assets(schema_id, all_schema_ids)
+        raise AssetNotFoundError(schema_id, category="schemas", suggestions=suggestions) from e
+    except ValueError as e:
+        raise AssetNotFoundError(schema_id, category="schemas") from e
+
+
+def find_config(config_id: str) -> tuple[dict, AssetMetadata]:
+    """Load config by ID and return with full metadata.
+
+    Populates complete AssetMetadata including format, size, checksum, and modified.
+
+    Args:
+        config_id: Config ID in format 'category/version/name'
+                  (e.g., 'terminal/v1.0.0/terminal-overrides-defaults')
+
+    Returns:
+        Tuple of (parsed_config_dict, asset_metadata)
+
+    Raises:
+        AssetNotFoundError: If config not found (includes suggestions)
+
+    Example:
+        >>> cfg, meta = find_config('terminal/v1.0.0/terminal-overrides-defaults')
+        >>> print(f"Config format: {meta.format}, checksum: {meta.checksum[:8]}...")
+        Config format: yaml, checksum: abc12345...
+    """
+    from . import _metadata
+
+    try:
+        parts = config_id.split("/")
+        if len(parts) < 3:
+            raise ValueError(
+                f"Invalid config ID format: {config_id}. Expected format: category/version/name"
+            )
+
+        version = parts[-2]
+        name = parts[-1]
+        category = "/".join(parts[:-2])
+
+        config_data = config.load_config_defaults(category, version, name)
+        config_path = config.get_config_path(category, version, name)
+
+        metadata = AssetMetadata(
+            id=config_id,
+            category="config",
+            path=config_path,
+            description=None,
+            format=_metadata.get_file_format(config_path),
+            size=_metadata.get_file_size(config_path),
+            modified=_metadata.get_modified_time(config_path),
+            checksum=_metadata.compute_checksum(config_path),
+        )
+
+        return (config_data, metadata)
+
+    except FileNotFoundError as e:
+        all_configs = []
+        from . import _paths
+
+        config_dir = _paths.get_config_dir()
+        for cat in config.list_config_categories():
+            for ver in config.list_config_versions(cat):
+                version_dir = config_dir / cat / ver
+                if version_dir.exists():
+                    for config_file in version_dir.glob("*.y*ml"):
+                        all_configs.append(f"{cat}/{ver}/{config_file.stem}")
+
+        suggestions = _find_similar_assets(config_id, all_configs)
+        raise AssetNotFoundError(config_id, category="config", suggestions=suggestions) from e
+
+
+def get_doc(doc_id: str) -> tuple[str, AssetMetadata]:
+    """Get raw documentation markdown with metadata.
+
+    Returns raw markdown INCLUDING frontmatter. Use docscribe module for parsing.
+    Populates complete AssetMetadata including format, size, checksum, and modified.
+
+    Args:
+        doc_id: Document ID (relative path with .md extension)
+               (e.g., 'standards/agentic-attribution.md')
+
+    Returns:
+        Tuple of (raw_markdown_string, asset_metadata)
+
+    Raises:
+        AssetNotFoundError: If document not found (includes suggestions)
+
+    Example:
+        >>> doc, meta = get_doc('standards/agentic-attribution.md')
+        >>> print(f"Doc size: {meta.size} bytes, format: {meta.format}")
+        Doc size: 5120 bytes, format: md
+    """
+    from . import _metadata
+
+    try:
+        doc_path = docs.get_doc_path(doc_id)
+
+        with doc_path.open("r", encoding="utf-8") as f:
+            raw_content = f.read()
+
+        metadata = AssetMetadata(
+            id=doc_id,
+            category="docs",
+            path=doc_path,
+            description=None,
+            format=_metadata.get_file_format(doc_path),
+            size=_metadata.get_file_size(doc_path),
+            modified=_metadata.get_modified_time(doc_path),
+            checksum=_metadata.compute_checksum(doc_path),
+        )
+
+        return (raw_content, metadata)
+
+    except FileNotFoundError as e:
+        all_doc_assets = list_assets("docs")
+        all_doc_ids = [asset.id for asset in all_doc_assets]
+        suggestions = _find_similar_assets(doc_id, all_doc_ids)
+        raise AssetNotFoundError(doc_id, category="docs", suggestions=suggestions) from e
+
+
 def load_schema_by_id(schema_id: str) -> dict:
     """Load a schema by its ID string.
+
+    .. deprecated:: 0.1.5
+        Use :func:`find_schema` instead to get schema with full metadata.
+        This function will be removed in v0.2.0.
 
     Convenience wrapper around schemas.load_schema() with enhanced error handling.
 
@@ -212,37 +383,25 @@ def load_schema_by_id(schema_id: str) -> dict:
         >>> print(schema['type'])
         object
     """
-    try:
-        # Parse schema_id into parts
-        # Format: category/version/name or category/subcategory/version/name
-        parts = schema_id.split("/")
-        if len(parts) < 3:
-            raise ValueError(
-                f"Invalid schema ID format: {schema_id}. Expected format: category/version/name"
-            )
+    import warnings
 
-        # Last two parts are version and name
-        # Everything before that is the category path
-        version = parts[-2]
-        name = parts[-1]
-        category = "/".join(parts[:-2])
+    warnings.warn(
+        "load_schema_by_id() is deprecated. Use find_schema() to get schema with metadata. "
+        "Will be removed in v0.2.0.",
+        DeprecationWarning,
+        stacklevel=2,
+    )
 
-        return schemas.load_schema(category, version, name)
-
-    except FileNotFoundError as e:
-        # Generate suggestions for similar schema IDs
-        # Get all available schema IDs (not just top-level categories)
-        all_schema_assets = list_assets("schemas")
-        all_schema_ids = [asset.id for asset in all_schema_assets]
-        suggestions = _find_similar_assets(schema_id, all_schema_ids)
-        raise AssetNotFoundError(schema_id, category="schemas", suggestions=suggestions) from e
-    except ValueError as e:
-        # Invalid schema ID format
-        raise AssetNotFoundError(schema_id, category="schemas") from e
+    schema_data, _ = find_schema(schema_id)
+    return schema_data
 
 
 def get_config_defaults(category: str, version: str, name: str) -> dict:
     """Load configuration defaults.
+
+    .. deprecated:: 0.1.5
+        Use :func:`find_config` instead to get config with full metadata.
+        This function will be removed in v0.2.0.
 
     Convenience wrapper around config.load_config_defaults() with enhanced
     error handling.
@@ -263,25 +422,18 @@ def get_config_defaults(category: str, version: str, name: str) -> dict:
         >>> print(cfg.keys())
         dict_keys(['overrides', 'boxChars', ...])
     """
-    try:
-        return config.load_config_defaults(category, version, name)
-    except FileNotFoundError as e:
-        # Generate suggestions
-        asset_id = f"{category}/{version}/{name}"
-        # Get all available config IDs for suggestions
-        all_configs = []
-        from . import _paths
+    import warnings
 
-        config_dir = _paths.get_config_dir()
-        for cat in config.list_config_categories():
-            for ver in config.list_config_versions(cat):
-                version_dir = config_dir / cat / ver
-                if version_dir.exists():
-                    for config_file in version_dir.glob("*.y*ml"):
-                        all_configs.append(f"{cat}/{ver}/{config_file.stem}")
+    warnings.warn(
+        "get_config_defaults() is deprecated. Use find_config() to get config with metadata. "
+        "Will be removed in v0.2.0.",
+        DeprecationWarning,
+        stacklevel=2,
+    )
 
-        suggestions = _find_similar_assets(asset_id, all_configs)
-        raise AssetNotFoundError(asset_id, category="config", suggestions=suggestions) from e
+    config_id = f"{category}/{version}/{name}"
+    config_data, _ = find_config(config_id)
+    return config_data
 
 
 @contextmanager
@@ -471,6 +623,9 @@ __all__ = [
     "list_categories",
     "list_assets",
     "get_crucible_version",
+    "find_schema",
+    "find_config",
+    "get_doc",
     "load_schema_by_id",
     "get_config_defaults",
     "open_asset",

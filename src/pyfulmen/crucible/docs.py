@@ -27,7 +27,6 @@ from typing import Any
 
 from .. import docscribe
 from . import _paths
-from .errors import AssetNotFoundError
 
 
 def list_available_docs(category: str | None = None) -> list[str]:
@@ -125,6 +124,8 @@ def get_documentation(path: str) -> str:
     Use this when you need to render or process markdown content
     without the metadata header.
 
+    Delegates to bridge.get_doc() for single read path, then strips frontmatter.
+
     Args:
         path: Documentation path relative to docs/crucible-py/
               (e.g., 'standards/observability/logging.md')
@@ -141,14 +142,9 @@ def get_documentation(path: str) -> str:
         # Observability Logging Standard...
         >>> # No YAML frontmatter in the output
     """
-    try:
-        raw_content = read_doc(path)
-    except FileNotFoundError as e:
-        # Convert to AssetNotFoundError with helpful suggestions
-        suggestions = _get_similar_docs(path)
-        raise AssetNotFoundError(path, category="docs", suggestions=suggestions) from e
+    from . import bridge
 
-    # Delegate to docscribe module for frontmatter parsing
+    raw_content, _ = bridge.get_doc(path)
     clean_content, _ = docscribe.parse_frontmatter(raw_content)
     return clean_content
 
@@ -158,6 +154,8 @@ def get_documentation_metadata(path: str) -> dict[str, Any] | None:
 
     Extracts and parses YAML frontmatter block if present.
     Returns None if the document has no frontmatter.
+
+    Delegates to bridge.get_doc() for single read path, then extracts metadata.
 
     Args:
         path: Documentation path relative to docs/crucible-py/
@@ -177,13 +175,9 @@ def get_documentation_metadata(path: str) -> dict[str, Any] | None:
         Status: stable
         Tags: ['observability', 'logging']
     """
-    try:
-        raw_content = read_doc(path)
-    except FileNotFoundError as e:
-        suggestions = _get_similar_docs(path)
-        raise AssetNotFoundError(path, category="docs", suggestions=suggestions) from e
+    from . import bridge
 
-    # Delegate to docscribe module for frontmatter parsing
+    raw_content, _ = bridge.get_doc(path)
     _, metadata = docscribe.parse_frontmatter(raw_content)
     return metadata
 
@@ -194,6 +188,8 @@ def get_documentation_with_metadata(path: str) -> tuple[str, dict[str, Any] | No
     Convenience function returning both clean content and parsed frontmatter
     in a single call. More efficient than calling get_documentation() and
     get_documentation_metadata() separately.
+
+    Delegates to bridge.get_doc() for single read path, then parses frontmatter.
 
     Args:
         path: Documentation path relative to docs/crucible-py/
@@ -214,13 +210,9 @@ def get_documentation_with_metadata(path: str) -> tuple[str, dict[str, Any] | No
         ...     print(f"Last updated: {meta.get('last_updated', 'N/A')}")
         >>> render_markdown(content)
     """
-    try:
-        raw_content = read_doc(path)
-    except FileNotFoundError as e:
-        suggestions = _get_similar_docs(path)
-        raise AssetNotFoundError(path, category="docs", suggestions=suggestions) from e
+    from . import bridge
 
-    # Delegate to docscribe module for frontmatter parsing
+    raw_content, _ = bridge.get_doc(path)
     return docscribe.parse_frontmatter(raw_content)
 
 

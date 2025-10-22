@@ -9,13 +9,17 @@ import pytest
 
 from pyfulmen.crucible import (
     AssetNotFoundError,
+    find_config,
+    find_schema,
     get_crucible_version,
+    get_doc,
     list_assets,
     list_categories,
     load_schema_by_id,
     open_asset,
 )
 from pyfulmen.crucible.errors import CrucibleVersionError
+from pyfulmen.crucible.models import AssetMetadata
 
 
 class TestBridgeIntegration:
@@ -266,3 +270,150 @@ class TestBackwardCompatibility:
         assert "docs" in categories
         assert isinstance(assets, list)
         assert isinstance(docs_list, list)
+
+
+class TestNewShimHelpers:
+    """Integration tests for v0.1.5 new shim helper functions."""
+
+    def test_find_schema_returns_data_and_metadata(self):
+        """find_schema returns tuple of (dict, AssetMetadata)."""
+        try:
+            schema, meta = find_schema("observability/logging/v1.0.0/logger-config")
+        except AssetNotFoundError:
+            pytest.skip("observability/logging/v1.0.0/logger-config not synced")
+
+        assert isinstance(schema, dict)
+        assert isinstance(meta, AssetMetadata)
+        assert meta.id == "observability/logging/v1.0.0/logger-config"
+        assert meta.category == "schemas"
+        assert meta.format in ["json", "yaml"]
+        assert meta.size > 0
+        assert meta.checksum is not None
+        assert len(meta.checksum) == 64
+
+    def test_find_schema_format_field_correct(self):
+        """find_schema metadata.format reflects actual file type."""
+        try:
+            schema, meta = find_schema("observability/logging/v1.0.0/logger-config")
+        except AssetNotFoundError:
+            pytest.skip("observability/logging/v1.0.0/logger-config not synced")
+
+        assert meta.format in ["json", "yaml"]
+        if meta.format == "json":
+            assert meta.path.suffix == ".json"
+        elif meta.format == "yaml":
+            assert meta.path.suffix in [".yaml", ".yml"]
+
+    def test_find_config_returns_data_and_metadata(self):
+        """find_config returns tuple of (dict, AssetMetadata)."""
+        try:
+            config, meta = find_config("terminal/v1.0.0/terminal-overrides-defaults")
+        except AssetNotFoundError:
+            pytest.skip("terminal/v1.0.0/terminal-overrides-defaults not synced")
+
+        assert isinstance(config, dict)
+        assert isinstance(meta, AssetMetadata)
+        assert meta.id == "terminal/v1.0.0/terminal-overrides-defaults"
+        assert meta.category == "config"
+        assert meta.format in ["yaml", "yml"]
+        assert meta.size > 0
+        assert meta.checksum is not None
+
+    def test_get_doc_returns_raw_markdown_with_frontmatter(self):
+        """get_doc returns raw markdown including frontmatter."""
+        try:
+            doc, meta = get_doc("standards/library/modules/crucible-shim.md")
+        except AssetNotFoundError:
+            pytest.skip("standards/library/modules/crucible-shim.md not synced")
+
+        assert isinstance(doc, str)
+        assert isinstance(meta, AssetMetadata)
+        assert doc.startswith("---"), "Raw doc should include frontmatter"
+        assert meta.format == "md"
+        assert meta.size > 0
+
+    def test_get_doc_metadata_populated(self):
+        """get_doc returns complete metadata."""
+        try:
+            doc, meta = get_doc("standards/agentic-attribution.md")
+        except AssetNotFoundError:
+            pytest.skip("standards/agentic-attribution.md not synced")
+
+        assert meta.id == "standards/agentic-attribution.md"
+        assert meta.category == "docs"
+        assert meta.path.exists()
+        assert meta.format == "md"
+        assert isinstance(meta.size, int)
+        assert meta.size == len(doc.encode("utf-8"))
+        assert isinstance(meta.checksum, str)
+        assert len(meta.checksum) == 64
+
+    def test_docscribe_wrappers_delegate_to_get_doc(self):
+        """Docscribe wrappers use get_doc internally (single read path)."""
+        from pyfulmen.crucible import (
+            get_documentation,
+            get_documentation_metadata,
+            get_documentation_with_metadata,
+        )
+
+        try:
+            raw_doc, raw_meta = get_doc("standards/library/modules/crucible-shim.md")
+        except AssetNotFoundError:
+            pytest.skip("crucible-shim.md not synced")
+
+        clean_doc = get_documentation("standards/library/modules/crucible-shim.md")
+        assert not clean_doc.startswith("---"), "Clean doc should not have frontmatter"
+        assert len(clean_doc) < len(raw_doc), "Clean doc should be shorter (no frontmatter)"
+
+        fm_meta = get_documentation_metadata("standards/library/modules/crucible-shim.md")
+        assert fm_meta is not None
+        assert "title" in fm_meta
+
+        content, meta = get_documentation_with_metadata(
+            "standards/library/modules/crucible-shim.md"
+        )
+        assert content == clean_doc
+        assert meta == fm_meta
+
+    def test_list_assets_populates_all_metadata_fields(self):
+        """list_assets now populates format, size, modified, checksum."""
+        assets = list_assets("schemas", prefix="observability/logging")
+
+        if len(assets) == 0:
+            pytest.skip("No observability/logging schemas synced")
+
+        asset = assets[0]
+        assert asset.format is not None
+        assert asset.format in ["json", "yaml", "yml"]
+        assert isinstance(asset.size, int)
+        assert asset.size > 0
+        assert isinstance(asset.checksum, str)
+        assert len(asset.checksum) == 64
+
+    def test_legacy_functions_still_work(self):
+        """Legacy load_schema_by_id and get_config_defaults still work."""
+        import warnings
+
+        with warnings.catch_warnings(record=True) as w:
+            warnings.simplefilter("always", DeprecationWarning)
+
+            try:
+                schema = load_schema_by_id("observability/logging/v1.0.0/logger-config")
+                assert isinstance(schema, dict)
+                assert len(w) > 0
+                assert issubclass(w[-1].category, DeprecationWarning)
+                assert "find_schema" in str(w[-1].message)
+            except AssetNotFoundError:
+                pytest.skip("observability/logging/v1.0.0/logger-config not synced")
+
+    def test_metadata_checksums_are_deterministic(self):
+        """Metadata checksums are consistent across calls."""
+        try:
+            _, meta1 = find_schema("observability/logging/v1.0.0/logger-config")
+            _, meta2 = find_schema("observability/logging/v1.0.0/logger-config")
+        except AssetNotFoundError:
+            pytest.skip("observability/logging/v1.0.0/logger-config not synced")
+
+        assert meta1.checksum == meta2.checksum
+        assert meta1.size == meta2.size
+        assert meta1.format == meta2.format
