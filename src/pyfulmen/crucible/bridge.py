@@ -26,6 +26,7 @@ from collections.abc import Iterator
 from contextlib import contextmanager, suppress
 from typing import BinaryIO
 
+from .. import foundry
 from . import config, docs, schemas
 from ._version import get_crucible_version as _get_version
 from .errors import AssetNotFoundError
@@ -592,9 +593,10 @@ def _discover_config_categories(config_dir) -> list[str]:
 
 
 def _find_similar_assets(query: str, candidates: list[str], max_suggestions: int = 3) -> list[str]:
-    """Find similar asset IDs for suggestions.
+    """Find similar asset IDs for suggestions using Foundry similarity module.
 
-    Uses simple string matching based on path parts to find similar IDs.
+    Uses Levenshtein distance with normalization for accurate fuzzy matching.
+    Follows Foundry standard defaults (min_score=0.6, normalization enabled).
 
     Args:
         query: The asset ID that was not found
@@ -604,19 +606,15 @@ def _find_similar_assets(query: str, candidates: list[str], max_suggestions: int
     Returns:
         List of similar asset IDs (up to max_suggestions)
     """
-    query_parts = set(query.lower().replace(".md", "").replace(".json", "").split("/"))
-    suggestions = []
-
-    for candidate in candidates:
-        candidate_parts = set(candidate.lower().replace(".md", "").replace(".json", "").split("/"))
-        # Count matching parts
-        matches = len(query_parts & candidate_parts)
-        if matches > 0:
-            suggestions.append((matches, candidate))
-
-    # Sort by match count (descending) and return top N
-    suggestions.sort(reverse=True, key=lambda x: x[0])
-    return [candidate for _, candidate in suggestions[:max_suggestions]]
+    suggestions = foundry.similarity.suggest(
+        query,
+        candidates,
+        min_score=0.6,
+        max_suggestions=max_suggestions,
+        normalize_text=True
+    )
+    
+    return [s.value for s in suggestions]
 
 
 __all__ = [

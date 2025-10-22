@@ -216,36 +216,7 @@ def get_documentation_with_metadata(path: str) -> tuple[str, dict[str, Any] | No
     return docscribe.parse_frontmatter(raw_content)
 
 
-def _get_similar_docs(path: str, max_suggestions: int = 3) -> list[str]:
-    """Get suggestions for similar documentation paths.
 
-    Uses simple string matching to find similar paths. Looks for paths
-    that share common parts with the requested path.
-
-    Args:
-        path: The path that was not found
-        max_suggestions: Maximum number of suggestions to return
-
-    Returns:
-        List of similar paths (up to max_suggestions)
-    """
-    # Get all available docs
-    all_docs = list_available_docs()
-
-    # Simple similarity: paths that contain parts of the query
-    path_parts = set(path.lower().replace(".md", "").split("/"))
-    suggestions = []
-
-    for doc_path in all_docs:
-        doc_parts = set(doc_path.lower().replace(".md", "").split("/"))
-        # Count matching parts
-        matches = len(path_parts & doc_parts)
-        if matches > 0:
-            suggestions.append((matches, doc_path))
-
-    # Sort by match count (descending) and return top N
-    suggestions.sort(reverse=True, key=lambda x: x[0])
-    return [path for _, path in suggestions[:max_suggestions]]
 
 
 __all__ = [
