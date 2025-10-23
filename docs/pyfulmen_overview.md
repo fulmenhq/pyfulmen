@@ -50,19 +50,20 @@ Rather than copying Crucible assets into every project, helper libraries provide
 
 PyFulmen implements the mandatory core modules defined in the [Module Manifest](config/crucible-py/library/v1.0.0/module-manifest.yaml). Each module follows the progressive interface pattern and targets 90%+ test coverage.
 
-| Module ID                      | Status    | Coverage Target | Specification                                                            | Description                                                                                     |
-| ------------------------------ | --------- | --------------- | ------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------- |
-| **crucible-shim**              | ✅ Stable | 90%             | [Spec](docs/crucible-py/standards/library/modules/crucible-shim.md)      | Idiomatic Python access to Crucible schemas, docs, and config defaults via bridge API           |
-| **docscribe**                  | ✅ Stable | 95%             | [Spec](docs/crucible-py/standards/library/modules/docscribe.md)          | Frontmatter parsing, header extraction, and clean content access for markdown assets (v0.1.4+)  |
-| **config-path-api**            | ✅ Stable | 90%             | [Spec](docs/crucible-py/standards/config/fulmen-config-paths.md)         | Platform-aware config/data/cache paths (XDG-compliant on Linux/macOS, Windows-aware)            |
-| **three-layer-config**         | ✅ Stable | 90%             | [Spec](docs/crucible-py/standards/library/modules/three-layer-config.md) | Crucible defaults → User overrides → Runtime config with YAML/JSON support                      |
-| **schema-validation**          | ✅ Stable | 90%             | [Spec](docs/crucible-py/standards/library/modules/schema-validation.md)  | JSON Schema validation helpers using jsonschema library                                         |
-| **observability-logging**      | ✅ Stable | 95%             | [Spec](docs/crucible-py/standards/observability/logging.md)              | Progressive logging with SIMPLE/STRUCTURED/ENTERPRISE profiles, policy enforcement              |
-| **error-handling-propagation** | ✅ Stable | 95%             | [Spec](docs/crucible-py/standards/error-handling/)                       | Pathfinder error wrapper with telemetry metadata, severity mapping, schema validation (v0.1.6+) |
-| **telemetry-metrics**          | ✅ Stable | 85%             | [Spec](docs/crucible-py/standards/observability/metrics/)                | Counter/gauge/histogram with Crucible taxonomy validation, logging integration (v0.1.6+)        |
-| **goneat-bootstrap**           | ✅ Stable | 90%             | [Spec](docs/crucible-py/guides/bootstrap-goneat.md)                      | Goneat tool installation and SSOT sync automation                                               |
-| **ssot-sync**                  | ✅ Stable | 90%             | -                                                                        | Automated sync of Crucible assets via goneat                                                    |
-| **foundry-patterns**           | ✅ Stable | 90%             | [Spec](docs/crucible-py/standards/library/foundry/interfaces.md)         | Pattern catalogs, MIME detection, HTTP status helpers                                           |
+| Module ID                      | Status    | Coverage Target | Specification                                                            | Description                                                                                             |
+| ------------------------------ | --------- | --------------- | ------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------- |
+| **crucible-shim**              | ✅ Stable | 90%             | [Spec](docs/crucible-py/standards/library/modules/crucible-shim.md)      | Idiomatic Python access to Crucible schemas, docs, and config defaults via bridge API                   |
+| **docscribe**                  | ✅ Stable | 95%             | [Spec](docs/crucible-py/standards/library/modules/docscribe.md)          | Frontmatter parsing, header extraction, and clean content access for markdown assets (v0.1.4+)          |
+| **config-path-api**            | ✅ Stable | 90%             | [Spec](docs/crucible-py/standards/config/fulmen-config-paths.md)         | Platform-aware config/data/cache paths (XDG-compliant on Linux/macOS, Windows-aware)                    |
+| **three-layer-config**         | ✅ Stable | 90%             | [Spec](docs/crucible-py/standards/library/modules/three-layer-config.md) | Crucible defaults → User overrides → Runtime config with YAML/JSON support                              |
+| **schema-validation**          | ✅ Stable | 90%             | [Spec](docs/crucible-py/standards/library/modules/schema-validation.md)  | JSON Schema validation helpers using jsonschema library                                                 |
+| **observability-logging**      | ✅ Stable | 95%             | [Spec](docs/crucible-py/standards/observability/logging.md)              | Progressive logging with SIMPLE/STRUCTURED/ENTERPRISE profiles, policy enforcement                      |
+| **error-handling-propagation** | ✅ Stable | 95%             | [Spec](docs/crucible-py/standards/error-handling/)                       | Pathfinder error wrapper with telemetry metadata, severity mapping, schema validation (v0.1.6+)         |
+| **telemetry-metrics**          | ✅ Stable | 85%             | [Spec](docs/crucible-py/standards/observability/metrics/)                | Counter/gauge/histogram with Crucible taxonomy validation, logging integration (v0.1.6+)                |
+| **fulhash**                    | ✅ Stable | 95%             | [Spec](docs/crucible-py/standards/library/modules/fulhash.md)            | Fast, consistent hashing with xxh3-128/sha256, thread-safe streaming, cross-language fixtures (v0.1.6+) |
+| **goneat-bootstrap**           | ✅ Stable | 90%             | [Spec](docs/crucible-py/guides/bootstrap-goneat.md)                      | Goneat tool installation and SSOT sync automation                                                       |
+| **ssot-sync**                  | ✅ Stable | 90%             | -                                                                        | Automated sync of Crucible assets via goneat                                                            |
+| **foundry-patterns**           | ✅ Stable | 90%             | [Spec](docs/crucible-py/standards/library/foundry/interfaces.md)         | Pattern catalogs, MIME detection, HTTP status helpers                                                   |
 
 ### Extension Modules (Optional)
 
@@ -73,6 +74,34 @@ PyFulmen implements the mandatory core modules defined in the [Module Manifest](
 | **cloud-storage** | 📋 Planned | Unified S3/GCS/Azure Blob helpers                                                |
 
 **Legend**: ✅ Stable | 🔄 Active Development | 📋 Planned | ⚠️ Deprecated
+
+### Module Highlights: FulHash (v0.1.6+)
+
+**Purpose**: Fast, consistent hashing for checksums, content addressing, and integrity verification
+
+**Algorithms**:
+
+- xxh3-128 (default): Fast non-cryptographic hashing (5-10x faster than SHA-256)
+- sha256: Cryptographic hashing for security-sensitive use cases
+
+**APIs**:
+
+- Block hashing: `hash_bytes()`, `hash_string()`, `hash_file()`, `hash()` dispatcher
+- Streaming: `stream()` creates independent `StreamHasher` instances
+- Metadata: `format_checksum()`, `parse_checksum()`, `validate_checksum_string()`, `compare_digests()`
+
+**Thread Safety**: Independent instances by design (no singletons), validated with 14 concurrency tests
+
+**Performance**: 121,051 ops/sec sustained throughput, memory-safe under concurrent load
+
+**Cross-Language**: Shared fixtures with gofulmen and tsfulmen for consistent behavior
+
+**Dependencies**: xxhash (fast hashing), hashlib (stdlib, sha256)
+
+**Documentation**:
+
+- [FulHash Thread Safety Guide](../fulhash_thread_safety.md)
+- [ADR-0009: Independent Stream Instances](development/adr/ADR-0009-fulhash-independent-stream-instances.md)
 
 ## Observability Highlights
 

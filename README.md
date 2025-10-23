@@ -17,6 +17,7 @@ PyFulmen is part of the Fulmen ecosystem, providing templates, processes, and to
 - **Progressive Logging** - Zero-complexity to enterprise-grade logging with SIMPLE → STRUCTURED → ENTERPRISE profiles
 - **Error Handling** - Pathfinder-compatible errors with telemetry metadata and schema validation (v0.1.6+)
 - **Telemetry & Metrics** - Counter/gauge/histogram recording with Crucible taxonomy validation (v0.1.6+)
+- **FulHash** - Fast, consistent hashing with xxh3-128 (default) and sha256 support, thread-safe streaming (v0.1.6+)
 - **Crucible Shim** - Idiomatic Python access to Crucible schemas, docs, and config defaults
 - **Config Path API** - XDG-compliant, platform-aware configuration paths
 - **Three-Layer Config Loading** - Crucible defaults → User overrides → App config
@@ -230,6 +231,55 @@ logging.emit_metrics_to_log(logger, event_dicts)
 - **Logging Integration** - Export metrics through standard logging pipeline
 
 📖 **[See examples/error_telemetry_demo.py](examples/error_telemetry_demo.py)** for a complete integration example.
+
+### FulHash - Fast, Consistent Hashing (v0.1.6+)
+
+PyFulmen provides fast, deterministic hashing with xxh3-128 (default, fast) and sha256 (cryptographic) algorithms, designed for checksums, content addressing, and integrity verification across the Fulmen ecosystem.
+
+```python
+from pyfulmen import fulhash
+
+# Block hashing (one-shot)
+digest = fulhash.hash_bytes(b"Hello, World!")
+print(digest.formatted)  # "xxh3-128:531df2844447dd5077db03842cd75395"
+
+# String hashing with encoding
+digest = fulhash.hash_string("Hello, World!", encoding="utf-8")
+
+# File hashing (streaming internally)
+from pathlib import Path
+digest = fulhash.hash_file(Path("config.yaml"))
+
+# Streaming API (for large data)
+hasher = fulhash.stream(fulhash.Algorithm.XXH3_128)
+hasher.update(b"chunk 1")
+hasher.update(b"chunk 2")
+digest = hasher.digest()
+
+# Universal hash dispatcher
+digest = fulhash.hash(b"bytes")           # Detects bytes
+digest = fulhash.hash("string")           # Detects string
+digest = fulhash.hash(Path("file.txt"))   # Detects Path
+
+# Metadata helpers
+checksum = fulhash.format_checksum("xxh3-128", "abc123...")  # "xxh3-128:abc123..."
+algorithm, hex_value = fulhash.parse_checksum(checksum)
+is_valid = fulhash.validate_checksum_string("xxh3-128:abc123...")
+match = fulhash.compare_digests(digest1, digest2)  # Constant-time comparison
+```
+
+**Key Features:**
+
+- **Two Algorithms** - xxh3-128 (default, 5-10x faster) and sha256 (cryptographic)
+- **Thread-Safe** - All APIs safe for concurrent use (independent instances, no singletons)
+- **Streaming Support** - Memory-efficient hashing of large files (64KB chunks)
+- **Schema Compliance** - Validates against Crucible digest and checksum-string schemas
+- **Cross-Language Fixtures** - Shared test vectors with gofulmen and tsfulmen
+- **Production Ready** - 156 tests including 14 concurrency tests, 121K ops/sec sustained throughput
+
+📖 **Thread Safety**: See [FulHash Thread Safety Guide](docs/fulhash_thread_safety.md) for concurrency guarantees and validation results.
+
+📖 **Architecture**: See [ADR-0009](docs/development/adr/ADR-0009-fulhash-independent-stream-instances.md) for independent instance design rationale.
 
 ### Other Features
 

@@ -99,7 +99,7 @@ const digest = hasher.digest();
 
 ### 3. Metadata Formatting
 
-Standardized checksum representation: `<algorithm>:<lowercase-hex>`
+Standardized checksum representation: `<algorithm>:<lowercase-hex>` (see [`checksum-string.schema.json`](../../../schemas/library/fulhash/v1.0.0/checksum-string.schema.json))
 
 **Format Helper**:
 
@@ -140,6 +140,8 @@ Represents a computed hash with metadata.
 | `hex`       | string | Lowercase hexadecimal representation            |
 | `bytes`     | bytes  | Raw hash bytes (language-specific type)         |
 | `formatted` | string | Prefixed format: `"<algorithm>:<hex>"`          |
+
+Canonical schema: [`digest.schema.json`](../../../schemas/library/fulhash/v1.0.0/digest.schema.json)
 
 ### StreamHasher
 

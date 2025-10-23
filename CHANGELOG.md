@@ -11,6 +11,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **FulHash Module**: Fast, consistent hashing for the Fulmen ecosystem
+  - Two algorithms: xxh3-128 (default, fast) and sha256 (cryptographic)
+  - Block hashing: `hash_bytes(data)`, `hash_string(text, encoding)`, `hash_file(path)`
+  - Streaming API: `stream(algorithm)` returns independent `StreamHasher` instance
+  - Universal dispatcher: `hash(bytes | str | Path)` with automatic type detection
+  - Metadata helpers: `format_checksum()`, `parse_checksum()`, `validate_checksum_string()`, `compare_digests()`
+  - Schema compliance: Digest and checksum-string validation against Crucible schemas
+  - Thread-safe by design: Independent instances, no singletons (ADR-0009)
+  - 156 tests including 14 dedicated concurrency tests
+  - Stress tested: 121,051 ops/sec sustained throughput (1,000 operations)
+  - Memory safety: 200 concurrent file hashing operations (1MB files), zero corruption
+  - Cross-language fixtures: Shared test vectors in `config/crucible-py/library/fulhash/fixtures.yaml`
+  - Dependencies: Added xxhash library for fast non-cryptographic hashing
+  - 95%+ test coverage on all fulhash APIs
+  - **Ecosystem Impact**: First language to implement fulhash module
+  - **Architecture Decision**: ADR-0009 documents independent instance pattern (learned from TypeScript singleton bug)
+
 - **Error Handling Module**: Pathfinder error envelope with telemetry extensions
   - `PathfinderError` model: Base error structure (code, message, details, path, timestamp)
   - `FulmenError` model: Extended error with telemetry metadata (severity, correlation_id, trace_id, exit_code, context, original)

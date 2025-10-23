@@ -112,12 +112,15 @@ ADRs are **immutable** once accepted. Instead of editing:
 
 ### PyFulmen Local ADRs
 
-| ADR                                                           | Title                                         | Date       | Status   |
-| ------------------------------------------------------------- | --------------------------------------------- | ---------- | -------- |
-| [ADR-0001](ADR-0001-fulmencatalogmodel-populate-by-name.md)   | FulmenCatalogModel populate_by_name=True      | 2025-10-15 | Accepted |
-| [ADR-0002](ADR-0002-validate-country-code-lookup-strategy.md) | validate_country_code() Three-Lookup Strategy | 2025-10-15 | Accepted |
-| [ADR-0003](ADR-0003-country-catalog-preview-status.md)        | Country Code Catalog Preview Status           | 2025-10-15 | Accepted |
-| [ADR-0004](ADR-0004-tool-config-separation.md)                | Tool Configuration Separation                 | 2025-10-15 | Accepted |
+| ADR                                                              | Title                                         | Date       | Status   |
+| ---------------------------------------------------------------- | --------------------------------------------- | ---------- | -------- |
+| [ADR-0001](ADR-0001-fulmencatalogmodel-populate-by-name.md)      | FulmenCatalogModel populate_by_name=True      | 2025-10-15 | Accepted |
+| [ADR-0002](ADR-0002-validate-country-code-lookup-strategy.md)    | validate_country_code() Three-Lookup Strategy | 2025-10-15 | Accepted |
+| [ADR-0003](ADR-0003-country-catalog-preview-status.md)           | Country Code Catalog Preview Status           | 2025-10-15 | Accepted |
+| [ADR-0004](ADR-0004-tool-config-separation.md)                   | Tool Configuration Separation                 | 2025-10-15 | Accepted |
+| [ADR-0007](ADR-0007-similarity-case-insensitive-tie-breaking.md) | Similarity Case-Insensitive Tie Breaking      | 2025-10-15 | Accepted |
+| [ADR-0008](ADR-0008-global-metric-registry-singleton.md)         | Global Metric Registry Singleton Pattern      | 2025-10-23 | Accepted |
+| [ADR-0009](ADR-0009-fulhash-independent-stream-instances.md)     | FulHash Independent Stream Instances          | 2025-10-23 | Accepted |
 
 ### Ecosystem ADRs (Reference)
 

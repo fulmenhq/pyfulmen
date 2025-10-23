@@ -65,7 +65,7 @@ def main():
     schema_counter.inc()
     schema_counter.inc()
     schema_counter.inc()
-    print(f"  schema_validations: incremented 3 times")
+    print("  schema_validations: incremented 3 times")
 
     # Record histogram metrics
     print("Recording histogram metrics...")
@@ -73,7 +73,7 @@ def main():
     latency_histogram.observe(12.5)
     latency_histogram.observe(45.2)
     latency_histogram.observe(8.3)
-    print(f"  config_load_ms: recorded 3 observations")
+    print("  config_load_ms: recorded 3 observations")
 
     # Get metric events
     events = registry.get_events()
