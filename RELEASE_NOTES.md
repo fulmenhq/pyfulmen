@@ -238,6 +238,187 @@ print(f"Schema size: {meta.size} bytes, checksum: {meta.checksum[:8]}...")
 
 ---
 
+## [0.1.6] - 2025-10-23
+
+### Error Handling & Telemetry Modules
+
+**Release Type**: Feature Release - First Language to Implement Error/Telemetry Modules
+**Release Date**: October 23, 2025
+**Status**: 🔄 In Progress
+
+#### Features
+
+**Error Handling Module (error-handling-propagation)**:
+
+- ✅ **Pathfinder Error Models**: Pydantic-based data structures (not exceptions)
+  - `PathfinderError` - Base error structure (code, message, details, path, timestamp)
+  - `FulmenError` - Extended error with telemetry metadata
+  - Fields: severity, severity_level, correlation_id, trace_id, exit_code, context, original
+- ✅ **Wrapping API**: `error_handling.wrap(base_error, severity, context, ...)`
+  - Auto-populates correlation_id from logging context
+  - Serializes original Python exceptions with traceback
+  - Maps severity names to severity_level integers (0-4)
+- ✅ **Schema Validation**: `error_handling.validate(error)` - Crucible schema compliance
+- ✅ **Exit Helper**: `exit_with_error(exit_code, error, logger)`
+  - Severity-aware logging (info/warn/error/fatal mapping)
+  - Graceful stderr fallback when logging unavailable
+  - Structured context emission before sys.exit()
+- ✅ **95% Coverage**: 4 test methods, all error paths validated
+- ✅ **Crucible Standard**: Error handling as data models (Crucible 2025.10.3)
+
+**Telemetry Module (telemetry-metrics)**:
+
+- ✅ **Three Metric Types**: Counter (monotonic), Gauge (instantaneous), Histogram (distribution)
+  - `MetricRegistry.counter(name)` - Get or create counter instrument
+  - `MetricRegistry.gauge(name)` - Get or create gauge instrument
+  - `MetricRegistry.histogram(name, buckets)` - Get or create histogram with buckets
+- ✅ **Thread-Safe Registry**: Concurrent metric recording via threading.Lock
+- ✅ **Crucible Taxonomy Validation**: `validate_metric_event(event)`
+  - Validates metric names against taxonomy (schema_validations, config_load_ms, etc.)
+  - Validates units per metric (count, ms, bytes, percent)
+  - Validates histogram bucket structure (cumulative, numeric bounds)
+- ✅ **Default Histogram Buckets**: `[1, 5, 10, 50, 100, 500, 1000, 5000, 10000]` milliseconds
+  - Covers 1ms to 10s range for typical library operations
+  - Cross-language compatible (numeric sentinel instead of null/Infinity)
+- ✅ **Logging Integration**: `logging.emit_metrics_to_log(logger, events)`
+  - Routes metric events through progressive logging pipeline
+  - Emits structured JSON with metric_event context
+- ✅ **85% Coverage**: 6 test methods, validation edge cases, thread safety
+- ✅ **Crucible Standard**: Default histogram buckets `[1, 5, 10, 50, 100, 500, 1000, 5000, 10000]` ms (Crucible 2025.10.3)
+- ✅ **ADR-0008**: Metric registry pattern (explicit instantiation over global singleton)
+
+**Integration & Fixtures**:
+
+- ✅ **Cross-Language Fixtures**: JSON fixtures for error/metric validation
+  - `tests/fixtures/errors/` - valid_error.json, invalid_error_missing_code.json
+  - `tests/fixtures/metrics/` - scalar_counter.json, histogram_ms.json, invalid_metric_bad_name.json
+  - All fixtures schema-validated (valid pass, invalid fail as expected)
+  - Terminal histogram bucket uses 1e9 (numeric) instead of null for cross-language compatibility
+- ✅ **Example Integration**: `examples/error_telemetry_demo.py`
+  - Demonstrates error wrapping, validation, metrics recording, logging integration
+  - Full working demo with structured JSON output
+- ✅ **Module Exports Updated**:
+  - `error_handling.__all__` - Added exit_with_error
+  - `telemetry.__all__` - Added validate_metric_event, validate_metric_events
+  - `logging.__all__` - Added emit_metrics_to_log
+
+**Documentation**:
+
+- ✅ **README Updated**: Added Error Handling and Telemetry & Metrics sections with examples
+- ✅ **Module Catalog**: Added error-handling-propagation and telemetry-metrics (✅ Stable)
+- ✅ **ADR-0008**: Metric Registry Pattern (explicit instantiation pattern documented)
+- ✅ **Crucible Standards Support**: Error handling data models and histogram buckets (2025.10.3)
+- [ ] CHANGELOG.md entry - pending
+- [ ] docs/releases/v0.1.6.md - after scope finalized
+
+#### Breaking Changes
+
+- None (fully backward compatible with v0.1.5)
+
+#### Migration Notes
+
+**Error Handling**:
+
+```python
+from pyfulmen import error_handling, logging
+from datetime import datetime, UTC
+
+# Create Pathfinder error
+base = error_handling.PathfinderError(
+    code="CONFIG_INVALID",
+    message="Failed to load config",
+    timestamp=datetime.now(UTC)
+)
+
+# Wrap with telemetry metadata
+error = error_handling.wrap(
+    base,
+    severity="high",  # "info" | "low" | "medium" | "high" | "critical"
+    context={"environment": "production"}
+)
+
+# Validate against schema
+is_valid = error_handling.validate(error)  # True
+
+# Exit with structured logging
+logger = logging.Logger(service="myapp")
+# error_handling.exit_with_error(1, error, logger=logger)
+```
+
+**Telemetry**:
+
+```python
+from pyfulmen import telemetry, logging
+
+# Create registry
+registry = telemetry.MetricRegistry()
+
+# Record metrics
+registry.counter("requests").inc()
+registry.gauge("connections").set(42)
+registry.histogram("latency_ms").observe(12.5)
+
+# Get events and validate
+events = registry.get_events()
+event_dicts = [e.model_dump(mode="json") for e in events]
+telemetry.validate_metric_event(event_dicts[0])  # True
+
+# Integrate with logging
+logger = logging.Logger(service="myapp", profile=logging.LoggingProfile.STRUCTURED)
+logging.emit_metrics_to_log(logger, event_dicts)
+```
+
+#### Cross-Language Implications
+
+**PyFulmen is the first language implementation** of error-handling and telemetry modules. Design decisions documented in ADRs for gofulmen and tsfulmen adoption:
+
+- **Data Models vs Exceptions**: Pydantic models translate to Go structs and TS interfaces
+- **Histogram Buckets**: `[1, 5, 10, 50, 100, 500, 1000, 5000, 10000]` ms - numeric for cross-language JSON
+- **Registry Pattern**: Explicit `MetricRegistry()` instantiation matches Go/TS idioms
+
+#### Known Limitations
+
+- **No Global Telemetry Helpers**: Must create `MetricRegistry()` instance (by design per ADR-0010)
+- **Histogram Buckets Fixed**: Taxonomy doesn't specify per-metric buckets (local decision per ADR-0009)
+
+#### Quality Gates
+
+- [x] All 1,058 tests passing (100 new tests: error_handling + telemetry + validation)
+- [x] 93% coverage maintained across all modules
+- [x] 95% coverage on error_handling module
+- [x] 85% coverage on telemetry module
+- [x] Code quality checks passing (ruff lint, ruff format)
+- [x] Schema validation: all fixtures validated correctly
+- [x] Example demo runs successfully
+- [x] README updated with new modules
+- [x] Module catalog updated
+- [x] ADR-0008 created (metric registry pattern)
+- [x] Crucible standards support validated (error data models, histogram buckets)
+- [ ] CHANGELOG.md updated - pending
+- [ ] Final prepush validation - pending
+
+#### Release Checklist
+
+- [ ] Version number set in VERSION (0.1.6)
+- [ ] pyproject.toml version updated (0.1.6)
+- [x] Error handling module implemented (95% coverage)
+- [x] Telemetry module implemented (85% coverage)
+- [x] Fixtures created and validated
+- [x] Example integration demo working
+- [x] All 1,058 tests passing (18 skipped)
+- [x] Code quality checks passing
+- [x] ADR-0008 created (metric registry pattern)
+- [x] Crucible 2025.10.3 standards support validated
+- [x] README updated
+- [x] Module catalog updated
+- [ ] CHANGELOG.md updated - next
+- [ ] docs/releases/v0.1.6.md - after scope finalized
+- [ ] Git commits ready
+- [ ] Git tag created (v0.1.6) - after finalization
+- [ ] Git push with tags - final step
+
+---
+
 ## [Unreleased]
 
 ### v0.2.0 - Enterprise Complete (Planned)

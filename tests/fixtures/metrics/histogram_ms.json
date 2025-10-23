@@ -1,0 +1,16 @@
+{
+  "timestamp": "2025-10-22T12:00:00Z",
+  "name": "config_load_ms",
+  "value": {
+    "count": 5,
+    "sum": 125.5,
+    "buckets": [
+      {"le": 10, "count": 1},
+      {"le": 50, "count": 3},
+      {"le": 100, "count": 4},
+      {"le": 500, "count": 5},
+      {"le": 1e9, "count": 5}
+    ]
+  },
+  "unit": "ms"
+}

@@ -96,9 +96,7 @@ class Gauge:
         Args:
             value: New gauge value
         """
-        self.registry._record(
-            MetricEvent(timestamp=datetime.now(UTC), name=self.name, value=value)
-        )
+        self.registry._record(MetricEvent(timestamp=datetime.now(UTC), name=self.name, value=value))
 
 
 class Histogram:

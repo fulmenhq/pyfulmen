@@ -58,9 +58,7 @@ class MetricRegistry:
                 self._gauges[name] = Gauge(name, self)
             return self._gauges[name]
 
-    def histogram(
-        self, name: str, buckets: list[float] | None = None
-    ) -> Histogram:
+    def histogram(self, name: str, buckets: list[float] | None = None) -> Histogram:
         """Get or create histogram.
 
         Args:

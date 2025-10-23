@@ -137,9 +137,7 @@ class TestMetricEvent:
         """Test event can be serialized to dict."""
         ts = datetime.now(UTC)
         tags = {"env": "test"}
-        event = MetricEvent(
-            timestamp=ts, name="test_metric", value=123.4, tags=tags, unit="ms"
-        )
+        event = MetricEvent(timestamp=ts, name="test_metric", value=123.4, tags=tags, unit="ms")
 
         data = event.model_dump()
 

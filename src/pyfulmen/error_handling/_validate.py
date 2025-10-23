@@ -11,15 +11,15 @@ from .models import FulmenError
 
 def validate(error: FulmenError | dict[str, Any]) -> bool:
     """Validate error payload against schema.
-    
+
     Uses schemas/error-handling/v1.0.0/error-response.schema.json
-    
+
     Args:
         error: FulmenError instance or dict
-    
+
     Returns:
         True if valid, False otherwise
-    
+
     Example:
         >>> from datetime import datetime, UTC
         >>> err = FulmenError(
@@ -45,12 +45,12 @@ def validate(error: FulmenError | dict[str, Any]) -> bool:
 
 def _basic_validate(payload: dict[str, Any]) -> bool:
     """Basic validation when schema validator unavailable.
-    
+
     Checks required fields from Pathfinder base schema.
-    
+
     Args:
         payload: Error dict to validate
-    
+
     Returns:
         True if has required fields, False otherwise
     """

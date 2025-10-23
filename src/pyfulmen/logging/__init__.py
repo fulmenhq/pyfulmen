@@ -25,6 +25,7 @@ Example:
 """
 
 from ._models import LogEvent, LoggingConfig, LoggingPolicy, LoggingProfile
+from ._telemetry import emit_metrics_to_log
 from .context import (
     clear_context,
     correlation_context,
@@ -83,6 +84,7 @@ __all__ = [
     "set_context_value",
     "clear_context",
     "extract_correlation_id_from_headers",
+    "emit_metrics_to_log",
 ]
 
 

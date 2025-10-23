@@ -1,0 +1,6 @@
+{
+  "timestamp": "2025-10-22T12:00:00Z",
+  "name": "invalid_metric_name",
+  "value": 100,
+  "unit": "count"
+}

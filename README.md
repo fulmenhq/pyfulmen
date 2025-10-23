@@ -2,7 +2,7 @@
 
 Python Fulmen libraries for enterprise-scale development.
 
-**Lifecycle Phase**: `alpha` | **Version**: 0.1.5 | **Coverage**: 92%
+**Lifecycle Phase**: `alpha` | **Version**: 0.1.6 | **Coverage**: 93%
 
 ## Overview
 
@@ -15,6 +15,8 @@ PyFulmen is part of the Fulmen ecosystem, providing templates, processes, and to
 **Key Features:**
 
 - **Progressive Logging** - Zero-complexity to enterprise-grade logging with SIMPLE → STRUCTURED → ENTERPRISE profiles
+- **Error Handling** - Pathfinder-compatible errors with telemetry metadata and schema validation (v0.1.6+)
+- **Telemetry & Metrics** - Counter/gauge/histogram recording with Crucible taxonomy validation (v0.1.6+)
 - **Crucible Shim** - Idiomatic Python access to Crucible schemas, docs, and config defaults
 - **Config Path API** - XDG-compliant, platform-aware configuration paths
 - **Three-Layer Config Loading** - Crucible defaults → User overrides → App config
@@ -140,6 +142,95 @@ schema, meta = crucible.find_schema('observability/logging/v1.0.0/logger-config'
 config, cfg_meta = crucible.find_config('terminal/v1.0.0/terminal-overrides-defaults')
 ```
 
+### Error Handling (v0.1.6+)
+
+PyFulmen provides structured error handling with telemetry integration, extending Pathfinder errors with correlation tracking and severity classification.
+
+```python
+from pyfulmen import error_handling, logging
+from datetime import datetime, UTC
+
+# Create a Pathfinder error
+base_error = error_handling.PathfinderError(
+    code="CONFIG_LOAD_FAILED",
+    message="Failed to load configuration file",
+    details={"file": "/app/config.yaml", "reason": "File not found"},
+    timestamp=datetime.now(UTC)
+)
+
+# Wrap with telemetry metadata
+error = error_handling.wrap(
+    base_error,
+    severity="high",  # "info", "low", "medium", "high", "critical"
+    context={"environment": "production", "version": "0.1.6"},
+    correlation_id="req-abc123"  # Auto-populated from logging context if omitted
+)
+
+# Validate against Crucible schema
+is_valid = error_handling.validate(error)  # Returns bool
+
+# Log and exit gracefully (exits with code 1)
+logger = logging.Logger(service="my-app")
+# error_handling.exit_with_error(1, error, logger=logger)
+# Logs error at appropriate severity level, then calls sys.exit(1)
+```
+
+**Key Features:**
+
+- **Pathfinder Compatibility** - Extends standard Pathfinder error structure
+- **Telemetry Integration** - Severity levels, correlation IDs, trace IDs
+- **Schema Validation** - Validates against Crucible error-handling schemas
+- **Graceful Exit** - Structured logging before process exit with severity mapping
+
+### Telemetry & Metrics (v0.1.6+)
+
+Record and validate application metrics with support for counters, gauges, and histograms conforming to the Crucible metrics taxonomy.
+
+```python
+from pyfulmen import telemetry, logging
+
+# Create a metric registry
+registry = telemetry.MetricRegistry()
+
+# Record counter metrics
+counter = registry.counter("schema_validations")
+counter.inc()  # Increment by 1
+counter.inc(5)  # Increment by 5
+
+# Record gauge values (point-in-time measurements)
+gauge = registry.gauge("active_connections")
+gauge.set(42)
+
+# Record histogram observations (with automatic bucketing)
+histogram = registry.histogram("config_load_ms")
+histogram.observe(12.5)
+histogram.observe(45.2)
+histogram.observe(8.3)
+
+# Get recorded events
+events = registry.get_events()  # Returns list[MetricEvent]
+
+# Convert to JSON for export
+event_dicts = [event.model_dump(mode="json") for event in events]
+
+# Validate against Crucible metrics schema
+is_valid = telemetry.validate_metric_event(event_dicts[0])
+
+# Integrate with logging pipeline
+logger = logging.Logger(service="my-app", profile=logging.LoggingProfile.STRUCTURED)
+logging.emit_metrics_to_log(logger, event_dicts)
+```
+
+**Key Features:**
+
+- **Three Metric Types** - Counter (monotonic), Gauge (instantaneous), Histogram (distribution)
+- **Crucible Taxonomy** - Validates metric names against official taxonomy
+- **Thread-Safe Registry** - Safe for concurrent metric recording
+- **Histogram Bucketing** - Default buckets optimized for millisecond latencies
+- **Logging Integration** - Export metrics through standard logging pipeline
+
+📖 **[See examples/error_telemetry_demo.py](examples/error_telemetry_demo.py)** for a complete integration example.
+
 ### Other Features
 
 ```python
@@ -153,11 +244,11 @@ loader = config.loader.ConfigLoader()
 cfg = loader.load('terminal/v1.0.0/terminal-overrides-defaults')
 
 # Validate data against schemas
-schema.validator.validate_against_schema(
-    data={'severity': 'info'},
+schema.validator.validate_data(
     category='observability/logging',
     version='v1.0.0',
-    name='log-event'
+    name='log-event',
+    data={'severity': 'info'}
 )
 ```
 

@@ -19,6 +19,7 @@ Example:
 """
 
 from ._registry import MetricRegistry
+from ._validate import validate_metric_event, validate_metric_events
 from .models import HistogramBucket, HistogramSummary, MetricEvent
 
 __all__ = [
@@ -26,4 +27,6 @@ __all__ = [
     "MetricEvent",
     "HistogramSummary",
     "HistogramBucket",
+    "validate_metric_event",
+    "validate_metric_events",
 ]

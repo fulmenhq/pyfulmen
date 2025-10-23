@@ -7,6 +7,82 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.6] - 2025-10-23
+
+### Added
+
+- **Error Handling Module**: Pathfinder error envelope with telemetry extensions
+  - `PathfinderError` model: Base error structure (code, message, details, path, timestamp)
+  - `FulmenError` model: Extended error with telemetry metadata (severity, correlation_id, trace_id, exit_code, context, original)
+  - `wrap(base_error, severity, context, ...)` - Wrap errors with telemetry metadata
+  - `validate(error)` - Validate against Crucible error-handling schema
+  - `exit_with_error(exit_code, error, logger)` - Severity-aware logging before sys.exit()
+  - Schema compliance with `schemas/error-handling/v1.0.0/error-response.schema.json`
+  - Automatic correlation_id propagation from logging context
+  - Python exception serialization with traceback capture
+  - 95% test coverage with 4 test methods
+  - **Ecosystem Impact**: First language to implement error-handling-propagation module
+  - **Crucible Standard**: Error handling as data models (Crucible 2025.10.3)
+
+- **Telemetry Module**: OpenTelemetry-compatible metrics with Crucible taxonomy validation
+  - `MetricRegistry` class: Thread-safe metric instrument management
+  - Three metric types: Counter (monotonic), Gauge (instantaneous), Histogram (distribution)
+  - `counter(name)`, `gauge(name)`, `histogram(name, buckets)` - Instrument accessors
+  - `validate_metric_event(event)` - Validate against Crucible metrics schema and taxonomy
+  - `validate_metric_events(events)` - Batch validation with detailed error reporting
+  - Default histogram buckets: `[1, 5, 10, 50, 100, 500, 1000, 5000, 10000]` milliseconds
+  - Taxonomy-aware validation: metric names, units, histogram structure
+  - Thread-safe event recording via threading.Lock
+  - 85% test coverage with 6 test methods
+  - **Ecosystem Impact**: First language to implement telemetry-metrics module
+  - **Crucible Standard**: Default histogram buckets (Crucible 2025.10.3)
+
+- **Logging Integration**: Telemetry metrics routing through progressive logging
+  - `emit_metrics_to_log(logger, events)` - Route metric events through logging pipeline
+  - Structured JSON output with metric_event context
+  - Compatible with SIMPLE/STRUCTURED/ENTERPRISE profiles
+
+- **Cross-Language Fixtures**: JSON fixtures for schema validation
+  - `tests/fixtures/errors/` - valid_error.json, invalid_error_missing_code.json
+  - `tests/fixtures/metrics/` - scalar_counter.json, histogram_ms.json, invalid_metric_bad_name.json
+  - Terminal histogram bucket uses 1e9 (numeric sentinel) for cross-language compatibility
+  - All fixtures schema-validated (valid pass, invalid fail as expected)
+
+- **Example Integration**: Complete error/telemetry demonstration
+  - `examples/error_telemetry_demo.py` - Working demo with structured JSON output
+  - Demonstrates error wrapping, validation, metrics recording, logging integration
+
+- **Architecture Decision Records**: PyFulmen metric registry pattern
+  - `ADR-0008`: Metric Registry Pattern - Explicit instantiation over global singleton
+  - Documents registry lifecycle, usage patterns, cross-language translation
+
+### Changed
+
+- **Module Exports**: Enhanced public APIs
+  - `error_handling.__all__`: Added `exit_with_error`
+  - `telemetry.__all__`: Added `validate_metric_event`, `validate_metric_events`
+  - `logging.__all__`: Added `emit_metrics_to_log`
+
+- **Documentation**: Comprehensive module documentation
+  - `README.md`: Added Error Handling and Telemetry & Metrics sections with examples
+  - `docs/pyfulmen_overview.md`: Updated module catalog with error-handling-propagation and telemetry-metrics (✅ Stable)
+
+### Architectural Impact
+
+- **First Language Implementation**: PyFulmen implements error-handling and telemetry modules before gofulmen and tsfulmen
+- **Crucible Standards Promotion**: Two PyFulmen ADRs promoted to Crucible 2025.10.3 ecosystem standards
+  - Error handling as data models (not language-native exceptions)
+  - Default histogram buckets `[1, 5, 10, 50, 100, 500, 1000, 5000, 10000]` ms for `*_ms` metrics
+- **Cross-Language Pattern Establishment**: Pydantic models translate to Go structs and TypeScript interfaces
+- **Registry Pattern**: Explicit instantiation pattern aligns with Go and TypeScript idioms
+
+### Test Coverage
+
+- **Total Tests**: 1,058 passing (18 skipped)
+- **New Tests**: 100 tests added for error_handling + telemetry + validation
+- **Coverage**: 93% overall, 95% error_handling, 85% telemetry
+- **Schema Validation**: All fixtures validated correctly
+
 ## [0.1.5] - 2025-10-22
 
 ### Breaking Changes

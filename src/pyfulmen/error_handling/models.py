@@ -12,9 +12,9 @@ from ..foundry import FulmenDataModel
 
 class PathfinderError(FulmenDataModel):
     """Base Pathfinder error structure.
-    
+
     Conforms to schemas/pathfinder/v1.0.0/error-response.schema.json
-    
+
     Attributes:
         code: Error code identifier (e.g., "CONFIG_INVALID", "PATH_TRAVERSAL")
         message: Human-readable error message
@@ -37,13 +37,13 @@ class PathfinderError(FulmenDataModel):
 
 class FulmenError(FulmenDataModel):
     """Extended error with telemetry metadata.
-    
+
     Extends PathfinderError with optional telemetry fields per
     schemas/error-handling/v1.0.0/error-response.schema.json
-    
+
     This is the ecosystem-standard error model used across all Fulmen
     helper libraries for structured error emission.
-    
+
     Attributes:
         code: Error code identifier
         message: Human-readable error message
@@ -93,13 +93,13 @@ _SEVERITY_MAP = {
 
 def _map_severity_level(severity: str) -> int:
     """Map severity name to numeric level.
-    
+
     Args:
         severity: Severity name ("info", "low", "medium", "high", "critical")
-    
+
     Returns:
         Numeric severity level (0-4)
-    
+
     Raises:
         ValueError: If severity is not recognized
     """

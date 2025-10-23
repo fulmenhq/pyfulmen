@@ -25,6 +25,7 @@ Example:
     >>> print(err.correlation_id)  # e.g., "req-abc123"
 """
 
+from ._exit import exit_with_error
 from ._validate import validate
 from ._wrap import wrap
 from .models import FulmenError, PathfinderError
@@ -34,4 +35,5 @@ __all__ = [
     "FulmenError",
     "wrap",
     "validate",
+    "exit_with_error",
 ]

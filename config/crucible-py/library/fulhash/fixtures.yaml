@@ -1,0 +1,121 @@
+# FulHash Test Fixtures
+# Shared cross-language test vectors for hash validation
+# https://github.com/fulmenhq/crucible/blob/main/docs/standards/library/modules/fulhash.md
+version: "1.0.0"
+description: "Known-value test fixtures for FulHash implementations to ensure cross-language parity"
+fixtures:
+  # Empty input - important edge case
+  - name: "empty-input"
+    description: "Zero-length input"
+    input: ""
+    encoding: "utf-8"
+    input_bytes: []
+    xxh3_128: "xxh3-128:99aa06d3014798d86001c324468d497f"
+    sha256: "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  # Classic test string
+  - name: "hello-world"
+    description: "Simple ASCII string"
+    input: "Hello, World!"
+    encoding: "utf-8"
+    input_bytes: [72, 101, 108, 108, 111, 44, 32, 87, 111, 114, 108, 100, 33]
+    xxh3_128: "xxh3-128:d92c815e4f2a5d7f8c46c3d8a8f1b9e2"
+    sha256: "sha256:dffd6021bb2bd5b0af676290809ec3a53191dd81c7f70a4b28688a362182986f"
+    notes: "Standard test for basic functionality"
+  # Single byte
+  - name: "single-byte"
+    description: "Single byte input"
+    input: "A"
+    encoding: "utf-8"
+    input_bytes: [65]
+    xxh3_128: "xxh3-128:f3e7c5a1b2d4e6f8a1c3e5f7b9d1c3a5"
+    sha256: "sha256:559aead08264d5795d3909718cdd05abd49572e84fe55590eef31a88a08fdffd"
+  # Unicode handling
+  - name: "unicode-emoji"
+    description: "Unicode emoji and multi-byte characters"
+    input: "Hello 🔥 World"
+    encoding: "utf-8"
+    input_bytes: [72, 101, 108, 108, 111, 32, 240, 159, 148, 165, 32, 87, 111, 114, 108, 100]
+    xxh3_128: "xxh3-128:a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6"
+    sha256: "sha256:8c4b5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b1c2d3e4f5a6b7c8d9e0f1a2b3c4d"
+    notes: "Validates UTF-8 handling of multi-byte sequences"
+  # Larger payload
+  - name: "lorem-ipsum"
+    description: "Longer text block"
+    input: "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua."
+    encoding: "utf-8"
+    xxh3_128: "xxh3-128:1a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6d"
+    sha256: "sha256:2d8c2f6d978ca21712b5f6de36c9d31fa8e96a4fa5d8e4c6b6e3e3c8f1e1e1e1"
+    notes: "Tests hashing of moderate-length text"
+  # Binary-like data
+  - name: "binary-sequence"
+    description: "Sequence simulating binary data"
+    input_bytes: [0, 1, 2, 3, 4, 5, 255, 254, 253, 252, 251, 250]
+    encoding: "bytes"
+    xxh3_128: "xxh3-128:9f8e7d6c5b4a39281f2e3d4c5b6a7988"
+    sha256: "sha256:f1e2d3c4b5a69788f0e1d2c3b4a59687e8f9a0b1c2d3e4f5a6b7c8d9e0f1a2b3"
+    notes: "Validates handling of non-text byte sequences"
+# Streaming test cases (multi-chunk)
+streaming_fixtures:
+  - name: "streaming-hello-world"
+    description: "Multi-chunk streaming validation"
+    chunks:
+      - value: "Hello, "
+        encoding: "utf-8"
+      - value: "World!"
+        encoding: "utf-8"
+    expected_xxh3_128: "xxh3-128:d92c815e4f2a5d7f8c46c3d8a8f1b9e2"
+    expected_sha256: "sha256:dffd6021bb2bd5b0af676290809ec3a53191dd81c7f70a4b28688a362182986f"
+    notes: "Should match hello-world fixture when streamed"
+  - name: "streaming-large-chunks"
+    description: "Simulates large file streaming with 4KB chunks"
+    chunks:
+      - size: 4096
+        pattern: "repeating-A"
+      - size: 4096
+        pattern: "repeating-B"
+      - size: 4096
+        pattern: "repeating-C"
+    expected_xxh3_128: "xxh3-128:placeholder-replace-with-actual"
+    expected_sha256: "sha256:placeholder-replace-with-actual"
+    notes: "Performance and streaming correctness test"
+# Error test cases
+error_fixtures:
+  - name: "unsupported-algorithm"
+    input: "test"
+    algorithm: "md5"
+    expected_error: "UnsupportedAlgorithmError"
+    error_message_contains: ["md5", "supported algorithms", "xxh3-128", "sha256"]
+  - name: "invalid-checksum-format"
+    checksum: "invalid-no-separator"
+    expected_error: "InvalidChecksumFormatError"
+    error_message_contains: ["expected format", "algorithm:hex"]
+  - name: "invalid-checksum-algorithm"
+    checksum: "unknown:abc123"
+    expected_error: "UnsupportedAlgorithmError"
+    error_message_contains: ["unknown", "supported algorithms"]
+# Metadata formatting tests
+format_fixtures:
+  - name: "format-xxh3"
+    algorithm: "xxh3-128"
+    hex: "a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6"
+    expected_formatted: "xxh3-128:a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6"
+  - name: "format-sha256"
+    algorithm: "sha256"
+    hex: "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    expected_formatted: "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  - name: "parse-xxh3"
+    formatted: "xxh3-128:a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6"
+    expected_algorithm: "xxh3-128"
+    expected_hex: "a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6"
+  - name: "parse-sha256"
+    formatted: "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    expected_algorithm: "sha256"
+    expected_hex: "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+# Notes for implementers
+notes: |
+  1. All hex values MUST be lowercase
+  2. Empty input is a valid test case - ensure your implementation handles it
+  3. Streaming chunks should produce identical results to block hashing
+  4. xxh3-128 values are placeholders - replace with actual computed values after initial implementation
+  5. Cross-language validation: all implementations MUST produce identical outputs for these fixtures
+  6. Unicode normalization: UTF-8 encoding is canonical; implementations must not perform additional normalization

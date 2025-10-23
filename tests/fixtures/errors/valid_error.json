@@ -1,0 +1,16 @@
+{
+  "code": "CONFIG_INVALID",
+  "message": "Failed to load configuration",
+  "details": {
+    "file": "/app/config.yaml",
+    "reason": "YAML syntax error"
+  },
+  "timestamp": "2025-10-22T12:00:00Z",
+  "severity": "high",
+  "severity_level": 3,
+  "correlation_id": "req-abc123",
+  "context": {
+    "environment": "production",
+    "version": "0.1.6"
+  }
+}

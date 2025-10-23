@@ -70,7 +70,6 @@ class TestValidate:
     def test_validate_fallback_when_schema_unavailable(self):
         """Test validate() falls back to basic validation when schema module unavailable."""
         import sys
-        from unittest.mock import patch
 
         payload = {"code": "TEST", "message": "Test"}
 
@@ -82,7 +81,6 @@ class TestValidate:
     def test_validate_fallback_with_invalid_payload(self):
         """Test validate() fallback rejects invalid payload."""
         import sys
-        from unittest.mock import patch
 
         payload = {"code": "TEST"}
 
