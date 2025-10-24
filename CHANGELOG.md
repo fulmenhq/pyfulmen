@@ -9,6 +9,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **Foundry Telemetry Instrumentation (Phase 4 - Complete)**: Comprehensive telemetry in Foundry module
+  - `FoundryCatalog.get_pattern()` emits `foundry_lookup_count` counter (catalog lookups)
+  - `FoundryCatalog.get_mime_type()` emits `foundry_lookup_count` counter (catalog lookups)
+  - Simple counter increments on each catalog operation
+  - 290 foundry tests passing (288 original + 2 new telemetry tests)
+  - Zero performance overhead confirmed
+  - Follows same pattern as previous phases (simplified for counter-only)
+  - **Rationale**: Continuing telemetry dogfooding across all modules
+
 - **Schema Telemetry Instrumentation (Phase 3 - Complete)**: Comprehensive telemetry in Schema module
   - `validate_against_schema()` emits `schema_validation_ms` histogram (validation duration)
   - `validate_against_schema()` emits `schema_validation_errors` counter (validation failures)

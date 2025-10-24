@@ -9,6 +9,7 @@ from typing import TYPE_CHECKING, Any
 
 from pydantic import Field, computed_field, field_validator
 
+from ..telemetry import MetricRegistry
 from .models import FulmenCatalogModel
 
 if TYPE_CHECKING:
@@ -515,11 +516,17 @@ class FoundryCatalog:
         Returns:
             Pattern instance or None if not found
 
+        Telemetry:
+            - Emits foundry_lookup_count counter (on each lookup)
+
         Example:
             >>> pattern = catalog.get_pattern("ansi-email")
             >>> pattern.match("user@example.com")
             True
         """
+        registry = MetricRegistry()
+        registry.counter("foundry_lookup_count").inc()
+        
         patterns = self._load_patterns()
         return patterns.get(pattern_id)
 
@@ -545,11 +552,17 @@ class FoundryCatalog:
         Returns:
             MimeType instance or None if not found
 
+        Telemetry:
+            - Emits foundry_lookup_count counter (on each lookup)
+
         Example:
             >>> mime_type = catalog.get_mime_type("json")
             >>> mime_type.mime
             'application/json'
         """
+        registry = MetricRegistry()
+        registry.counter("foundry_lookup_count").inc()
+        
         mime_types = self._load_mime_types()
         return mime_types.get(mime_id)
 

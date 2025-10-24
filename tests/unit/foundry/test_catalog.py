@@ -990,3 +990,36 @@ class TestMimeDetectionIntegration:
         mime, new_reader = detect_mime_type_from_reader(reader)
         assert mime.id == "xml"
         assert new_reader.read() == data
+
+
+class TestTelemetry:
+    """Test telemetry instrumentation.
+
+    Note: Current implementation creates independent MetricRegistry instances per call,
+    so telemetry emission cannot be directly tested without module-level singleton helpers
+    (per ADR-0008). These tests verify the code path executes without errors.
+
+    Full telemetry testing will be added when module-level helpers are implemented.
+    """
+
+    def test_get_pattern_with_telemetry_enabled(self):
+        """Verify get_pattern executes with telemetry without errors."""
+        from pyfulmen.foundry import get_pattern
+
+        pattern = get_pattern("ansi-email")
+        assert pattern is not None
+        assert pattern.id == "ansi-email"
+
+        # Telemetry is emitted to an internal registry instance.
+        # Full assertion testing requires module-level singleton helpers per ADR-0008.
+
+    def test_get_mime_type_with_telemetry_enabled(self):
+        """Verify get_mime_type executes with telemetry without errors."""
+        from pyfulmen.foundry import get_mime_type
+
+        mime_type = get_mime_type("json")
+        assert mime_type is not None
+        assert mime_type.id == "json"
+
+        # Telemetry is emitted to an internal registry instance.
+        # Full assertion testing requires module-level singleton helpers per ADR-0008.
