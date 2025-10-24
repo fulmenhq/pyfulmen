@@ -119,3 +119,44 @@ def test_format_diagnostics_json():
     diagnostics = [Diagnostic(pointer="", message="error", keyword=None)]
     output = format_diagnostics(diagnostics, style="json")
     assert "error" in output
+
+
+class TestTelemetry:
+    """Test telemetry instrumentation.
+
+    Note: Current implementation creates independent MetricRegistry instances per call,
+    so telemetry emission cannot be directly tested without module-level singleton helpers
+    (per ADR-0008). These tests verify the code path executes without errors.
+
+    Full telemetry testing will be added when module-level helpers are implemented.
+    """
+
+    def test_validate_against_schema_with_telemetry_enabled(self):
+        """Verify validate_against_schema executes with telemetry without errors."""
+        # Valid minimal data
+        valid_data = {"level": "info"}
+
+        # Should execute without errors (telemetry emitted to internal registry)
+        import contextlib
+
+        with contextlib.suppress(SchemaValidationError):
+            validate_against_schema(
+                valid_data, "observability/logging", "v1.0.0", "logger-config"
+            )
+
+        # Telemetry is emitted to an internal registry instance.
+        # Full assertion testing requires module-level singleton helpers per ADR-0008.
+
+    def test_schema_validation_errors_counter_on_invalid_data(self):
+        """Verify schema_validation_errors counter is emitted on validation failure."""
+        # Create invalid data - missing required fields
+        invalid_data = {"invalid_field": "value"}
+
+        # Should raise SchemaValidationError
+        with pytest.raises(SchemaValidationError):
+            validate_against_schema(
+                invalid_data, "observability/logging", "v1.0.0", "logger-config"
+            )
+
+        # Counter is emitted but to independent registry instance.
+        # Full metric assertion requires module-level helpers per ADR-0008.

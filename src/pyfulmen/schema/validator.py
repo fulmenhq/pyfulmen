@@ -7,6 +7,7 @@ import os
 import shutil
 import subprocess
 import tempfile
+import time
 from collections.abc import Iterable
 from dataclasses import asdict, dataclass
 from pathlib import Path
@@ -16,6 +17,7 @@ from jsonschema import Draft7Validator, ValidationError
 from jsonschema import validate as jsonschema_validate
 
 from .. import crucible
+from ..telemetry import MetricRegistry
 from . import catalog
 
 
@@ -50,11 +52,33 @@ def load_validator(category: str, version: str, name: str) -> Draft7Validator:
 
 
 def validate_against_schema(data: dict[str, Any], category: str, version: str, name: str) -> None:
+    """
+    Validate data against a schema, raising on validation failure.
+
+    Telemetry:
+        - Emits schema_validation_ms histogram (validation duration)
+        - Emits schema_validation_errors counter (on validation failure)
+    """
+    start_time = time.perf_counter()
+    registry = MetricRegistry()
+
+    try:
+        _validate_against_schema_impl(data, category, version, name, registry)
+    finally:
+        duration_ms = (time.perf_counter() - start_time) * 1000
+        registry.histogram("schema_validation_ms").observe(duration_ms)
+
+
+def _validate_against_schema_impl(
+    data: dict[str, Any], category: str, version: str, name: str, registry: MetricRegistry
+) -> None:
+    """Internal implementation of validate_against_schema without telemetry."""
     schema = crucible.schemas.load_schema(category, version, name)
 
     try:
         jsonschema_validate(instance=data, schema=schema)
     except ValidationError as exc:
+        registry.counter("schema_validation_errors").inc()
         validator = Draft7Validator(schema)
         errors = [err.message for err in validator.iter_errors(data)]
 
