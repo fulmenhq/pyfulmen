@@ -122,6 +122,8 @@ ADRs are **immutable** once accepted. Instead of editing:
 | [ADR-0008](ADR-0008-global-metric-registry-singleton.md)         | Global Metric Registry Singleton Pattern      | 2025-10-23 | Accepted |
 | [ADR-0009](ADR-0009-fulhash-independent-stream-instances.md)     | FulHash Independent Stream Instances          | 2025-10-23 | Accepted |
 
+| [ADR-0010](ADR-0010-pathfinder-checksum-performance-acceptable-delta.md) | Pathfinder Checksum Performance Acceptable Delta | 2025-10-24 | Accepted |
+
 ### Ecosystem ADRs (Reference)
 
 PyFulmen implements these cross-language architectural decisions from Crucible. See [`docs/crucible-py/architecture/decisions/`](../../crucible-py/architecture/decisions/) for complete ecosystem ADRs.

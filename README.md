@@ -281,6 +281,39 @@ match = fulhash.compare_digests(digest1, digest2)  # Constant-time comparison
 
 📖 **Architecture**: See [ADR-0009](docs/development/adr/ADR-0009-fulhash-independent-stream-instances.md) for independent instance design rationale.
 
+### Pathfinder - File Discovery with Checksums (v0.1.6+)
+
+Fast file discovery with optional FulHash checksum calculation for integrity verification.
+
+```python
+from pyfulmen.pathfinder import Finder, FindQuery, FinderConfig
+
+# Basic file discovery
+finder = Finder()
+results = finder.find_files(FindQuery(
+    root="/path/to/project",
+    include=["**/*.py", "**/*.json"],
+    exclude=["**/__pycache__/**", "**/node_modules/**"]
+))
+
+for result in results:
+    print(f"{result.relative_path}: {result.metadata.size} bytes")
+
+# With checksums (opt-in)
+finder = Finder(FinderConfig(
+    calculateChecksums=True,
+    checksumAlgorithm="xxh3-128"  # or "sha256"
+))
+results = finder.find_files(FindQuery(root="/path/to/project", include=["**/*.py"]))
+
+for result in results:
+    print(f"{result.relative_path}")
+    print(f"  Size: {result.metadata.size} bytes")
+    print(f"  Checksum: {result.metadata.checksum}")  # "xxh3-128:abc123..."
+```
+
+**Performance**: ~23,800 files/sec with checksums enabled. See [ADR-0010](docs/development/adr/ADR-0010-pathfinder-checksum-performance-acceptable-delta.md) for overhead analysis.
+
 ### Other Features
 
 ```python

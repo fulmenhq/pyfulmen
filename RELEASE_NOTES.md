@@ -2,6 +2,53 @@
 
 This document tracks release notes and checklists for PyFulmen releases.
 
+## [0.1.6] - 2025-10-24
+
+### Pathfinder Checksum Support + Performance Tools
+
+**Release Type**: Feature Release - File Integrity Verification
+**Release Date**: October 24, 2025
+**Status**: ✅ Released
+
+#### Features
+
+**Pathfinder Checksum Integration**:
+
+- ✅ **Optional Checksums**: FulHash-powered integrity verification for discovered files
+  - `FinderConfig(calculateChecksums=True)` enables checksum calculation
+  - Supports xxh3-128 (fast, default) and sha256 (cryptographic)
+  - Case-insensitive algorithm names (XXH3-128, Sha256, etc.)
+- ✅ **Metadata Fields**: PathMetadata extended with checksum, checksumAlgorithm, checksumError
+- ✅ **Performance**: ~23,800 files/sec throughput with checksums enabled
+- ✅ **Cross-Language Parity**: Checksums match gofulmen/tsfulmen test vectors
+- ✅ **87 Tests**: 62 unit + 25 integration (15 new parity/case-insensitive tests)
+
+**Tooling & Validation**:
+
+- ✅ **Benchmark Script**: Performance measurement tool (scripts/benchmark_pathfinder_checksums.py)
+- ✅ **Fixture Validation**: Cross-language integrity check (scripts/validate_pathfinder_fixtures.py)
+- ✅ **Make Target**: `make validate-pathfinder-fixtures` for CI/CD integration
+- ✅ **Binary Protection**: .gitattributes prevents Windows CRLF corruption of test fixtures
+
+**Documentation & ADRs**:
+
+- ✅ **ADR-0010**: Performance characteristics documented (38-88% overhead acceptable for use case)
+- ✅ **Module Guide**: Comprehensive Pathfinder documentation (docs/modules/pathfinder.md)
+- ✅ **README Updated**: Pathfinder section with checksum examples
+
+#### Performance Notes
+
+Overhead higher than <10% aspirational target but acceptable:
+
+- Small files (1KB): +38% overhead = 0.02ms absolute (Python/IO fixed costs)
+- Absolute performance excellent: 4-5ms for 100 files, 21ms for 500 files
+- Use case aligned: Discovery operations, opt-in feature, latency-tolerant
+- See ADR-0010 for detailed analysis and future optimization paths
+
+#### Breaking Changes
+
+- None (checksums opt-in, default behavior unchanged)
+
 ## [0.1.4] - 2025-10-21
 
 ### Crucible Bridge API + Docscribe Module

@@ -1,0 +1,5 @@
+# Scripts are diagnostic tools, not production code
+# Allow longer lines, unused variables, and path manipulation for readability
+
+[lint]
+ignore = ["E402", "E501", "F841", "B007"]

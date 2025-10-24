@@ -7,6 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **Pathfinder Checksum Support**: Optional FulHash integration for file integrity verification
+  - `FinderConfig(calculateChecksums=True, checksumAlgorithm="xxh3-128" | "sha256")` configuration
+  - Case-insensitive algorithm names (XXH3-128, Sha256, etc. normalized to lowercase)
+  - `PathMetadata.checksum`, `checksumAlgorithm`, `checksumError` fields
+  - Streaming hash calculation via FulHash for memory efficiency
+  - 87 pathfinder tests (62 unit + 25 integration)
+  - 15 new tests: 12 cross-language parity + 3 case-insensitive validation
+  - Performance: ~23,800 files/sec with checksums enabled
+  - Cross-language test fixtures in `tests/fixtures/pathfinder/`
+  - Validation tool: `make validate-pathfinder-fixtures` for CI/CD
+  - ADR-0010 documents performance characteristics vs <10% aspirational target
+  - Binary fixture protection via .gitattributes (prevents Windows CRLF corruption)
+
 ## [0.1.6] - 2025-10-23
 
 ### Added

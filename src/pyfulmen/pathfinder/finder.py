@@ -291,14 +291,14 @@ class Finder:
     def _convert_algorithm(self, algorithm_str: str) -> tuple[Algorithm | None, str | None]:
         """
         Convert string to Algorithm enum with consistent error handling.
-        
+
         Normalizes input to lowercase for case-insensitive matching.
-        
+
         Args:
             algorithm_str: Algorithm string to convert (e.g., "xxh3-128", "XXH3-128", "sha256")
-            
+
         Returns:
-            Tuple of (Algorithm instance, error_message). 
+            Tuple of (Algorithm instance, error_message).
             Algorithm is None if conversion failed, error_message is None if successful.
         """
         try:

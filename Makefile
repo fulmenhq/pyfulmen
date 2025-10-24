@@ -205,3 +205,9 @@ clean:
 	@rm -rf dist/ build/ *.egg-info __pycache__/ .pytest_cache/ .ruff_cache/
 	@find . -type d -name "__pycache__" -exec rm -rf {} + 2>/dev/null || true
 	@echo "✓ Clean complete"
+
+# Pathfinder fixture validation
+.PHONY: validate-pathfinder-fixtures
+validate-pathfinder-fixtures:
+	@echo "Validating Pathfinder checksum fixtures..."
+	@uv run python scripts/validate_pathfinder_fixtures.py
