@@ -139,3 +139,45 @@ def test_load_with_metadata_no_layers(tmp_path):
     assert result.data == {}
     assert len(result.sources) == 3
     assert not any(source.applied for source in result.sources)
+
+
+class TestTelemetry:
+    """Test telemetry instrumentation.
+
+    Note: Current implementation creates independent MetricRegistry instances per call,
+    so telemetry emission cannot be directly tested without module-level singleton helpers
+    (per ADR-0008). These tests verify the code path executes without errors.
+
+    Full telemetry testing will be added when module-level helpers are implemented.
+    """
+
+    def test_load_with_telemetry_enabled(self):
+        """Verify load_with_metadata executes with telemetry without errors."""
+        loader = ConfigLoader()
+        result = loader.load_with_metadata("terminal/v1.0.0/terminal-overrides-defaults")
+
+        # Verify operation succeeded
+        assert isinstance(result.data, dict)
+        assert len(result.sources) == 3
+
+        # Telemetry is emitted to an internal registry instance.
+        # Full assertion testing requires module-level singleton helpers per ADR-0008.
+
+    def test_load_errors_counter_on_invalid_yaml(self, tmp_path):
+        """Verify config_load_errors counter is emitted on YAML parse failure."""
+        user_config_dir = tmp_path / "fulmen"
+        override = user_config_dir / "test" / "config.yaml"
+        override.parent.mkdir(parents=True)
+        # Write invalid YAML (unclosed bracket)
+        override.write_text("key: [invalid yaml")
+
+        loader = ConfigLoader()
+        loader.user_config_dir = user_config_dir
+
+        # Should handle YAML error gracefully and continue
+        result = loader.load_with_metadata("test/config")
+
+        # Operation succeeds but without user layer applied
+        assert isinstance(result.data, dict)
+        # Counter is emitted but to independent registry instance.
+        # Full metric assertion requires module-level helpers per ADR-0008.

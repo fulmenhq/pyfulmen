@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import time
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
@@ -9,6 +10,7 @@ from typing import Any
 import yaml
 
 from .. import crucible
+from ..telemetry import MetricRegistry
 from . import paths
 from .merger import merge_configs
 
@@ -60,11 +62,33 @@ class ConfigLoader:
         crucible_path: str,
         app_config: dict[str, Any] | None = None,
     ) -> ConfigLoadResult:
-        """Load configuration and return metadata about each applied layer."""
+        """
+        Load configuration and return metadata about each applied layer.
+
+        Telemetry:
+            - Emits config_load_ms histogram (operation duration)
+            - Emits config_load_errors counter (on load failure)
+        """
+        start_time = time.perf_counter()
+        registry = MetricRegistry()
+
+        try:
+            return self._load_with_metadata_impl(crucible_path, app_config, registry)
+        finally:
+            duration_ms = (time.perf_counter() - start_time) * 1000
+            registry.histogram("config_load_ms").observe(duration_ms)
+
+    def _load_with_metadata_impl(
+        self,
+        crucible_path: str,
+        app_config: dict[str, Any] | None,
+        registry: MetricRegistry,
+    ) -> ConfigLoadResult:
+        """Internal implementation of load_with_metadata without telemetry."""
         sources: list[ConfigSource] = []
         configs: list[dict[str, Any]] = []
 
-        defaults = self._load_crucible_defaults(crucible_path)
+        defaults = self._load_crucible_defaults(crucible_path, registry)
         sources.append(
             ConfigSource(
                 layer="defaults",
@@ -75,7 +99,7 @@ class ConfigLoader:
         if defaults:
             configs.append(defaults.data)
 
-        user_overrides = self._load_user_overrides(crucible_path)
+        user_overrides = self._load_user_overrides(crucible_path, registry)
         sources.append(
             ConfigSource(
                 layer="user",
@@ -115,7 +139,9 @@ class ConfigLoader:
             return category, version, name
         return None
 
-    def _load_crucible_defaults(self, crucible_path: str) -> _LoadedLayer | None:
+    def _load_crucible_defaults(
+        self, crucible_path: str, registry: MetricRegistry
+    ) -> _LoadedLayer | None:
         """Return defaults and source path if available."""
         parsed = self._parse_crucible_path(crucible_path)
         if not parsed:
@@ -127,6 +153,9 @@ class ConfigLoader:
             return ConfigLoader._LoadedLayer(data=data or {}, path=config_path)
         except FileNotFoundError:
             return None
+        except Exception:
+            registry.counter("config_load_errors").inc()
+            raise
 
     def _user_override_candidates(self, crucible_path: str) -> list[Path]:
         base = self.user_config_dir
@@ -141,7 +170,9 @@ class ConfigLoader:
     def _user_override_path(self, crucible_path: str) -> Path:
         return self.user_config_dir / f"{crucible_path}.yaml"
 
-    def _load_user_overrides(self, crucible_path: str) -> _LoadedLayer | None:
+    def _load_user_overrides(
+        self, crucible_path: str, registry: MetricRegistry
+    ) -> _LoadedLayer | None:
         for candidate in self._user_override_candidates(crucible_path):
             if not candidate.exists():
                 continue
@@ -154,7 +185,11 @@ class ConfigLoader:
                 if data is None:
                     data = {}
                 return ConfigLoader._LoadedLayer(data=data, path=candidate)
-            except (yaml.YAMLError, OSError):
+            except yaml.YAMLError:
+                registry.counter("config_load_errors").inc()
+                continue
+            except OSError:
+                registry.counter("config_load_errors").inc()
                 continue
         return None
 

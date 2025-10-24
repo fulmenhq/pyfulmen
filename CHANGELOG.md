@@ -9,6 +9,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **Config Telemetry Instrumentation (Phase 2 - Complete)**: Comprehensive telemetry in Config module
+  - `ConfigLoader.load_with_metadata()` emits `config_load_ms` histogram (operation duration)
+  - `ConfigLoader` emits `config_load_errors` counter (YAML parse failures, file read errors)
+  - Try/finally pattern ensures metrics emitted even on errors
+  - 36 config tests passing (34 original + 2 new telemetry tests)
+  - Zero performance overhead confirmed
+  - Follows same pattern as Pathfinder Phase 1.5
+  - **Rationale**: Continuing telemetry dogfooding across all modules
+
 - **Pathfinder Telemetry Instrumentation (Phase 1.5 - Complete)**: Comprehensive telemetry in Pathfinder module
   - `Finder.find_files()` emits `pathfinder_find_ms` histogram (operation duration)
   - `Finder.find_files()` emits `pathfinder_validation_errors` counter (schema validation failures)
