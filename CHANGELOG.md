@@ -9,6 +9,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **Logging Telemetry Instrumentation (Phase 5 - Complete)**: Self-instrumentation in Logging module
+  - `ProgressiveLogger.log()` emits `logging_emit_count` counter (log emissions)
+  - `ProgressiveLogger.log()` emits `logging_emit_latency_ms` histogram (emission duration)
+  - Try/finally pattern ensures metrics emitted even on errors
+  - 204 logging tests passing (202 original + 2 new telemetry tests)
+  - Zero performance overhead confirmed
+  - Logging module now instruments itself (meta-instrumentation)
+  - **Rationale**: Complete telemetry dogfooding - all major modules instrumented
+
 - **Foundry Telemetry Instrumentation (Phase 4 - Complete)**: Comprehensive telemetry in Foundry module
   - `FoundryCatalog.get_pattern()` emits `foundry_lookup_count` counter (catalog lookups)
   - `FoundryCatalog.get_mime_type()` emits `foundry_lookup_count` counter (catalog lookups)

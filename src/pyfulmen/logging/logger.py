@@ -32,8 +32,10 @@ Example:
     ...     log.info("Inside context")
 """
 
+import time
 from typing import Any
 
+from ..telemetry import MetricRegistry
 from ._models import LogEvent, LoggingConfig, LoggingPolicy, LoggingProfile
 from .context import get_context, get_correlation_id
 from .formatter import JSONFormatter, TextFormatter
@@ -295,7 +297,28 @@ class ProgressiveLogger:
             severity: Severity level (TRACE, DEBUG, INFO, WARN, ERROR, FATAL)
             message: Log message
             **kwargs: Additional context fields
+
+        Telemetry:
+            - Emits logging_emit_count counter (on each log call)
+            - Emits logging_emit_latency_ms histogram (emission duration)
         """
+        start_time = time.perf_counter()
+        registry = MetricRegistry()
+
+        try:
+            self._log_impl(severity, message, **kwargs)
+        finally:
+            duration_ms = (time.perf_counter() - start_time) * 1000
+            registry.histogram("logging_emit_latency_ms").observe(duration_ms)
+            registry.counter("logging_emit_count").inc()
+
+    def _log_impl(
+        self,
+        severity: Severity | str,
+        message: str,
+        **kwargs: Any,
+    ) -> None:
+        """Internal implementation of log without telemetry."""
         # Check if should log
         if not self._should_log(severity):
             return

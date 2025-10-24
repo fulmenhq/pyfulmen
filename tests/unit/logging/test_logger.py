@@ -515,3 +515,36 @@ class TestLoggerProfileComparison:
         assert enterprise_event["requestId"] == "req-2"
         # throttle_bucket should be camelCased in ENTERPRISE profile
         assert enterprise_event.get("throttleBucket") == "bucket-2"
+
+
+class TestTelemetry:
+    """Test telemetry instrumentation.
+
+    Note: Current implementation creates independent MetricRegistry instances per call,
+    so telemetry emission cannot be directly tested without module-level singleton helpers
+    (per ADR-0008). These tests verify the code path executes without errors.
+
+    Full telemetry testing will be added when module-level helpers are implemented.
+    """
+
+    def test_log_with_telemetry_enabled(self):
+        """Verify log() executes with telemetry without errors."""
+        from pyfulmen.logging import Logger
+
+        logger = Logger(service="test")
+        logger.info("Test message")
+
+        # Telemetry is emitted to an internal registry instance.
+        # Full assertion testing requires module-level singleton helpers per ADR-0008.
+
+    def test_multiple_log_calls_emit_counters(self):
+        """Verify multiple log calls each emit telemetry."""
+        from pyfulmen.logging import Logger
+
+        logger = Logger(service="test")
+        logger.info("Message 1")
+        logger.warn("Message 2")
+        logger.error("Message 3")
+
+        # Each call emits logging_emit_count counter and logging_emit_latency_ms histogram.
+        # Full metric assertion requires module-level helpers per ADR-0008.

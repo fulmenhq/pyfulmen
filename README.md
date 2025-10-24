@@ -229,8 +229,10 @@ logging.emit_metrics_to_log(logger, event_dicts)
 - **Thread-Safe Registry** - Safe for concurrent metric recording
 - **Histogram Bucketing** - Default buckets optimized for millisecond latencies
 - **Logging Integration** - Export metrics through standard logging pipeline
+- **Self-Instrumentation** - PyFulmen modules instrument themselves (Pathfinder, Config, Schema, Foundry, Logging)
 
-📖 **[See examples/error_telemetry_demo.py](examples/error_telemetry_demo.py)** for a complete integration example.
+📖 **[See examples/error_telemetry_demo.py](examples/error_telemetry_demo.py)** for a complete integration example.  
+📖 **[See docs/development/telemetry-instrumentation-pattern.md](docs/development/telemetry-instrumentation-pattern.md)** for instrumentation patterns.
 
 ### FulHash - Fast, Consistent Hashing (v0.1.6+)
 

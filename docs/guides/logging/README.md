@@ -52,8 +52,18 @@ Additional guides are being developed for:
 | **ENTERPRISE** | Compliance, audit    | Middleware via config  |
 | **CUSTOM**     | Special requirements | Full custom config     |
 
+## Telemetry (v0.1.6+)
+
+PyFulmen logging emits telemetry metrics about its own operation (self-instrumentation):
+
+- **`logging_emit_count`**: Number of log emissions (counter)
+- **`logging_emit_latency_ms`**: Log emission duration (histogram)
+
+All metrics follow the [Telemetry Instrumentation Pattern](../../development/telemetry-instrumentation-pattern.md).
+
 ## Support
 
 - **Issues**: [GitHub Issues](https://github.com/fulmenhq/pyfulmen/issues)
 - **Examples**: See `examples/` directory
 - **Standards**: [Crucible Logging Standard](../../crucible-py/standards/observability/logging.md)
+- **Telemetry**: [Instrumentation Pattern](../../development/telemetry-instrumentation-pattern.md)

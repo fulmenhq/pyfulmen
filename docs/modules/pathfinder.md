@@ -236,8 +236,19 @@ Run tests:
 pytest tests/unit/pathfinder/ tests/integration/test_pathfinder_*.py -v
 ```
 
+## Telemetry (v0.1.6+)
+
+Pathfinder emits telemetry metrics for observability:
+
+- **`pathfinder_find_ms`**: File discovery operation duration (histogram)
+- **`pathfinder_validation_errors`**: Schema validation failures (counter)
+- **`pathfinder_security_warnings`**: Path traversal attempts and security violations (counter)
+
+All metrics follow the [Telemetry Instrumentation Pattern](../development/telemetry-instrumentation-pattern.md).
+
 ## See Also
 
 - [FulHash Thread Safety](../fulhash_thread_safety.md)
 - [ADR-0010: Pathfinder Checksum Performance](../development/adr/ADR-0010-pathfinder-checksum-performance-acceptable-delta.md)
+- [Telemetry Instrumentation Pattern](../development/telemetry-instrumentation-pattern.md)
 - [Checksum Fixtures](../../tests/fixtures/pathfinder/checksum-fixtures.yaml)
