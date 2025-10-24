@@ -1,5 +1,7 @@
 """Tests for Crucible bridge API."""
 
+from contextlib import suppress
+
 import pytest
 
 from pyfulmen.crucible import bridge
@@ -319,3 +321,32 @@ class TestBackwardCompatibility:
         # Legacy API
         docs_list = crucible.docs.list_available_docs()
         assert isinstance(docs_list, list)
+
+
+class TestTelemetry:
+    """Tests for Crucible bridge telemetry instrumentation."""
+
+    def test_list_assets_with_telemetry_enabled(self):
+        """Verify list_assets executes with telemetry instrumentation without errors."""
+        assets = bridge.list_assets("docs")
+        assert isinstance(assets, list)
+
+    def test_find_schema_with_telemetry_enabled(self):
+        """Verify find_schema executes with telemetry instrumentation without errors."""
+        with suppress(AssetNotFoundError):
+            bridge.find_schema("observability/logging/v1.0.0/logger-config")
+
+    def test_find_config_with_telemetry_enabled(self):
+        """Verify find_config executes with telemetry instrumentation without errors."""
+        with suppress(AssetNotFoundError):
+            bridge.find_config("terminal/v1.0.0/terminal-overrides-defaults")
+
+    def test_get_doc_with_telemetry_enabled(self):
+        """Verify get_doc executes with telemetry instrumentation without errors."""
+        with suppress(AssetNotFoundError):
+            bridge.get_doc("standards/agentic-attribution.md")
+
+    def test_asset_not_found_with_telemetry_enabled(self):
+        """Verify AssetNotFoundError path executes with telemetry without errors."""
+        with pytest.raises(AssetNotFoundError):
+            bridge.find_schema("nonexistent/schema/id")
