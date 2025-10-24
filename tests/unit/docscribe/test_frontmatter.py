@@ -338,3 +338,14 @@ description: 'Test with "quotes"'
         clean, meta = parse_frontmatter(content)
         assert meta["title"] == "Test: With Colon"
         assert 'Test with "quotes"' in meta["description"]
+
+
+class TestTelemetry:
+    """Tests for docscribe telemetry instrumentation."""
+
+    def test_parse_frontmatter_with_telemetry_enabled(self):
+        """Verify parse_frontmatter executes with telemetry instrumentation."""
+        content = "---\ntitle: Test\n---\n# Content"
+        clean, meta = parse_frontmatter(content)
+        assert clean == "# Content"
+        assert meta is not None

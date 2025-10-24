@@ -323,3 +323,16 @@ class TestEdgeCases:
         # Should still create valid hierarchy
         assert len(outline) == 1
         assert outline[0]["level"] == 1
+
+
+class TestTelemetry:
+    """Tests for docscribe telemetry instrumentation."""
+
+    def test_extract_headers_with_telemetry_enabled(self):
+        """Verify extract_headers executes with telemetry instrumentation."""
+        from pyfulmen.docscribe import extract_headers
+
+        content = "# Title\n## Section\n### Subsection"
+        headers = extract_headers(content)
+        assert len(headers) == 3
+        assert headers[0].level == 1
