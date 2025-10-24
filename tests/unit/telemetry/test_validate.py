@@ -203,3 +203,50 @@ class TestMetricEventValidation:
         }
 
         assert validate_metric_event(event3_dict) is False
+
+    def test_new_taxonomy_metrics(self) -> None:
+        """Test validation accepts new metrics from taxonomy update."""
+        # config_load_errors (count)
+        event1 = MetricEvent(
+            timestamp=datetime.now(UTC),
+            name="config_load_errors",
+            value=3,
+            unit="count",
+        )
+        assert validate_metric_event(event1) is True
+
+        # pathfinder_find_ms (ms)
+        event2 = MetricEvent(
+            timestamp=datetime.now(UTC),
+            name="pathfinder_find_ms",
+            value=12.5,
+            unit="ms",
+        )
+        assert validate_metric_event(event2) is True
+
+        # pathfinder_validation_errors (count)
+        event3 = MetricEvent(
+            timestamp=datetime.now(UTC),
+            name="pathfinder_validation_errors",
+            value=2,
+            unit="count",
+        )
+        assert validate_metric_event(event3) is True
+
+        # pathfinder_security_warnings (count)
+        event4 = MetricEvent(
+            timestamp=datetime.now(UTC),
+            name="pathfinder_security_warnings",
+            value=1,
+            unit="count",
+        )
+        assert validate_metric_event(event4) is True
+
+        # Verify unit mismatch still fails for new metrics
+        invalid_event = MetricEvent(
+            timestamp=datetime.now(UTC),
+            name="pathfinder_find_ms",
+            value=12.5,
+            unit="count",  # Wrong unit (should be ms)
+        )
+        assert validate_metric_event(invalid_event) is False

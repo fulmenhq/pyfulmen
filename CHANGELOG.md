@@ -9,6 +9,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **Telemetry Taxonomy Update**: Synced four new metrics from Crucible taxonomy (2025.10.3)
+  - `config_load_errors` (count) - Failed configuration load attempts
+  - `pathfinder_find_ms` (ms) - Duration of pathfinder file discovery operations
+  - `pathfinder_validation_errors` (count) - Failed pathfinder validation attempts
+  - `pathfinder_security_warnings` (count) - Pathfinder security warnings (path traversal, etc.)
+  - Added test coverage for new metrics in `test_validate.py`
+  - Validation ensures correct units and schema compliance
+  - Coordinated with gofulmen Phase 3 telemetry implementation
+
 - **Pathfinder Checksum Support**: Optional FulHash integration for file integrity verification
   - `FinderConfig(calculateChecksums=True, checksumAlgorithm="xxh3-128" | "sha256")` configuration
   - Case-insensitive algorithm names (XXH3-128, Sha256, etc. normalized to lowercase)
