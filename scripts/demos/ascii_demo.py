@@ -190,7 +190,12 @@ def demo_aligned_boxes() -> None:
     """Demonstrate aligned boxes using max_content_width."""
     print_section("Aligned Boxes")
 
-    contents = ["Short", "Medium length", "Very long content line", "Multi\nLine\nContent"]
+    contents = [
+        "Short",
+        "Medium length",
+        "Very long content line",
+        "Multi\nLine\nContent",
+    ]
 
     # Find maximum width
     max_width = max_content_width(contents)
@@ -225,7 +230,9 @@ def demo_status_dashboard() -> None:
         "Queue:       ⚠ 42 messages pending"
     )
 
-    box = draw_box_with_options(status_content, BoxOptions(min_width=40, chars=status_chars))
+    box = draw_box_with_options(
+        status_content, BoxOptions(min_width=40, chars=status_chars)
+    )
     print(box)
 
 
@@ -253,7 +260,9 @@ def demo_error_message() -> None:
         "Got: key value (missing colon)"
     )
 
-    box = draw_box_with_options(error_content, BoxOptions(min_width=45, chars=error_chars))
+    box = draw_box_with_options(
+        error_content, BoxOptions(min_width=45, chars=error_chars)
+    )
     print(box)
 
 

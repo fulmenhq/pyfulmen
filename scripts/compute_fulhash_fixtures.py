@@ -115,7 +115,9 @@ def main():
         print(f"  • {name}")
         process_block_fixture(fixture)
 
-    print(f"\n🌊 Processing {len(data.get('streaming_fixtures', []))} streaming fixtures...")
+    print(
+        f"\n🌊 Processing {len(data.get('streaming_fixtures', []))} streaming fixtures..."
+    )
 
     # Process streaming fixtures
     for fixture in data.get("streaming_fixtures", []):
@@ -132,7 +134,9 @@ def main():
             "values after initial implementation",
             "xxh3-128 values computed using xxhash v3.6.0 (Python reference implementation)",
         )
-        notes = notes.replace("replace with actual computed values", "computed by PyFulmen v0.1.6")
+        notes = notes.replace(
+            "replace with actual computed values", "computed by PyFulmen v0.1.6"
+        )
         data["notes"] = notes
 
     # Write updated fixtures
@@ -140,7 +144,9 @@ def main():
     print(f"\n✍️  Writing updated fixtures to: {output_path}")
 
     with open(output_path, "w") as f:
-        yaml.dump(data, f, default_flow_style=False, sort_keys=False, allow_unicode=True)
+        yaml.dump(
+            data, f, default_flow_style=False, sort_keys=False, allow_unicode=True
+        )
 
     print("\n✅ Done! All xxh3-128 values computed and updated.")
     print("\n📋 Summary:")

@@ -91,7 +91,9 @@ def demo_simple_profile() -> None:
     time.sleep(0.2)
     logger.warn("Slow response detected", duration_ms=1250)
     time.sleep(0.2)
-    logger.error("Failed to connect to external API", context={"api": "payments.example.com"})
+    logger.error(
+        "Failed to connect to external API", context={"api": "payments.example.com"}
+    )
 
     time.sleep(0.5)
 
@@ -123,10 +125,15 @@ def demo_structured_profile() -> None:
         context={"method": "jwt", "scope": "read:profile write:profile"},
     )
     time.sleep(0.2)
-    logger.info("Database query executed", duration_ms=15.3, context={"table": "users", "rows": 1})
+    logger.info(
+        "Database query executed",
+        duration_ms=15.3,
+        context={"table": "users", "rows": 1},
+    )
     time.sleep(0.2)
     logger.info(
-        "Response sent", context={"status": 200, "content_type": "application/json", "size": 1024}
+        "Response sent",
+        context={"status": 200, "content_type": "application/json", "size": 1024},
     )
 
     time.sleep(0.5)
@@ -163,7 +170,8 @@ def demo_enterprise_profile() -> None:
         time.sleep(0.2)
 
         logger.debug(
-            "Validating payment method", context={"card_last4": "4242", "card_brand": "visa"}
+            "Validating payment method",
+            context={"card_last4": "4242", "card_brand": "visa"},
         )
         time.sleep(0.2)
 
@@ -209,7 +217,10 @@ def demo_severity_levels() -> None:
         default_level="TRACE",  # Show all levels
     )
 
-    print(">>> All severity levels (TRACE requires explicit configuration):\n", file=sys.stdout)
+    print(
+        ">>> All severity levels (TRACE requires explicit configuration):\n",
+        file=sys.stdout,
+    )
     sys.stdout.flush()
     time.sleep(0.3)
 
@@ -219,9 +230,14 @@ def demo_severity_levels() -> None:
     time.sleep(0.2)
     logger.info("Order validated", context={"order_id": "ord_999", "items": 3})
     time.sleep(0.2)
-    logger.warn("Inventory low", context={"product_id": "SKU-456", "quantity": 5, "threshold": 10})
+    logger.warn(
+        "Inventory low",
+        context={"product_id": "SKU-456", "quantity": 5, "threshold": 10},
+    )
     time.sleep(0.2)
-    logger.error("Payment gateway timeout", context={"gateway": "stripe", "timeout_ms": 5000})
+    logger.error(
+        "Payment gateway timeout", context={"gateway": "stripe", "timeout_ms": 5000}
+    )
     time.sleep(0.2)
     logger.fatal(
         "Database connection lost",
@@ -279,19 +295,27 @@ def demo_contextual_logging() -> None:
     time.sleep(0.3)
 
     with correlation_context():
-        logger.info("Batch job started", context={"batch_id": "batch_2024_001", "total_items": 100})
+        logger.info(
+            "Batch job started",
+            context={"batch_id": "batch_2024_001", "total_items": 100},
+        )
         time.sleep(0.2)
 
         # Simulate processing items
         for i in range(1, 4):
             logger.info(
                 "Processing item",
-                context={"item_number": i, "item_id": f"item_{i:03d}", "progress": f"{i}/100"},
+                context={
+                    "item_number": i,
+                    "item_id": f"item_{i:03d}",
+                    "progress": f"{i}/100",
+                },
             )
             time.sleep(0.2)
 
         logger.info(
-            "Batch job completed", context={"processed": 3, "failed": 0, "duration_s": 15.3}
+            "Batch job completed",
+            context={"processed": 3, "failed": 0, "duration_s": 15.3},
         )
 
     time.sleep(0.5)
@@ -313,7 +337,9 @@ def demo_profile_comparison() -> None:
         profile=LoggingProfile.SIMPLE,
         default_level="INFO",
     )
-    simple_logger.info("User login successful", user_id="alice", context={"ip": "192.168.1.100"})
+    simple_logger.info(
+        "User login successful", user_id="alice", context={"ip": "192.168.1.100"}
+    )
 
     time.sleep(0.5)
 
@@ -349,10 +375,14 @@ def main() -> None:
     """Run all logging demos."""
     print("\n" + "=" * 80, file=sys.stdout)
     print("  PyFulmen Progressive Logging - Demo", file=sys.stdout)
-    print("  Enterprise-grade structured logging for Python applications", file=sys.stdout)
+    print(
+        "  Enterprise-grade structured logging for Python applications", file=sys.stdout
+    )
     print("=" * 80, file=sys.stdout)
     print("\nNote: All logs are written to stderr (shown below)", file=sys.stdout)
-    print("      Section headers are written to stdout (shown above)\n", file=sys.stdout)
+    print(
+        "      Section headers are written to stdout (shown above)\n", file=sys.stdout
+    )
     sys.stdout.flush()
 
     time.sleep(1)
@@ -371,12 +401,21 @@ def main() -> None:
     print("\nKey Takeaways:", file=sys.stdout)
     print("  • SIMPLE: Perfect for CLI tools (human-readable output)", file=sys.stdout)
     print("  • STRUCTURED: JSON logs for services (machine-parseable)", file=sys.stdout)
-    print("  • ENTERPRISE: Full observability with correlation and middleware", file=sys.stdout)
-    print("  • All logs go to stderr, preserving stdout for application output", file=sys.stdout)
+    print(
+        "  • ENTERPRISE: Full observability with correlation and middleware",
+        file=sys.stdout,
+    )
+    print(
+        "  • All logs go to stderr, preserving stdout for application output",
+        file=sys.stdout,
+    )
     print("\nFor more information, see:", file=sys.stdout)
     print("  - src/pyfulmen/logging/README.md", file=sys.stdout)
     print("  - docs/releases/v0.1.3.md (Logging section)", file=sys.stdout)
-    print("  - examples/logging/ (simple.py, structured.py, enterprise.py)\n", file=sys.stdout)
+    print(
+        "  - examples/logging/ (simple.py, structured.py, enterprise.py)\n",
+        file=sys.stdout,
+    )
     sys.stdout.flush()
 
 
