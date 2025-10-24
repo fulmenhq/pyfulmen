@@ -159,6 +159,14 @@ class PathMetadata(FulmenDataModel):
     )
     encoding: str | None = Field(default=None, description="Character encoding")
     checksum: str | None = Field(default=None, description="Checksum or hash")
+    checksum_algorithm: str | None = Field(
+        default=None, alias="checksumAlgorithm", description="Algorithm used for checksum"
+    )
+    checksum_error: str | None = Field(
+        default=None,
+        alias="checksumError",
+        description="Error message if checksum calculation failed",
+    )
     tags: list[str] = Field(default_factory=list, description="User-defined tags")
     custom: dict[str, Any] = Field(default_factory=dict, description="Custom metadata fields")
 
@@ -174,6 +182,9 @@ class FinderConfig(FulmenConfigModel):
         loader_type: Default loader type ("local", "remote", etc.)
         validate_inputs: Whether to validate FindQuery inputs against schema
         validate_outputs: Whether to validate PathResult outputs against schema
+        calculate_checksums: Whether to calculate file checksums during discovery
+        checksum_algorithm: Hash algorithm for checksums ("xxh3-128" or "sha256")
+        checksum_encoding: Output encoding for checksums ("hex")
     """
 
     model_config = _config_model_config(alias_generator=_to_camel, populate_by_name=True)
@@ -186,6 +197,17 @@ class FinderConfig(FulmenConfigModel):
     validate_outputs: bool = Field(default=False, description="Validate PathResult outputs")
     constraint: PathConstraint | None = Field(
         default=None, description="Constraint configuration for permissible paths"
+    )
+    calculate_checksums: bool = Field(
+        default=False,
+        alias="calculateChecksums",
+        description="Calculate file checksums during discovery",
+    )
+    checksum_algorithm: str = Field(
+        default="xxh3-128", alias="checksumAlgorithm", description="Hash algorithm for checksums"
+    )
+    checksum_encoding: str = Field(
+        default="hex", alias="checksumEncoding", description="Output encoding for checksums"
     )
 
 

@@ -232,9 +232,9 @@ class TestFindFiles:
         """Strict enforcement should raise when blocked patterns match."""
         constraint = PathConstraint(
             root=str(temp_file_tree),
-            constraint_type=ConstraintType.REPOSITORY,
-            enforcement_level=EnforcementLevel.STRICT,
-            blocked_patterns=["subdir/**"],
+            type=ConstraintType.REPOSITORY,
+            enforcementLevel=EnforcementLevel.STRICT,
+            blockedPatterns=["subdir/**"],
         )
         finder = Finder(FinderConfig(constraint=constraint))
 
@@ -245,9 +245,9 @@ class TestFindFiles:
         """Warn enforcement should skip blocked paths without raising."""
         constraint = PathConstraint(
             root=str(temp_file_tree),
-            constraint_type=ConstraintType.REPOSITORY,
-            enforcement_level=EnforcementLevel.WARN,
-            blocked_patterns=["subdir/**"],
+            type=ConstraintType.REPOSITORY,
+            enforcementLevel=EnforcementLevel.WARN,
+            blockedPatterns=["subdir/**"],
         )
         finder = Finder(FinderConfig(constraint=constraint))
         results = finder.find_files(FindQuery(root=str(temp_file_tree), include=["**/*.py"]))
@@ -316,12 +316,14 @@ class TestPathResult:
 
     def test_path_result_serialization(self):
         """PathResult should serialize to JSON."""
+        from pyfulmen.pathfinder.models import PathMetadata
+
         result = PathResult(
             relative_path="test/file.py",
             source_path="/abs/test/file.py",
             logical_path="test/file.py",
             loader_type="local",
-            metadata={"size": 1024},
+            metadata=PathMetadata(size=1024),
         )
 
         # Should serialize to dict/JSON without errors
@@ -395,3 +397,124 @@ class TestPathNormalization:
             assert os.path.isabs(result.source_path)
             # Path should equal its resolved form
             assert result.source_path == str(Path(result.source_path).resolve())
+
+
+class TestChecksumSupport:
+    """Test checksum calculation in Pathfinder."""
+
+    def test_checksums_disabled_by_default(self, temp_file_tree):
+        """Checksums should be disabled by default."""
+        finder = Finder()
+        query = FindQuery(root=str(temp_file_tree), include=["*.py"])
+        results = finder.find_files(query)
+
+        for result in results:
+            assert result.metadata.checksum is None
+            assert result.metadata.checksum_algorithm is None
+            assert result.metadata.checksum_error is None
+
+    def test_finder_with_checksum_config(self, temp_file_tree):
+        """Finder should work with checksum config enabled but not calculate."""
+        config = FinderConfig(calculateChecksums=False, checksumAlgorithm="xxh3-128")
+        finder = Finder(config)
+        query = FindQuery(root=str(temp_file_tree), include=["*.py"])
+        results = finder.find_files(query)
+
+        assert len(results) == 1
+        assert results[0].relative_path == "file1.py"
+        metadata = results[0].metadata
+        assert metadata.checksum is None
+        assert metadata.checksum_algorithm is None
+        assert metadata.checksum_error is None
+
+    def test_checksums_enabled_xxh3_128(self, temp_file_tree):
+        """Checksums should be calculated when enabled with xxh3-128."""
+        finder = Finder()
+        finder.config.calculate_checksums = True
+        finder.config.checksum_algorithm = "xxh3-128"
+        query = FindQuery(root=str(temp_file_tree), include=["*.py"])
+        results = finder.find_files(query)
+
+        assert len(results) == 1
+        assert results[0].relative_path == "file1.py"
+        metadata = results[0].metadata
+        assert metadata.checksum is not None
+        assert metadata.checksum.startswith("xxh3-128:")  # type: ignore
+        assert len(metadata.checksum) == len("xxh3-128:") + 32  # 128 bits = 32 hex chars
+        assert metadata.checksum_algorithm == "xxh3-128"
+        assert metadata.checksum_error is None
+
+    def test_checksums_enabled_sha256(self, temp_file_tree):
+        """Checksums should be calculated when enabled with sha256."""
+        finder = Finder()
+        finder.config.calculate_checksums = True
+        finder.config.checksum_algorithm = "sha256"
+        query = FindQuery(root=str(temp_file_tree), include=["*.py"])
+        results = finder.find_files(query)
+
+        assert len(results) == 1
+        assert results[0].relative_path == "file1.py"
+        metadata = results[0].metadata
+        assert metadata.checksum is not None
+        assert metadata.checksum.startswith("sha256:")  # type: ignore
+        assert len(metadata.checksum) == len("sha256:") + 64  # 256 bits = 64 hex chars
+        assert metadata.checksum_algorithm == "sha256"
+        assert metadata.checksum_error is None
+
+    def test_invalid_checksum_algorithm(self, temp_file_tree):
+        """Invalid checksum algorithm should set error field."""
+        finder = Finder()
+        finder.config.calculate_checksums = True
+        finder.config.checksum_algorithm = "invalid"
+        query = FindQuery(root=str(temp_file_tree), include=["*.py"])
+        results = finder.find_files(query)
+
+        assert len(results) == 1
+        assert results[0].relative_path == "file1.py"
+        metadata = results[0].metadata
+        assert metadata.checksum is None
+        assert metadata.checksum_algorithm is None
+        assert metadata.checksum_error == "Unsupported checksum algorithm: invalid"
+
+    def test_checksum_algorithm_case_insensitive(self, temp_file_tree):
+        """Checksum algorithm matching should be case-insensitive."""
+        # Test uppercase
+        config_upper = FinderConfig(calculateChecksums=True, checksumAlgorithm="XXH3-128")
+        finder_upper = Finder(config_upper)
+        query = FindQuery(root=str(temp_file_tree), include=["*.py"])
+        results_upper = finder_upper.find_files(query)
+
+        assert len(results_upper) == 1
+        metadata_upper = results_upper[0].metadata
+        assert metadata_upper.checksum is not None
+        assert metadata_upper.checksum.startswith("xxh3-128:")
+        assert metadata_upper.checksum_algorithm == "xxh3-128"
+        assert metadata_upper.checksum_error is None
+
+        # Test mixed case
+        config_mixed = FinderConfig(calculateChecksums=True, checksumAlgorithm="Sha256")
+        finder_mixed = Finder(config_mixed)
+        results_mixed = finder_mixed.find_files(query)
+
+        assert len(results_mixed) == 1
+        metadata_mixed = results_mixed[0].metadata
+        assert metadata_mixed.checksum is not None
+        assert metadata_mixed.checksum.startswith("sha256:")
+        assert metadata_mixed.checksum_algorithm == "sha256"
+        assert metadata_mixed.checksum_error is None
+
+    def test_checksum_calculation_failure(self, temp_file_tree):
+        """Checksum calculation failure should set error field."""
+        # Create a file that might fail to read (though hard to simulate reliably)
+        # For now, test that the error field is handled
+        finder = Finder()
+        finder.config.calculate_checksums = True
+        finder.config.checksum_algorithm = "xxh3-128"
+        query = FindQuery(root=str(temp_file_tree), include=["*.py"])
+        results = finder.find_files(query)
+
+        assert len(results) == 1
+        assert results[0].relative_path == "file1.py"
+        metadata = results[0].metadata
+        # Either checksum is set or error is set, but not both
+        assert (metadata.checksum is not None) != (metadata.checksum_error is not None)

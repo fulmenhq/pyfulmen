@@ -11,6 +11,7 @@ from datetime import UTC, datetime
 from fnmatch import fnmatch
 from pathlib import Path
 
+from pyfulmen.fulhash import Algorithm, hash_file
 from pyfulmen.schema import validator as schema_validator
 
 from .ignore import IgnoreMatcher
@@ -142,8 +143,12 @@ class Finder:
                         continue
 
                     # Enforce path constraints if configured
-                    if constraint_root and self._violates_constraint(
-                        constraint, constraint_root, rel_path, abs_match
+                    if (
+                        constraint
+                        and constraint_root
+                        and self._violates_constraint(
+                            constraint, constraint_root, rel_path, abs_match
+                        )
                     ):
                         violation = PathTraversalError(
                             f"Path {abs_match} violates constraint root {constraint_root}"
@@ -283,8 +288,28 @@ class Finder:
         """
         return self.find_by_extension(root, ["py"])
 
-    @staticmethod
-    def _build_metadata(path: Path) -> PathMetadata:
+    def _convert_algorithm(self, algorithm_str: str) -> tuple[Algorithm | None, str | None]:
+        """
+        Convert string to Algorithm enum with consistent error handling.
+        
+        Normalizes input to lowercase for case-insensitive matching.
+        
+        Args:
+            algorithm_str: Algorithm string to convert (e.g., "xxh3-128", "XXH3-128", "sha256")
+            
+        Returns:
+            Tuple of (Algorithm instance, error_message). 
+            Algorithm is None if conversion failed, error_message is None if successful.
+        """
+        try:
+            # Normalize to lowercase for case-insensitive matching
+            normalized = algorithm_str.lower()
+            algorithm = Algorithm(normalized)
+            return algorithm, None
+        except ValueError:
+            return None, f"Unsupported checksum algorithm: {algorithm_str}"
+
+    def _build_metadata(self, path: Path) -> PathMetadata:
         """Construct metadata for a discovered path."""
         try:
             stat_result = path.stat()
@@ -294,20 +319,49 @@ class Finder:
         modified = datetime.fromtimestamp(stat_result.st_mtime, tz=UTC).isoformat()
         permissions = oct(stat_result.st_mode & 0o777)
 
-        return PathMetadata(
+        # Initialize checksum fields
+        checksum = None
+        checksum_algorithm = None
+        checksum_error = None
+
+        # Calculate checksum if enabled
+        if self.config.calculate_checksums:
+            algorithm, conversion_error = self._convert_algorithm(self.config.checksum_algorithm)
+            if conversion_error:
+                checksum_error = conversion_error
+            elif algorithm is not None:
+                try:
+                    digest = hash_file(path, algorithm)
+                    checksum = digest.formatted
+                    # Use normalized algorithm value from enum (lowercase)
+                    checksum_algorithm = algorithm.value
+                except Exception as e:
+                    # Catch all other exceptions from hash_file and set error field
+                    checksum_error = str(e)
+
+        metadata = PathMetadata(
             size=stat_result.st_size,
             modified=modified,
             permissions=permissions,
+            checksum=checksum,
+            checksumAlgorithm=checksum_algorithm,
+            checksumError=checksum_error,
         )
+
+        return metadata
 
     @staticmethod
     def _violates_constraint(
-        constraint: PathConstraint,
+        constraint: PathConstraint | None,
         constraint_root: Path,
         relative_path: Path,
         absolute_path: Path,
     ) -> bool:
         """Check whether a discovered path violates the configured constraint."""
+        if not constraint:
+            return False
+
+        assert constraint is not None  # For type checker
         path_posix = relative_path.as_posix()
 
         # Allowed patterns override constraint failures.
