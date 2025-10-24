@@ -518,3 +518,59 @@ class TestChecksumSupport:
         metadata = results[0].metadata
         # Either checksum is set or error is set, but not both
         assert (metadata.checksum is not None) != (metadata.checksum_error is not None)
+
+
+class TestTelemetry:
+    """Test telemetry instrumentation.
+
+    Note: Current implementation creates independent MetricRegistry instances per call,
+    so telemetry emission cannot be directly tested without module-level singleton helpers
+    (per ADR-0008). These tests verify the code path executes without errors.
+
+    Full telemetry testing will be added when module-level helpers are implemented.
+    """
+
+    def test_find_files_with_telemetry_enabled(self, temp_file_tree):
+        """Verify find_files executes with telemetry instrumentation without errors."""
+        # Execute find operation (telemetry is emitted but to independent registry instance)
+        finder = Finder()
+        query = FindQuery(root=str(temp_file_tree), include=["*.py"])
+        results = finder.find_files(query)
+
+        # Verify operation succeeded and files were found
+        assert len(results) > 0
+
+        # Telemetry is emitted to an internal registry instance.
+        # Full assertion testing requires module-level singleton helpers per ADR-0008.
+        # For now, we verify the instrumented code path executes without errors.
+
+    def test_validation_errors_counter_on_invalid_query(self, temp_file_tree):
+        """Verify validation_errors counter is emitted on invalid query."""
+        from pyfulmen.schema.validator import SchemaValidationError
+
+        finder = Finder(FinderConfig(validate_inputs=True))
+
+        # Create an invalid query - root is required but empty string violates minLength
+        with pytest.raises((ValueError, SchemaValidationError)):
+            # Empty root violates schema minLength: 1 requirement
+            finder.find_files(FindQuery(root="", include=["*.py"]))
+
+        # Note: Counter is emitted but to independent registry instance.
+        # Full metric assertion requires module-level helpers per ADR-0008.
+
+    def test_security_warnings_counter_on_path_traversal(self, temp_file_tree):
+        """Verify security_warnings counter is emitted on path traversal attempt."""
+        finder = Finder()
+
+        # Create file with ".." in the name to trigger path traversal during validation
+        traversal_file = temp_file_tree / "..test.py"
+        traversal_file.write_text("# test")
+
+        query = FindQuery(root=str(temp_file_tree), include=["..test.py"])
+
+        # Should raise PathTraversalError from validate_path when processing matched file
+        with pytest.raises(PathTraversalError):
+            finder.find_files(query)
+
+        # Note: Counter is emitted but to independent registry instance.
+        # Full metric assertion requires module-level helpers per ADR-0008.

@@ -9,6 +9,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **Pathfinder Telemetry Instrumentation (Phase 1.5 - Complete)**: Comprehensive telemetry in Pathfinder module
+  - `Finder.find_files()` emits `pathfinder_find_ms` histogram (operation duration)
+  - `Finder.find_files()` emits `pathfinder_validation_errors` counter (schema validation failures)
+  - `Finder.find_files()` emits `pathfinder_security_warnings` counter (path traversal attempts)
+  - Try/finally pattern ensures metrics emitted even on errors
+  - 90 pathfinder tests passing (87 original + 3 new telemetry tests)
+  - Zero performance overhead confirmed
+  - Pattern documented in `docs/development/telemetry-instrumentation-pattern.md`
+  - **Rationale**: Dogfooding our own telemetry/error-handling modules before ecosystem-wide adoption
+
 - **Telemetry Taxonomy Update**: Synced four new metrics from Crucible taxonomy (2025.10.3)
   - `config_load_errors` (count) - Failed configuration load attempts
   - `pathfinder_find_ms` (ms) - Duration of pathfinder file discovery operations

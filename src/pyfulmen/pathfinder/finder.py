@@ -7,12 +7,14 @@ proper path normalization using pathlib.
 
 from __future__ import annotations
 
+import time
 from datetime import UTC, datetime
 from fnmatch import fnmatch
 from pathlib import Path
 
 from pyfulmen.fulhash import Algorithm, hash_file
 from pyfulmen.schema import validator as schema_validator
+from pyfulmen.telemetry import MetricRegistry
 
 from .ignore import IgnoreMatcher
 from .models import (
@@ -65,15 +67,37 @@ class Finder:
         Raises:
             ValueError: If query validation fails (when validate_inputs=True)
             PathTraversalError: If unsafe paths are detected
+
+        Telemetry:
+            - Emits pathfinder_find_ms histogram (operation duration)
+            - Emits pathfinder_validation_errors counter (on validation failure)
+            - Emits pathfinder_security_warnings counter (on security violation)
         """
+        # Initialize telemetry
+        start_time = time.perf_counter()
+        registry = MetricRegistry()
+
+        try:
+            return self._find_files_impl(query, registry)
+        finally:
+            # Emit duration metric
+            duration_ms = (time.perf_counter() - start_time) * 1000
+            registry.histogram("pathfinder_find_ms").observe(duration_ms)
+
+    def _find_files_impl(self, query: FindQuery, registry: MetricRegistry) -> list[PathResult]:
+        """Internal implementation of find_files without telemetry."""
         # Validate input if enabled
         if self.config.validate_inputs:
-            schema_validator.validate_against_schema(
-                query.model_dump(by_alias=True, exclude_none=True),
-                "pathfinder",
-                "v1.0.0",
-                "find-query",
-            )
+            try:
+                schema_validator.validate_against_schema(
+                    query.model_dump(by_alias=True, exclude_none=True),
+                    "pathfinder",
+                    "v1.0.0",
+                    "find-query",
+                )
+            except ValueError:
+                registry.counter("pathfinder_validation_errors").inc()
+                raise
 
         results: list[PathResult] = []
 
@@ -106,7 +130,11 @@ class Finder:
                         continue
 
                     # Validate path safety using string representation
-                    validate_path(str(abs_match))
+                    try:
+                        validate_path(str(abs_match))
+                    except PathTraversalError:
+                        registry.counter("pathfinder_security_warnings").inc()
+                        raise
 
                     # Skip symlinks unless explicitly following them
                     if abs_match.is_symlink() and not query.follow_symlinks:
@@ -153,6 +181,7 @@ class Finder:
                         violation = PathTraversalError(
                             f"Path {abs_match} violates constraint root {constraint_root}"
                         )
+                        registry.counter("pathfinder_security_warnings").inc()
 
                         enforcement_value = constraint.enforcement_level
 
