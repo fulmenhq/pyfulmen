@@ -526,7 +526,7 @@ class FoundryCatalog:
         """
         registry = MetricRegistry()
         registry.counter("foundry_lookup_count").inc()
-        
+
         patterns = self._load_patterns()
         return patterns.get(pattern_id)
 
@@ -562,7 +562,7 @@ class FoundryCatalog:
         """
         registry = MetricRegistry()
         registry.counter("foundry_lookup_count").inc()
-        
+
         mime_types = self._load_mime_types()
         return mime_types.get(mime_id)
 

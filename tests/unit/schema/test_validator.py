@@ -140,9 +140,7 @@ class TestTelemetry:
         import contextlib
 
         with contextlib.suppress(SchemaValidationError):
-            validate_against_schema(
-                valid_data, "observability/logging", "v1.0.0", "logger-config"
-            )
+            validate_against_schema(valid_data, "observability/logging", "v1.0.0", "logger-config")
 
         # Telemetry is emitted to an internal registry instance.
         # Full assertion testing requires module-level singleton helpers per ADR-0008.
