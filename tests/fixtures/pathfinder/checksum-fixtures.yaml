@@ -1,0 +1,168 @@
+# Pathfinder Checksum Fixtures
+# Cross-language test vectors for Pathfinder file discovery with FulHash checksums
+# 
+# These fixtures ensure parity between pyfulmen, gofulmen, and tsfulmen
+# Pathfinder implementations when calculating file checksums.
+#
+# Note: This is a fixture manifest, not a metadata instance. No $schema validation.
+# Format loosely inspired by config/crucible-py/library/fulhash/fixtures.yaml
+
+version: 1.0.0
+description: Known-value test fixtures for Pathfinder checksum calculation
+
+# File content fixtures aligned with FulHash test vectors
+file_fixtures:
+  - name: empty-file
+    description: Zero-length file
+    content: ''
+    encoding: utf-8
+    size: 0
+    checksums:
+      xxh3_128: xxh3-128:99aa06d3014798d86001c324468d497f
+      sha256: sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
+    notes: Matches FulHash 'empty-input' fixture
+
+  - name: hello-world-txt
+    description: Simple ASCII text file
+    content: 'Hello, World!'
+    encoding: utf-8
+    size: 13
+    checksums:
+      xxh3_128: xxh3-128:531df2844447dd5077db03842cd75395
+      sha256: sha256:dffd6021bb2bd5b0af676290809ec3a53191dd81c7f70a4b28688a362182986f
+    notes: Matches FulHash 'hello-world' fixture
+
+  - name: single-char-txt
+    description: Single character file
+    content: 'A'
+    encoding: utf-8
+    size: 1
+    checksums:
+      xxh3_128: xxh3-128:9b0498cbe3839becd0d496e05c553485
+      sha256: sha256:559aead08264d5795d3909718cdd05abd49572e84fe55590eef31a88a08fdffd
+    notes: Matches FulHash 'single-byte' fixture
+
+  - name: unicode-emoji-txt
+    description: Unicode file with emoji
+    content: 'Hello 🔥 World'
+    encoding: utf-8
+    size: 16  # 11 ASCII chars + 4-byte emoji + 1 space
+    checksums:
+      xxh3_128: xxh3-128:0791d45904cb439cf2b54f3c99d7d016
+      sha256: sha256:f0eea4a27f4b360ceb33767e11b15297c9b8f35bedeac965ca2383b5909c5311
+    notes: Matches FulHash 'unicode-emoji' fixture, validates UTF-8 handling
+
+  - name: lorem-ipsum-txt
+    description: Longer text block
+    content: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.'
+    encoding: utf-8
+    size: 123
+    checksums:
+      xxh3_128: xxh3-128:11d2c0487e40a970896d55d440aa4917
+      sha256: sha256:973153f86ec2da1748e63f0cf85b89835b42f8ee8018c549868a1308a19f6ca3
+    notes: Matches FulHash 'lorem-ipsum' fixture
+
+  - name: python-script
+    description: Small Python source file
+    content: |
+      def hello():
+          print("Hello, World!")
+      
+      if __name__ == "__main__":
+          hello()
+    encoding: utf-8
+    size: 80
+    checksums:
+      xxh3_128: xxh3-128:e382fd9fd14fc71881ab51875157948f
+      sha256: sha256:cfb31641ddbd558fc65f76488ec699521fedd8595aac51fcd00e119c340dfb04
+    notes: Representative Python source file for testing
+
+  - name: json-data
+    description: JSON configuration file
+    content: |
+      {
+        "name": "test",
+        "version": "1.0.0",
+        "enabled": true
+      }
+    encoding: utf-8
+    size: 62
+    checksums:
+      xxh3_128: xxh3-128:fb1b4daa0208d52c2863c75b18c6ec5f
+      sha256: sha256:a3be7dd6b05876ccd06fce710e9eed2abf371a59cc798952846b68dd8b7c1a5d
+    notes: Common configuration file format
+
+# Streaming test fixtures for large files
+streaming_fixtures:
+  - name: large-repeated-content
+    description: 10KB file with repeated pattern (simulates streaming)
+    pattern: 'x'
+    repeat_count: 10240  # 10KB of 'x'
+    size: 10240
+    chunk_size: 65536  # Default FulHash chunk size
+    checksums:
+      xxh3_128: xxh3-128:63ad90f6f46df510759d6e6dd371d6f4
+      sha256: sha256:04f8f86af2cd14ffe9bbe8da1518ce9c980ae13fba87feb386b103544e9c4c6b
+    notes: Tests streaming hash calculation
+
+# Error handling fixtures
+error_fixtures:
+  - name: invalid-algorithm
+    description: Unsupported algorithm should set error field
+    algorithm: md5
+    expected_behavior:
+      checksum: null
+      checksum_algorithm: null
+      checksum_error: 'Unsupported checksum algorithm: md5'
+
+  - name: invalid-algorithm-uppercase
+    description: Invalid algorithm in uppercase
+    algorithm: INVALID
+    expected_behavior:
+      checksum: null
+      checksum_algorithm: null
+      checksum_error: 'Unsupported checksum algorithm: INVALID'
+
+# Case-insensitivity fixtures
+case_fixtures:
+  - name: algorithm-uppercase
+    description: Algorithm specified in uppercase
+    content: 'Hello, World!'
+    algorithm: XXH3-128
+    expected_algorithm: xxh3-128  # Should be normalized
+    expected_checksum: xxh3-128:531df2844447dd5077db03842cd75395
+
+  - name: algorithm-mixed-case
+    description: Algorithm specified in mixed case
+    content: 'Hello, World!'
+    algorithm: Sha256
+    expected_algorithm: sha256  # Should be normalized
+    expected_checksum: sha256:dffd6021bb2bd5b0af676290809ec3a53191dd81c7f70a4b28688a362182986f
+
+# Cross-language parity validation
+parity_notes: |
+  For cross-language parity validation:
+  
+  1. Create test files with content from file_fixtures
+  2. Run Pathfinder with calculateChecksums=true and checksumAlgorithm="xxh3-128" or "sha256"
+  3. Verify metadata.checksum matches expected checksums exactly
+  4. Verify metadata.checksumAlgorithm is normalized to lowercase
+  5. All implementations (pyfulmen, gofulmen, tsfulmen) MUST produce identical results
+  
+  Test file creation:
+  - Use exact content from fixtures (preserving line endings, encoding)
+  - UTF-8 encoding without BOM
+  - No trailing whitespace unless specified in fixture
+  - Use binary mode for writing to avoid platform line-ending conversion
+  
+  Streaming validation:
+  - Large files should use streaming hash calculation
+  - Chunk boundaries should not affect final checksum
+  - Memory usage should remain constant regardless of file size
+
+implementation_requirements:
+  - All checksums must be lowercase hexadecimal
+  - Algorithm field must be normalized to lowercase (xxh3-128, sha256)
+  - Error messages must be consistent across implementations
+  - Streaming must use 64KB chunks (65536 bytes) for consistency
+  - UTF-8 encoding is canonical, no additional normalization

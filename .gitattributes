@@ -1,0 +1,9 @@
+# Git attributes for pyfulmen repository
+# Ensures consistent file handling across platforms
+
+# Pathfinder checksum parity test fixtures - preserve exact binary content
+# These files have known checksums that must not change due to line-ending conversion
+tests/fixtures/pathfinder/sample-files/* -text
+
+# Prevent line-ending conversion that would break checksum validation
+# On Windows with core.autocrlf=true, git will NOT convert LF to CRLF for these files
