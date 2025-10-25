@@ -6,6 +6,8 @@ dispatcher that works with bytes, strings, and file paths.
 
 from pathlib import Path
 
+from pyfulmen.telemetry import MetricRegistry
+
 from ._hash import hash_bytes, hash_string
 from ._stream import stream
 from .models import Algorithm, Digest
@@ -32,6 +34,10 @@ def hash_file(path: Path | str, algorithm: Algorithm = Algorithm.XXH3_128) -> Di
         PermissionError: If file cannot be read
         IsADirectoryError: If path is a directory
 
+    Telemetry:
+        - Emits fulhash_hash_file_count counter (hash operations)
+        - Emits fulhash_errors_count counter (file I/O errors)
+
     Examples:
         >>> from pyfulmen.fulhash import hash_file, Algorithm
         >>> from pathlib import Path
@@ -44,6 +50,9 @@ def hash_file(path: Path | str, algorithm: Algorithm = Algorithm.XXH3_128) -> Di
         >>> digest.algorithm
         <Algorithm.SHA256: 'sha256'>
     """
+    registry = MetricRegistry()
+    registry.counter("fulhash_hash_file_count").inc()
+
     # Convert str to Path
     if isinstance(path, str):
         path = Path(path)
@@ -56,12 +65,14 @@ def hash_file(path: Path | str, algorithm: Algorithm = Algorithm.XXH3_128) -> Di
         with open(path, "rb") as f:
             while chunk := f.read(CHUNK_SIZE):
                 hasher.update(chunk)
-    except FileNotFoundError as e:
-        raise FileNotFoundError(f"File not found: {path}") from e
-    except IsADirectoryError as e:
-        raise IsADirectoryError(f"Path is a directory, not a file: {path}") from e
-    except PermissionError as e:
-        raise PermissionError(f"Permission denied reading file: {path}") from e
+    except (FileNotFoundError, IsADirectoryError, PermissionError) as e:
+        registry.counter("fulhash_errors_count").inc()
+        if isinstance(e, FileNotFoundError):
+            raise FileNotFoundError(f"File not found: {path}") from e
+        elif isinstance(e, IsADirectoryError):
+            raise IsADirectoryError(f"Path is a directory, not a file: {path}") from e
+        else:
+            raise PermissionError(f"Permission denied reading file: {path}") from e
 
     return hasher.digest()
 

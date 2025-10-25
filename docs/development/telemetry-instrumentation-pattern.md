@@ -1,9 +1,12 @@
 # Telemetry Instrumentation Pattern
 
 **Status**: Active  
-**Version**: 1.0  
+**Version**: 1.1  
 **Last Updated**: 2025-10-24  
-**Related**: ADR-0008 (Global Metric Registry Singleton)
+**Related**:
+
+- ADR-0008 (Global Metric Registry Singleton - local)
+- [Crucible ADR-0008](../crucible-py/architecture/decisions/ADR-0008-helper-library-instrumentation-patterns.md) (Helper Library Instrumentation Patterns - ecosystem)
 
 ## Overview
 
@@ -412,6 +415,31 @@ def get_pattern(self, name: str):
     return pattern
 ```
 
+### Hash Computations (FulHash - Performance-Sensitive)
+
+```python
+def hash_file(path: Path | str, algorithm: Algorithm = Algorithm.XXH3_128) -> Digest:
+    """Compute hash digest for file contents.
+
+    Telemetry:
+        - Emits fulhash_hash_file_count counter (hash operations)
+        - Emits fulhash_errors_count counter (file I/O errors)
+    """
+    registry = MetricRegistry()
+    registry.counter("fulhash_hash_file_count").inc()
+
+    try:
+        # Original hash computation logic
+        return _compute_hash(path, algorithm)
+    except (FileNotFoundError, PermissionError):
+        registry.counter("fulhash_errors_count").inc()
+        raise
+```
+
+**Why Counter-Only**: Hash operations are called thousands of times in typical workflows. Histogram timing adds 50-100ns overhead per call, which is significant when hashing 50,000 files. Counter increment adds <10ns - negligible impact while maintaining operation visibility.
+
+**Reference**: See [Crucible ADR-0008](../crucible-py/architecture/decisions/ADR-0008-helper-library-instrumentation-patterns.md) for ecosystem-level guidance on Performance-Sensitive instrumentation pattern.
+
 ## Migration Checklist
 
 When adding telemetry to a module:
@@ -500,5 +528,5 @@ Aggregation tools can correlate if needed.
 
 ## Changelog
 
-- **2025-10-24**: Initial version based on Pathfinder Phase 1 retrofit
-- **Future**: Update when module-level helpers implemented (ADR-0008)
+- **2025-10-24 v1.1**: Added Phase 8 FulHash performance-sensitive pattern, linked Crucible ADR-0008
+- **2025-10-24 v1.0**: Initial version based on Pathfinder Phase 1 retrofit

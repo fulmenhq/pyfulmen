@@ -15,6 +15,7 @@ from pyfulmen.fulhash import (
     compare_digests,
     format_checksum,
     hash_bytes,
+    hash_string,
     parse_checksum,
     validate_checksum_string,
 )
@@ -349,3 +350,13 @@ class TestHelperIntegration:
         # Different data should not match
         assert not compare_digests(digest1, digest3)
         assert not compare_digests(digest2, digest3)
+
+
+class TestTelemetry:
+    """Tests for FulHash telemetry instrumentation."""
+
+    def test_hash_string_with_telemetry_enabled(self):
+        """Verify hash_string executes with telemetry instrumentation."""
+        digest = hash_string("Telemetry test string")
+        assert digest is not None
+        assert digest.algorithm == Algorithm.XXH3_128

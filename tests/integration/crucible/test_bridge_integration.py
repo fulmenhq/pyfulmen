@@ -22,6 +22,7 @@ from pyfulmen.crucible.errors import CrucibleVersionError
 from pyfulmen.crucible.models import AssetMetadata
 
 
+@pytest.mark.filterwarnings("ignore::DeprecationWarning")
 class TestBridgeIntegration:
     """Integration tests for bridge API against real synced assets."""
 
@@ -214,6 +215,7 @@ class TestBridgeIntegration:
         assert len(found) > 0, f"Expected to find some of {expected_schemas}, got {schema_names}"
 
 
+@pytest.mark.filterwarnings("ignore::DeprecationWarning")
 class TestErrorHandling:
     """Test error handling and edge cases."""
 

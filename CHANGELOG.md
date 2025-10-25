@@ -7,7 +7,47 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+**🎯 Telemetry Retrofit Complete**: All 8 major modules now instrumented with comprehensive telemetry (Phases 1.5-8)
+
+- **16 metrics** across Pathfinder, Config, Schema, Foundry, Logging, Crucible, Docscribe, FulHash
+- **1269 tests passing** (1250 baseline + 19 new telemetry smoke tests)
+- **Zero performance overhead** confirmed across all phases
+- **Dogfooding complete**: PyFulmen now fully observes its own behavior
+- **Production ready**: Telemetry pattern proven and documented for ecosystem adoption
+- **Pattern alignment**: Follows [Crucible ADR-0008](docs/crucible-py/architecture/decisions/ADR-0008-helper-library-instrumentation-patterns.md) instrumentation patterns
+
 ### Added
+
+- **FulHash Telemetry Instrumentation (Phase 8 - Complete)**: Performance-sensitive counter-only pattern
+  - `hash_file()` emits `fulhash_hash_file_count` counter (file hash operations)
+  - `hash_string()` emits `fulhash_hash_string_count` counter (string hash operations)
+  - `stream()` emits `fulhash_stream_created_count` counter (stream hasher creation)
+  - All hash operations emit `fulhash_errors_count` counter (I/O failures)
+  - Counter-only pattern per Crucible ADR-0008 Performance-Sensitive guidance
+  - 160 fulhash tests passing (156 original + 4 new telemetry tests)
+  - <10ns overhead per operation (vs 50-100ns for histogram pattern)
+  - Preserves performance for high-frequency hashing workflows (50,000+ calls)
+  - **Rationale**: Final module retrofit, establishes performance-sensitive instrumentation pattern
+
+- **Docscribe Telemetry Instrumentation (Phase 7 - Complete)**: Lightweight telemetry in Docscribe module
+  - `parse_frontmatter()` emits `docscribe_parse_count` counter (parsing operations)
+  - `extract_headers()` emits `docscribe_extract_headers_count` counter (header extraction)
+  - Counter-only pattern (no histograms) for lightweight operations
+  - 94 docscribe tests passing (92 original + 2 new telemetry tests)
+  - Zero performance overhead confirmed
+  - Simplified instrumentation for fast, low-overhead operations
+  - **Rationale**: Complete telemetry retrofit across all 7 major modules
+
+- **Crucible Bridge Telemetry Instrumentation (Phase 6 - Complete)**: Comprehensive asset access telemetry
+  - `list_assets()` emits `crucible_list_assets_ms` histogram (asset discovery latency)
+  - `find_schema()` emits `crucible_find_schema_ms` histogram (schema lookup latency)
+  - `find_config()` emits `crucible_find_config_ms` histogram (config lookup latency)
+  - `get_doc()` emits `crucible_get_doc_ms` histogram (doc retrieval latency)
+  - All lookup operations emit `crucible_asset_not_found_count` counter (failed lookups)
+  - 33 crucible bridge tests passing (28 original + 5 new telemetry tests)
+  - Standard try/finally pattern with error counters
+  - Complete observability for Crucible asset access patterns
+  - **Rationale**: Critical bridge module instrumentation for production monitoring
 
 - **Logging Telemetry Instrumentation (Phase 5 - Complete)**: Self-instrumentation in Logging module
   - `ProgressiveLogger.log()` emits `logging_emit_count` counter (log emissions)

@@ -362,3 +362,21 @@ class TestFileHashingIntegration:
 
         assert validate_checksum_string(digest_xxh3.formatted)
         assert validate_checksum_string(digest_sha.formatted)
+
+
+class TestTelemetry:
+    """Tests for FulHash telemetry instrumentation."""
+
+    def test_hash_file_with_telemetry_enabled(self, tmp_path):
+        """Verify hash_file executes with telemetry instrumentation."""
+        file_path = tmp_path / "telemetry_test.txt"
+        file_path.write_text("Telemetry test content")
+
+        digest = hash_file(file_path)
+        assert digest is not None
+        assert digest.algorithm == Algorithm.XXH3_128
+
+    def test_hash_file_error_with_telemetry_enabled(self):
+        """Verify hash_file error path executes with telemetry."""
+        with pytest.raises(FileNotFoundError):
+            hash_file("/nonexistent/file/path.txt")

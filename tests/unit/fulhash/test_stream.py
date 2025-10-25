@@ -321,3 +321,16 @@ class TestStreamingAlgorithms:
         assert digest_xxh3.algorithm == Algorithm.XXH3_128
         assert digest_sha.algorithm == Algorithm.SHA256
         assert digest_xxh3.formatted != digest_sha.formatted
+
+
+class TestTelemetry:
+    """Tests for FulHash telemetry instrumentation."""
+
+    def test_stream_with_telemetry_enabled(self):
+        """Verify stream() executes with telemetry instrumentation."""
+        hasher = stream(Algorithm.XXH3_128)
+        hasher.update(b"Telemetry test data")
+        digest = hasher.digest()
+
+        assert digest is not None
+        assert digest.algorithm == Algorithm.XXH3_128

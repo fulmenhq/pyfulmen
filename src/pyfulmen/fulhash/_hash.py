@@ -8,6 +8,8 @@ import hashlib
 
 import xxhash
 
+from pyfulmen.telemetry import MetricRegistry
+
 from .models import Algorithm, Digest
 
 
@@ -65,6 +67,9 @@ def hash_string(
     Returns:
         Digest with algorithm, hex, bytes, and formatted fields
 
+    Telemetry:
+        - Emits fulhash_hash_string_count counter (hash operations)
+
     Examples:
         >>> from pyfulmen.fulhash import hash_string, Algorithm
         >>> digest = hash_string("Hello, World!", Algorithm.SHA256)
@@ -76,6 +81,9 @@ def hash_string(
         >>> digest.algorithm
         <Algorithm.XXH3_128: 'xxh3-128'>
     """
+    registry = MetricRegistry()
+    registry.counter("fulhash_hash_string_count").inc()
+
     data = text.encode(encoding)
     return hash_bytes(data, algorithm)
 

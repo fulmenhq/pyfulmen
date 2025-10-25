@@ -152,8 +152,9 @@ class TestGetCrucibleVersion:
         assert "." in version.version or "-" in version.version
 
 
+@pytest.mark.filterwarnings("ignore::DeprecationWarning")
 class TestLoadSchemaById:
-    """Tests for load_schema_by_id function."""
+    """Tests for load_schema_by_id function (deprecated API)."""
 
     def test_load_valid_schema_succeeds(self):
         """load_schema_by_id with valid ID returns schema dict."""
@@ -187,8 +188,9 @@ class TestLoadSchemaById:
             assert hasattr(e, "suggestions")
 
 
+@pytest.mark.filterwarnings("ignore::DeprecationWarning")
 class TestGetConfigDefaults:
-    """Tests for get_config_defaults function."""
+    """Tests for get_config_defaults function (deprecated API)."""
 
     def test_load_valid_config_succeeds(self):
         """get_config_defaults with valid category/version/name returns dict."""
