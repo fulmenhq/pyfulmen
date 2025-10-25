@@ -3,11 +3,11 @@ title: "PyFulmen Overview"
 description: "Python foundation library for the Fulmen ecosystem"
 author: "PyFulmen Architect"
 date: "2025-10-11"
-last_updated: "2025-10-20"
+last_updated: "2025-10-25"
 status: "active"
 lifecycle_phase: "alpha"
-version: "0.1.4"
-tags: ["python", "library", "fulmen", "enterprise"]
+version: "0.1.6"
+tags: ["python", "library", "fulmen", "enterprise", "telemetry", "observability"]
 ---
 
 # PyFulmen Overview
@@ -349,9 +349,9 @@ PyFulmen's dependency structure follows the Fulmen ecosystem model to prevent ci
 
 ## Roadmap & Gaps
 
-### Current Release (v0.1.4)
+### Current Release (v0.1.6)
 
-**Status**: Alpha - Core modules stable, documentation module enhanced
+**Status**: Alpha - Core modules stable, telemetry retrofit complete
 
 **Completed**:
 
@@ -368,8 +368,12 @@ PyFulmen's dependency structure follows the Fulmen ecosystem model to prevent ci
 - ✅ Pathfinder module (filesystem scanning with glob patterns, 47 tests)
 - ✅ ASCII helpers (console formatting, box drawing, 48 tests)
 - ✅ Docscribe module (frontmatter parsing, header extraction, outline generation, 92 tests)
+- ✅ Error Handling module (Pathfinder error wrapper, telemetry metadata, schema validation)
+- ✅ Telemetry & Metrics module (counter/gauge/histogram, Crucible taxonomy validation)
+- ✅ FulHash module (xxh3-128/sha256 hashing, thread-safe streaming, 156 tests)
+- ✅ Telemetry Retrofit Complete (all 8 modules instrumented with 16 metrics, Phases 1.5-8)
 
-**Test Coverage**: 720+ tests passing, 90%+ coverage across all modules
+**Test Coverage**: 1269 tests passing (zero warnings), 93% coverage across all modules
 
 ### Next Release (v0.2.0)
 

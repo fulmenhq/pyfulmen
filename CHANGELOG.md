@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Nothing yet
+
+## [0.1.6] - 2025-10-25
+
 **🎯 Telemetry Retrofit Complete**: All 8 major modules now instrumented with comprehensive telemetry (Phases 1.5-8)
 
 - **16 metrics** across Pathfinder, Config, Schema, Foundry, Logging, Crucible, Docscribe, FulHash
@@ -117,10 +123,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - ADR-0010 documents performance characteristics vs <10% aspirational target
   - Binary fixture protection via .gitattributes (prevents Windows CRLF corruption)
 
-## [0.1.6] - 2025-10-23
-
-### Added
-
 - **FulHash Module**: Fast, consistent hashing for the Fulmen ecosystem
   - Two algorithms: xxh3-128 (default, fast) and sha256 (cryptographic)
   - Block hashing: `hash_bytes(data)`, `hash_string(text, encoding)`, `hash_file(path)`
@@ -193,6 +195,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Documentation**: Comprehensive module documentation
   - `README.md`: Added Error Handling and Telemetry & Metrics sections with examples
   - `docs/pyfulmen_overview.md`: Updated module catalog with error-handling-propagation and telemetry-metrics (✅ Stable)
+
+### Improved
+
+- **Test Quality**: Eliminated test warnings and improved test markers
+  - Added `@pytest.mark.filterwarnings("ignore::DeprecationWarning")` to backward compatibility test classes
+  - Registered `slow` pytest marker in `pyproject.toml` to eliminate unknown mark warnings
+  - Reduced test warnings from 11 → 0 (clean test suite)
+  - All 1269 tests passing with zero warnings
 
 ### Architectural Impact
 
