@@ -1,6 +1,6 @@
 [project]
 name = "pyfulmen"
-version = "0.1.6"
+version = "0.1.7"
 description = "Python Fulmen libraries"
 authors = [
     {name = "3 Leaps Team", email = "dev@3leaps.net"}
