@@ -46,10 +46,10 @@ Example:
 References:
     - Standard: docs/crucible-py/standards/library/foundry/similarity.md
     - Fixtures: config/crucible-py/library/foundry/similarity-fixtures.yaml
-    - Schema: schemas/crucible-py/library/foundry/v1.0.0/similarity.schema.json
+    - Schema: schemas/crucible-py/library/foundry/v2.0.0/similarity.schema.json
 """
 
-from ._distance import distance, score
+from ._distance import distance, score, substring_match
 from ._normalize import casefold, equals_ignore_case, normalize, strip_accents
 from ._suggest import suggest
 from .models import Suggestion
@@ -58,6 +58,7 @@ __all__ = [
     "Suggestion",
     "distance",
     "score",
+    "substring_match",
     "suggest",
     "casefold",
     "normalize",

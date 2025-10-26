@@ -755,12 +755,274 @@ Pydantic v2.12+ computed fields with intelligent exclusion:
 - Explicit inclusion when needed (`include_computed=True`)
 - Full introspection support
 
+## Text Similarity and Normalization
+
+PyFulmen provides comprehensive text similarity utilities following the Foundry Similarity v2.0.0 standard. The module supports multiple distance metrics, Unicode-aware normalization, and ranked suggestion generation for typo correction and fuzzy matching.
+
+### Similarity Metrics
+
+The similarity module supports five metrics with different use cases:
+
+```python
+from pyfulmen.foundry import similarity
+
+# Levenshtein (default) - insertions, deletions, substitutions
+similarity.distance("kitten", "sitting")  # 3
+similarity.score("kitten", "sitting")     # 0.5714285714285714
+
+# Damerau-Levenshtein OSA - adds adjacent transpositions
+# Best for: typo correction, spell checking, CLI fuzzy matching
+similarity.distance("abcd", "abdc", metric="damerau_osa")  # 1
+similarity.score("abcd", "abdc", metric="damerau_osa")     # 0.75
+
+# Damerau-Levenshtein Unrestricted - unrestricted transpositions
+# Best for: general similarity, DNA sequencing, complex transformations
+similarity.distance("CA", "ABC", metric="damerau_unrestricted")  # 2
+similarity.score("CA", "ABC", metric="damerau_unrestricted")     # 0.33333...
+
+# Jaro-Winkler - similarity for short strings with common prefixes
+# Best for: name matching, short text comparison, record linkage
+similarity.score("martha", "marhta", metric="jaro_winkler")  # 0.9611111...
+similarity.score("dixon", "dicksonx", metric="jaro_winkler")  # 0.8133333...
+
+# Substring - longest common substring matching
+# Best for: path matching, partial string search, document similarity
+match_range, score = similarity.substring_match("world", "hello world")
+# match_range = (6, 11), score = 0.4545454...
+```
+
+### Metric Selection Guide
+
+**Choose Levenshtein when:**
+- You need standard edit distance
+- Performance is critical (fastest implementation)
+- Transpositions should cost 2 operations
+
+**Choose Damerau-Levenshtein OSA when:**
+- Correcting common typos (transpositions)
+- Building CLI autocomplete/suggestions
+- Single-character swaps are common errors
+
+**Choose Damerau-Levenshtein Unrestricted when:**
+- Complex transformations are valid
+- Need full transposition support
+- Working with DNA/protein sequences
+
+**Choose Jaro-Winkler when:**
+- Comparing names or short strings
+- Common prefixes are significant
+- Record linkage or deduplication
+
+**Choose Substring when:**
+- Searching for partial matches
+- Comparing file paths or URLs
+- Need match location information
+
+### Text Normalization
+
+Unicode-aware text normalization with configurable options:
+
+```python
+from pyfulmen.foundry import similarity
+
+# Basic normalization (trim + casefold)
+similarity.normalize("  Hello World  ")  # "hello world"
+
+# With accent stripping
+similarity.normalize("Café", strip_accents=True)  # "cafe"
+
+# Case-insensitive comparison
+similarity.equals_ignore_case("Hello", "HELLO")  # True
+similarity.equals_ignore_case("Café", "cafe", strip_accents=True)  # True
+
+# Unicode casefold with locale support
+similarity.casefold("İstanbul", locale="tr")  # Turkish dotted I handling
+```
+
+### Suggestion Ranking
+
+Rank candidate strings by similarity for typo correction:
+
+```python
+from pyfulmen.foundry import similarity
+
+# CLI command suggestions
+suggestions = similarity.suggest(
+    "cofnig",
+    ["config", "configure", "confirm", "conflict"],
+    min_score=0.6,
+    max_suggestions=3
+)
+# [Suggestion(score=0.833..., value='config'),
+#  Suggestion(score=0.625, value='configure'),
+#  Suggestion(score=0.625, value='confirm')]
+
+# Empty input defaults to alphabetical listing
+suggestions = similarity.suggest("", ["zebra", "alpha", "beta"])
+# [Suggestion(score=1.0, value='alpha'),
+#  Suggestion(score=1.0, value='beta'),
+#  Suggestion(score=1.0, value='zebra')]
+
+# No matches returns empty list
+suggestions = similarity.suggest("xyz", ["abc", "def"], min_score=0.8)
+# []
+```
+
+### Advanced Usage
+
+**Custom Jaro-Winkler parameters:**
+
+```python
+# Adjust prefix scaling (default: 0.1)
+score = similarity.score(
+    "testing", "test",
+    metric="jaro_winkler",
+    jaro_prefix_scale=0.15  # More weight to common prefixes
+)
+
+# Maximum prefix length (default: 4)
+score = similarity.score(
+    "testing", "test",
+    metric="jaro_winkler",
+    jaro_max_prefix=2  # Only consider first 2 characters
+)
+```
+
+**Substring matching with location:**
+
+```python
+# Find substring and get location
+match_range, score = similarity.substring_match("schemas", "schemas/foundry/patterns.yaml")
+# match_range = (0, 7), score = 0.241379...
+
+if match_range:
+    start, end = match_range
+    matched_text = haystack[start:end]  # "schemas"
+```
+
+### Performance Notes
+
+**Computational Complexity:**
+
+- **Levenshtein**: O(m×n) time, O(min(m,n)) space (two-row optimization)
+- **Damerau OSA**: O(m×n) time, O(m×n) space
+- **Damerau Unrestricted**: O(m×n) time, O(m×n) space
+- **Jaro-Winkler**: O(m×n) time, O(1) space
+- **Substring**: O(m×n) time, O(m×n) space
+
+**Performance Targets** (from Foundry standard):
+- ≤1ms for strings ≤128 characters
+- ≤10ms for strings ≤1024 characters
+
+**Substring Performance Consideration:**
+
+The longest common substring implementation uses an O(m×n) dynamic programming matrix. This is appropriate for typical use cases (CLI suggestions, path matching, short documents), but performance may degrade with very large strings (>10KB).
+
+**Recommended limits for substring matching:**
+- ✅ **Optimal**: strings <1KB (instant results)
+- ⚠️ **Acceptable**: strings 1-10KB (may take 10-100ms)
+- ❌ **Not recommended**: strings >10KB (consider alternative approaches)
+
+For very large text comparison, consider chunking strategies or alternative algorithms (e.g., suffix trees, rolling hashes).
+
+### Dependency Notes
+
+**RapidFuzz Integration:**
+
+PyFulmen uses [rapidfuzz](https://github.com/maxbachmann/RapidFuzz) (≥3.10.0) for Damerau-Levenshtein and Jaro-Winkler implementations. RapidFuzz provides high-performance C++ implementations with Python bindings.
+
+**Graceful Degradation:**
+
+If rapidfuzz is not available (e.g., in minimal environments or during bootstrapping), the module degrades gracefully:
+
+- **Damerau OSA** → Falls back to standard Levenshtein
+- **Damerau Unrestricted** → Falls back to Damerau OSA (which falls back to Levenshtein)
+- **Jaro-Winkler** → Returns 1.0 for exact matches, 0.0 otherwise
+- **Substring** → Always available (pure Python implementation)
+
+This ensures predictable behavior across all environments, though with reduced accuracy for the Damerau and Jaro-Winkler metrics when rapidfuzz is absent.
+
+**To ensure full functionality, install with:**
+```bash
+pip install pyfulmen[similarity]  # Includes rapidfuzz
+# or
+pip install pyfulmen rapidfuzz>=3.10.0
+```
+
+### API Reference
+
+**Core Functions:**
+
+```python
+# Distance calculation (edit distance as integer)
+distance(a: str, b: str, metric: MetricType = "levenshtein") -> int
+
+# Similarity scoring (normalized 0.0-1.0)
+score(
+    a: str,
+    b: str,
+    metric: MetricType = "levenshtein",
+    jaro_prefix_scale: float = 0.1,
+    jaro_max_prefix: int = 4,
+) -> float
+
+# Substring matching with location
+substring_match(needle: str, haystack: str) -> tuple[tuple[int, int] | None, float]
+
+# Suggestion ranking
+suggest(
+    input_value: str,
+    candidates: list[str],
+    min_score: float = 0.0,
+    max_suggestions: int | None = None,
+    normalize: bool = True,
+    strip_accents: bool = False,
+) -> list[Suggestion]
+
+# Text normalization
+normalize(value: str, strip_accents: bool = False, locale: str = "en") -> str
+casefold(value: str, locale: str = "en") -> str
+strip_accents(value: str) -> str
+equals_ignore_case(a: str, b: str, strip_accents: bool = False, locale: str = "en") -> bool
+```
+
+**Metric Types:**
+```python
+MetricType = Literal[
+    "levenshtein",
+    "damerau_osa",
+    "damerau_unrestricted",
+    "jaro_winkler",
+    "substring",
+]
+```
+
+**Data Models:**
+```python
+@dataclass(frozen=True, order=True)
+class Suggestion:
+    score: float  # Similarity score (0.0-1.0)
+    value: str    # Candidate string
+```
+
+### Standards Compliance
+
+- **Schema**: `schemas/crucible-py/library/foundry/v2.0.0/similarity.schema.json`
+- **Fixtures**: `config/crucible-py/library/foundry/similarity-fixtures.yaml` (46 test cases)
+- **Standard**: Foundry Similarity v2.0.0 (Crucible 2025.10.3)
+- **Cross-language**: API parity with gofulmen and tsfulmen
+
+### References
+
+- **Implementation Guide**: `docs/crucible-py/standards/library/foundry/similarity.md`
+- **Fixtures**: `config/crucible-py/library/foundry/similarity-fixtures.yaml`
+- **Test Coverage**: 90%+ (55+ unit tests, 46 fixture validations)
+
 ## Future Extensions
 
 Planned enhancements for future versions:
 
-- **Magic Number Detection** - MIME type detection from byte signatures (awaiting Crucible magic number catalog)
-- **Country Code Catalog** - ISO 3166-1 alpha-2/alpha-3/numeric lookups (planned for v0.2.x)
 - **Pattern Validation Helpers** - Additional domain-specific pattern utilities
 - **Catalog Versioning** - Track Crucible catalog version and sync status
 - **Performance Optimizations** - Compiled regex caching, bloom filters for existence checks
+- **Similarity Enhancements** - Phonetic algorithms (Soundex, Metaphone), n-gram similarity
