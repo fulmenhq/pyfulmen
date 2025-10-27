@@ -31,35 +31,46 @@ class TestDistanceFixtures:
     """Test distance and score calculations against fixtures."""
 
     def test_all_distance_fixtures(self, fixture_data):
-        """Validate all distance fixture test cases."""
-        distance_cases = [tc for tc in fixture_data if tc["category"] == "distance"][0]["cases"]
+        """Validate all distance fixture test cases (v2.0 - multiple metric categories)."""
+        distance_categories = {
+            "levenshtein": "levenshtein",
+            "damerau_osa": "damerau_osa",
+            "damerau_unrestricted": "damerau_unrestricted",
+        }
 
         failures = []
 
-        for case in distance_cases:
-            input_a = case["input_a"]
-            input_b = case["input_b"]
-            expected_distance = case["expected_distance"]
-            expected_score = case["expected_score"]
-            description = case["description"]
+        for category, metric in distance_categories.items():
+            category_block = [tc for tc in fixture_data if tc["category"] == category]
+            if not category_block:
+                continue
 
-            actual_distance = similarity.distance(input_a, input_b)
-            actual_score = similarity.score(input_a, input_b)
+            cases = category_block[0]["cases"]
 
-            distance_match = actual_distance == expected_distance
-            score_match = abs(actual_score - expected_score) < 1e-10
+            for case in cases:
+                input_a = case["input_a"]
+                input_b = case["input_b"]
+                expected_distance = case["expected_distance"]
+                expected_score = case["expected_score"]
+                description = case.get("description", "no description")
 
-            if not distance_match:
-                failures.append(
-                    f"{description}: distance mismatch - "
-                    f"expected {expected_distance}, got {actual_distance}"
-                )
+                actual_distance = similarity.distance(input_a, input_b, metric=metric)  # type: ignore
+                actual_score = similarity.score(input_a, input_b, metric=metric)  # type: ignore
 
-            if not score_match:
-                failures.append(
-                    f"{description}: score mismatch - "
-                    f"expected {expected_score:.16f}, got {actual_score:.16f}"
-                )
+                distance_match = actual_distance == expected_distance
+                score_match = abs(actual_score - expected_score) < 1e-10
+
+                if not distance_match:
+                    failures.append(
+                        f"[{category}] {description}: distance mismatch - "
+                        f"expected {expected_distance}, got {actual_distance}"
+                    )
+
+                if not score_match:
+                    failures.append(
+                        f"[{category}] {description}: score mismatch - "
+                        f"expected {expected_score:.16f}, got {actual_score:.16f}"
+                    )
 
         if failures:
             pytest.fail("\n".join(failures))
@@ -69,24 +80,22 @@ class TestNormalizationFixtures:
     """Test normalization functions against fixtures."""
 
     def test_all_normalization_fixtures(self, fixture_data):
-        """Validate all normalization fixture test cases."""
-        norm_cases = [tc for tc in fixture_data if tc["category"] == "normalization"][0]["cases"]
+        """Validate all normalization fixture test cases (v2.0 - preset-based)."""
+        norm_block = [tc for tc in fixture_data if tc["category"] == "normalization_presets"]
+        if not norm_block:
+            pytest.skip("No normalization_presets category in fixtures")
+
+        norm_cases = norm_block[0]["cases"]
 
         failures = []
 
         for case in norm_cases:
             input_val = case["input"]
-            options = case.get("options", {})
+            preset = case["preset"]
             expected = case["expected"]
-            description = case["description"]
+            description = case.get("description", "no description")
 
-            kwargs = {}
-            if "strip_accents" in options:
-                kwargs["strip_accents_flag"] = options["strip_accents"]
-            if "locale" in options:
-                kwargs["locale"] = options["locale"]
-
-            actual = similarity.normalize(input_val, **kwargs)
+            actual = similarity.apply_normalization_preset(input_val, preset)  # type: ignore
 
             if actual != expected:
                 failures.append(
@@ -102,22 +111,12 @@ class TestSuggestionFixtures:
     """Test suggestion API against fixtures."""
 
     def test_all_suggestion_fixtures(self, fixture_data):
-        """Validate all suggestion fixture test cases.
+        """Validate all suggestion fixture test cases (v2.0 - supports all metrics)."""
+        suggest_block = [tc for tc in fixture_data if tc["category"] == "suggestions"]
+        if not suggest_block:
+            pytest.skip("No suggestions category in fixtures")
 
-        Note: Some fixtures are skipped as they expect Damerau-Levenshtein
-        distance (which counts transpositions as 1 operation) or other
-        advanced metrics. These are explicitly excluded from v1.0.0 per
-        the similarity standard and will be enabled in future versions.
-        """
-        suggest_cases = [tc for tc in fixture_data if tc["category"] == "suggestions"][0]["cases"]
-
-        # SKIP: Fixtures expecting Damerau-Levenshtein or advanced metrics
-        # TODO: Unskip when Damerau-Levenshtein support is added (post-v0.1.5)
-        skip_descriptions = {
-            "Transposition (two candidates tie)",  # Expects Damerau-Levenshtein
-            "Transposition in middle (three-way tie)",  # Expects Damerau-Levenshtein
-            "Partial path matching",  # Expects substring/fuzzy matching beyond standard Levenshtein
-        }
+        suggest_cases = suggest_block[0]["cases"]
 
         failures = []
 
@@ -126,17 +125,23 @@ class TestSuggestionFixtures:
             candidates = case["candidates"]
             options = case.get("options", {})
             expected = case["expected"]
-            description = case["description"]
-
-            # Skip fixtures expecting advanced algorithms not yet implemented
-            if description in skip_descriptions:
-                continue
+            description = case.get("description", "no description")
 
             kwargs = {
                 "min_score": options.get("min_score", 0.6),
                 "max_suggestions": options.get("max_suggestions", 3),
-                "normalize_text": options.get("normalize", True),
             }
+
+            if "metric" in options:
+                kwargs["metric"] = options["metric"]  # type: ignore
+
+            if "normalize_preset" in options:
+                kwargs["normalize_preset"] = options["normalize_preset"]  # type: ignore
+            elif "normalize" in options:
+                kwargs["normalize_text"] = options["normalize"]
+
+            if "prefer_prefix" in options:
+                kwargs["prefer_prefix"] = options["prefer_prefix"]
 
             actual_suggestions = similarity.suggest(input_val, candidates, **kwargs)
 
@@ -168,20 +173,28 @@ class TestFixtureMetadata:
     """Test fixture file metadata and structure."""
 
     def test_fixture_version(self, fixture_data):
-        """Verify fixture version is compatible."""
+        """Verify fixture version is compatible (v2.0)."""
         fixture_path = "config/crucible-py/library/foundry/similarity-fixtures.yaml"
 
         with open(fixture_path) as f:
             data = yaml.safe_load(f)
 
         assert "version" in data
-        assert data["version"] == "2025.10.2"
+        assert data["version"] == "2025.10.3"
 
     def test_fixture_categories_present(self, fixture_data):
-        """Verify all expected categories are present."""
+        """Verify all expected categories are present (v2.0 structure)."""
         categories = {tc["category"] for tc in fixture_data}
 
-        expected_categories = {"distance", "normalization", "suggestions"}
+        expected_categories = {
+            "levenshtein",
+            "damerau_osa",
+            "damerau_unrestricted",
+            "jaro_winkler",
+            "substring",
+            "normalization_presets",
+            "suggestions",
+        }
         assert categories == expected_categories
 
     def test_fixture_case_count(self, fixture_data):
@@ -190,9 +203,9 @@ class TestFixtureMetadata:
             category = category_block["category"]
             cases = category_block["cases"]
 
-            if category == "distance":
-                assert len(cases) >= 10, f"Distance category has only {len(cases)} cases"
-            elif category == "normalization":
-                assert len(cases) >= 10, f"Normalization category has only {len(cases)} cases"
+            if category in ("levenshtein", "damerau_osa", "damerau_unrestricted"):
+                assert len(cases) >= 4, f"{category} category has only {len(cases)} cases"
+            elif category == "normalization_presets":
+                assert len(cases) >= 7, f"normalization_presets category has only {len(cases)} cases"
             elif category == "suggestions":
-                assert len(cases) >= 5, f"Suggestions category has only {len(cases)} cases"
+                assert len(cases) >= 4, f"Suggestions category has only {len(cases)} cases"

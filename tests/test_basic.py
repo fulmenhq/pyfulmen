@@ -6,4 +6,4 @@ import pyfulmen
 def test_version():
     """Test that version is defined."""
     assert hasattr(pyfulmen, "__version__")
-    assert pyfulmen.__version__ == "0.1.6"
+    assert pyfulmen.__version__ == "0.1.7"
