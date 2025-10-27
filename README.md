@@ -2,7 +2,7 @@
 
 Python Fulmen libraries for enterprise-scale development.
 
-**Lifecycle Phase**: `alpha` | **Version**: 0.1.6 | **Coverage**: 93%
+**Lifecycle Phase**: `alpha` | **Version**: 0.1.7 | **Coverage**: 93%
 
 ## Overview
 

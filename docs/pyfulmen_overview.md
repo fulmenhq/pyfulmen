@@ -3,10 +3,10 @@ title: "PyFulmen Overview"
 description: "Python foundation library for the Fulmen ecosystem"
 author: "PyFulmen Architect"
 date: "2025-10-11"
-last_updated: "2025-10-25"
+last_updated: "2025-10-27"
 status: "active"
 lifecycle_phase: "alpha"
-version: "0.1.6"
+version: "0.1.7"
 tags:
   ["python", "library", "fulmen", "enterprise", "telemetry", "observability"]
 ---
@@ -350,9 +350,9 @@ PyFulmen's dependency structure follows the Fulmen ecosystem model to prevent ci
 
 ## Roadmap & Gaps
 
-### Current Release (v0.1.6)
+### Current Release (v0.1.7)
 
-**Status**: Alpha - Core modules stable, telemetry retrofit complete
+**Status**: Alpha - Core modules stable, Foundry Similarity v2.0.0 complete
 
 **Completed**:
 
@@ -366,7 +366,8 @@ PyFulmen's dependency structure follows the Fulmen ecosystem model to prevent ci
 - ✅ Middleware pipeline implementation
 - ✅ Throttling and backpressure management
 - ✅ Foundry patterns module (pattern catalogs, MIME detection, HTTP status helpers)
-- ✅ Pathfinder module (filesystem scanning with glob patterns, 47 tests)
+- ✅ Foundry Similarity v2.0.0 (4 metrics, 4 normalization presets, 78 tests)
+- ✅ Pathfinder module (filesystem scanning with glob patterns, 90 tests)
 - ✅ ASCII helpers (console formatting, box drawing, 48 tests)
 - ✅ Docscribe module (frontmatter parsing, header extraction, outline generation, 92 tests)
 - ✅ Error Handling module (Pathfinder error wrapper, telemetry metadata, schema validation)
@@ -374,7 +375,7 @@ PyFulmen's dependency structure follows the Fulmen ecosystem model to prevent ci
 - ✅ FulHash module (xxh3-128/sha256 hashing, thread-safe streaming, 156 tests)
 - ✅ Telemetry Retrofit Complete (all 8 modules instrumented with 16 metrics, Phases 1.5-8)
 
-**Test Coverage**: 1269 tests passing (zero warnings), 93% coverage across all modules
+**Test Coverage**: 1286 tests passing (18 skipped), 93% coverage across all modules
 
 ### Next Release (v0.2.0)
 
