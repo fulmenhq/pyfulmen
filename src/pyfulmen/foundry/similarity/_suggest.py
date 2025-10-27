@@ -132,9 +132,7 @@ def suggest(
                 normalized_input, normalized_candidate
             )
             if similarity_score >= min_score:
-                norm_val = (
-                    normalized_candidate if normalize_preset or normalize_text else None
-                )
+                norm_val = normalized_candidate if normalize_preset or normalize_text else None
                 suggestion = Suggestion(
                     score=similarity_score,
                     value=candidate,
@@ -152,9 +150,7 @@ def suggest(
             )
 
             if similarity_score >= min_score:
-                norm_val = (
-                    normalized_candidate if normalize_preset or normalize_text else None
-                )
+                norm_val = normalized_candidate if normalize_preset or normalize_text else None
                 is_prefix = normalized_candidate.startswith(normalized_input)
                 suggestion = Suggestion(
                     score=similarity_score,

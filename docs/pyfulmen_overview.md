@@ -7,7 +7,8 @@ last_updated: "2025-10-25"
 status: "active"
 lifecycle_phase: "alpha"
 version: "0.1.6"
-tags: ["python", "library", "fulmen", "enterprise", "telemetry", "observability"]
+tags:
+  ["python", "library", "fulmen", "enterprise", "telemetry", "observability"]
 ---
 
 # PyFulmen Overview

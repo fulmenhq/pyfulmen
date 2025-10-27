@@ -755,9 +755,37 @@ Pydantic v2.12+ computed fields with intelligent exclusion:
 - Explicit inclusion when needed (`include_computed=True`)
 - Full introspection support
 
-## Text Similarity and Normalization
+## Text Similarity and Normalization (v2.0.0)
 
-PyFulmen provides comprehensive text similarity utilities following the Foundry Similarity v2.0.0 standard. The module supports multiple distance metrics, Unicode-aware normalization, and ranked suggestion generation for typo correction and fuzzy matching.
+PyFulmen provides comprehensive text similarity utilities following the Foundry Similarity v2.0.0 standard. The module supports five distance metrics, four normalization presets, and ranked suggestion generation for typo correction, fuzzy matching, and text comparison.
+
+### Quick Start
+
+```python
+from pyfulmen.foundry import similarity
+
+# Basic similarity with default Levenshtein metric
+similarity.distance("kitten", "sitting")  # 3
+similarity.score("kitten", "sitting")     # 0.571...
+
+# Typo correction with Damerau OSA (handles transpositions)
+similarity.distance("teh", "the", metric="damerau_osa")  # 1
+
+# CLI suggestions with Jaro-Winkler (rewards prefixes)
+suggestions = similarity.suggest(
+    "terrafrom",
+    ["terraform", "format", "validate"],
+    metric="jaro_winkler"
+)
+
+# Fuzzy matching with aggressive normalization
+suggestions = similarity.suggest(
+    "café!",
+    ["Cafe", "CAFE"],
+    normalize_preset="aggressive",
+    min_score=0.8
+)
+```
 
 ### Similarity Metrics
 
@@ -794,41 +822,52 @@ match_range, score = similarity.substring_match("world", "hello world")
 ### Metric Selection Guide
 
 **Choose Levenshtein when:**
+
 - You need standard edit distance
 - Performance is critical (fastest implementation)
 - Transpositions should cost 2 operations
 
 **Choose Damerau-Levenshtein OSA when:**
+
 - Correcting common typos (transpositions)
 - Building CLI autocomplete/suggestions
 - Single-character swaps are common errors
 
 **Choose Damerau-Levenshtein Unrestricted when:**
+
 - Complex transformations are valid
 - Need full transposition support
 - Working with DNA/protein sequences
 
 **Choose Jaro-Winkler when:**
+
 - Comparing names or short strings
 - Common prefixes are significant
 - Record linkage or deduplication
 
 **Choose Substring when:**
+
 - Searching for partial matches
 - Comparing file paths or URLs
 - Need match location information
 
 ### Text Normalization
 
-Unicode-aware text normalization with configurable options:
+Unicode-aware text normalization with preset-based configuration:
 
 ```python
 from pyfulmen.foundry import similarity
 
-# Basic normalization (trim + casefold)
-similarity.normalize("  Hello World  ")  # "hello world"
+# Normalization presets (v2.0.0)
+text = "  Café-Zürich! 🎉  "
 
-# With accent stripping
+similarity.apply_normalization_preset(text, "none")       # "  Café-Zürich! 🎉  "
+similarity.apply_normalization_preset(text, "minimal")    # "Café-Zürich! 🎉"
+similarity.apply_normalization_preset(text, "default")    # "café-zürich! 🎉"
+similarity.apply_normalization_preset(text, "aggressive") # "cafezurich "
+
+# Legacy API (backward compatible)
+similarity.normalize("  Hello World  ")  # "hello world"
 similarity.normalize("Café", strip_accents=True)  # "cafe"
 
 # Case-insensitive comparison
@@ -839,6 +878,13 @@ similarity.equals_ignore_case("Café", "cafe", strip_accents=True)  # True
 similarity.casefold("İstanbul", locale="tr")  # Turkish dotted I handling
 ```
 
+**Preset Levels**:
+
+- **`none`**: No changes (exact matching)
+- **`minimal`**: NFC normalization + trim whitespace
+- **`default`**: NFC + casefold + trim (recommended for most use cases)
+- **`aggressive`**: NFKD + casefold + strip accents + remove punctuation + trim
+
 ### Suggestion Ranking
 
 Rank candidate strings by similarity for typo correction:
@@ -846,7 +892,26 @@ Rank candidate strings by similarity for typo correction:
 ```python
 from pyfulmen.foundry import similarity
 
-# CLI command suggestions
+# CLI command suggestions with metric selection (v2.0.0)
+suggestions = similarity.suggest(
+    "terrafrom",
+    ["terraform", "terraform-apply", "format"],
+    metric="jaro_winkler",  # Best for prefix matching
+    min_score=0.7,
+    max_suggestions=3
+)
+# Returns terraform commands ranked by prefix similarity
+
+# Fuzzy matching with normalization presets (v2.0.0)
+suggestions = similarity.suggest(
+    "café",
+    ["Cafe", "CAFE", "cache"],
+    normalize_preset="aggressive",  # Strip accents, case, punctuation
+    min_score=0.8
+)
+# Returns: ["Cafe", "CAFE"] (cache excluded, too different)
+
+# Basic usage (backward compatible)
 suggestions = similarity.suggest(
     "cofnig",
     ["config", "configure", "confirm", "conflict"],
@@ -911,6 +976,7 @@ if match_range:
 - **Substring**: O(m×n) time, O(m×n) space
 
 **Performance Targets** (from Foundry standard):
+
 - ≤1ms for strings ≤128 characters
 - ≤10ms for strings ≤1024 characters
 
@@ -919,6 +985,7 @@ if match_range:
 The longest common substring implementation uses an O(m×n) dynamic programming matrix. This is appropriate for typical use cases (CLI suggestions, path matching, short documents), but performance may degrade with very large strings (>10KB).
 
 **Recommended limits for substring matching:**
+
 - ✅ **Optimal**: strings <1KB (instant results)
 - ⚠️ **Acceptable**: strings 1-10KB (may take 10-100ms)
 - ❌ **Not recommended**: strings >10KB (consider alternative approaches)
@@ -943,6 +1010,7 @@ If rapidfuzz is not available (e.g., in minimal environments or during bootstrap
 This ensures predictable behavior across all environments, though with reduced accuracy for the Damerau and Jaro-Winkler metrics when rapidfuzz is absent.
 
 **To ensure full functionality, install with:**
+
 ```bash
 pip install pyfulmen[similarity]  # Includes rapidfuzz
 # or
@@ -951,7 +1019,7 @@ pip install pyfulmen rapidfuzz>=3.10.0
 
 ### API Reference
 
-**Core Functions:**
+**Core Functions (v2.0.0):**
 
 ```python
 # Distance calculation (edit distance as integer)
@@ -969,24 +1037,35 @@ score(
 # Substring matching with location
 substring_match(needle: str, haystack: str) -> tuple[tuple[int, int] | None, float]
 
-# Suggestion ranking
+# Suggestion ranking (v2.0.0 enhanced)
 suggest(
     input_value: str,
     candidates: list[str],
-    min_score: float = 0.0,
-    max_suggestions: int | None = None,
-    normalize: bool = True,
-    strip_accents: bool = False,
+    min_score: float = 0.6,
+    max_suggestions: int = 3,
+    normalize_text: bool = True,
+    metric: MetricType = "levenshtein",
+    normalize_preset: NormalizationPreset | None = None,
+    prefer_prefix: bool = False,
+    jaro_prefix_scale: float = 0.1,
+    jaro_max_prefix: int = 4,
 ) -> list[Suggestion]
 
-# Text normalization
-normalize(value: str, strip_accents: bool = False, locale: str = "en") -> str
-casefold(value: str, locale: str = "en") -> str
+# Text normalization (v2.0.0 presets)
+apply_normalization_preset(text: str, preset: NormalizationPreset) -> str
+normalize(
+    value: str,
+    preset: NormalizationPreset | None = None,
+    strip_accents_flag: bool = False,
+    locale: str = "",
+) -> str
+casefold(value: str, locale: str = "") -> str
 strip_accents(value: str) -> str
-equals_ignore_case(a: str, b: str, strip_accents: bool = False, locale: str = "en") -> bool
+equals_ignore_case(a: str, b: str, strip_accents_flag: bool = False) -> bool
 ```
 
 **Metric Types:**
+
 ```python
 MetricType = Literal[
     "levenshtein",
@@ -997,12 +1076,27 @@ MetricType = Literal[
 ]
 ```
 
+**Normalization Presets (v2.0.0):**
+
+```python
+NormalizationPreset = Literal[
+    "none",
+    "minimal",
+    "default",
+    "aggressive",
+]
+```
+
 **Data Models:**
+
 ```python
 @dataclass(frozen=True, order=True)
 class Suggestion:
-    score: float  # Similarity score (0.0-1.0)
-    value: str    # Candidate string
+    score: float                          # Similarity score (0.0-1.0)
+    value: str                            # Candidate string
+    matched_range: tuple[int, int] | None = None  # v2.0.0: Substring match location
+    reason: str | None = None             # v2.0.0: Match type explanation
+    normalized_value: str | None = None   # v2.0.0: Normalized form
 ```
 
 ### Standards Compliance

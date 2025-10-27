@@ -206,6 +206,8 @@ class TestFixtureMetadata:
             if category in ("levenshtein", "damerau_osa", "damerau_unrestricted"):
                 assert len(cases) >= 4, f"{category} category has only {len(cases)} cases"
             elif category == "normalization_presets":
-                assert len(cases) >= 7, f"normalization_presets category has only {len(cases)} cases"
+                assert len(cases) >= 7, (
+                    f"normalization_presets category has only {len(cases)} cases"
+                )
             elif category == "suggestions":
                 assert len(cases) >= 4, f"Suggestions category has only {len(cases)} cases"

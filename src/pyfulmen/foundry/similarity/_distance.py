@@ -249,9 +249,7 @@ def _jaro_winkler_similarity(
     try:
         from rapidfuzz.distance import JaroWinkler
 
-        return JaroWinkler.similarity(
-            a, b, prefix_weight=prefix_scale, processor=None
-        )
+        return JaroWinkler.similarity(a, b, prefix_weight=prefix_scale, processor=None)
     except ImportError:
         if a == b:
             return 1.0

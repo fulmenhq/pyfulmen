@@ -27,6 +27,7 @@ Computes authoritative hash values (xxh3-128, sha256) for FulHash test fixtures.
 **Dependencies**: `xxhash>=3.6.0`, `pyyaml>=6.0.3`
 
 **Usage**:
+
 ```bash
 uv run python scripts/bootstrap/compute_fulhash_fixtures.py
 ```
@@ -37,12 +38,13 @@ uv run python scripts/bootstrap/compute_fulhash_fixtures.py
 
 **Status**: ✅ Complete (v0.1.7) - Bootstrap phase only
 
-⚠️  **BOOTSTRAP ONLY**: This script overwrites files with PyYAML formatting. Use `validate_similarity_fixtures.py` for ongoing validation.
+⚠️ **BOOTSTRAP ONLY**: This script overwrites files with PyYAML formatting. Use `validate_similarity_fixtures.py` for ongoing validation.
 
 Computes authoritative similarity scores for Foundry similarity test fixtures.
 
 **Input**: `config/crucible-py/library/foundry/similarity-fixtures.yaml`  
-**Computes**: 
+**Computes**:
+
 - Levenshtein distance and scores (using `rapidfuzz.distance.Levenshtein`)
 - Damerau-Levenshtein OSA distance with transposition support (using `rapidfuzz.distance.OSA`)
 - Jaro-Winkler similarity scores (using `rapidfuzz.distance.JaroWinkler`)
@@ -53,6 +55,7 @@ Computes authoritative similarity scores for Foundry similarity test fixtures.
 **Dependencies**: `rapidfuzz>=3.10.0` (cross-validated against Rust strsim 0.11.x)
 
 **Usage**:
+
 ```bash
 # Initial bootstrap (overwrites file, changes formatting):
 uv run python scripts/bootstrap/compute_similarity_fixtures.py
@@ -74,11 +77,13 @@ Validates similarity fixture values WITHOUT modifying the file or changing its f
 **Output**: Validation report showing any mismatches
 
 **Usage**:
+
 ```bash
 uv run python scripts/bootstrap/validate_similarity_fixtures.py
 ```
 
 **Benefits**:
+
 - Preserves Crucible's YAML formatting (indentation, comments, order)
 - Non-destructive validation for CI/CD pipelines
 - Clear error reporting with expected vs. actual values
