@@ -137,12 +137,9 @@ def _damerau_osa_distance(a: str, b: str) -> int:
 
     Uses rapidfuzz for reference implementation.
     """
-    try:
-        from rapidfuzz.distance import OSA
+    from rapidfuzz.distance import OSA
 
-        return OSA.distance(a, b)
-    except ImportError:
-        return _levenshtein_distance(a, b)
+    return OSA.distance(a, b)
 
 
 def _damerau_unrestricted_distance(a: str, b: str) -> int:
@@ -152,12 +149,9 @@ def _damerau_unrestricted_distance(a: str, b: str) -> int:
 
     Uses rapidfuzz for reference implementation.
     """
-    try:
-        from rapidfuzz.distance import DamerauLevenshtein
+    from rapidfuzz.distance import DamerauLevenshtein
 
-        return DamerauLevenshtein.distance(a, b)
-    except ImportError:
-        return _damerau_osa_distance(a, b)
+    return DamerauLevenshtein.distance(a, b)
 
 
 def score(
@@ -246,14 +240,9 @@ def _jaro_winkler_similarity(
     Returns:
         Similarity score from 0.0 to 1.0
     """
-    try:
-        from rapidfuzz.distance import JaroWinkler
+    from rapidfuzz.distance import JaroWinkler
 
-        return JaroWinkler.similarity(a, b, prefix_weight=prefix_scale, processor=None)
-    except ImportError:
-        if a == b:
-            return 1.0
-        return 0.0
+    return JaroWinkler.similarity(a, b, prefix_weight=prefix_scale, processor=None)
 
 
 def substring_match(needle: str, haystack: str) -> tuple[tuple[int, int] | None, float]:

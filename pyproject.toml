@@ -27,14 +27,21 @@ dependencies = [
     "uuid6>=2025.0.1",
     "wcwidth>=0.2.0",
     "xxhash>=3.5.0",
+    "rapidfuzz>=3.14.1",
 ]
+
+[project.urls]
+Homepage = "https://github.com/fulmenhq/pyfulmen"
+Repository = "https://github.com/fulmenhq/pyfulmen"
+Documentation = "https://github.com/fulmenhq/pyfulmen#readme"
+Issues = "https://github.com/fulmenhq/pyfulmen/issues"
+Changelog = "https://github.com/fulmenhq/pyfulmen/blob/main/CHANGELOG.md"
 
 [project.optional-dependencies]
 dev = [
     "pytest>=8.0.0",
     "pytest-cov>=4.1.0",
     "ruff>=0.1.0",
-    "rapidfuzz>=3.10.0",
 ]
 
 [build-system]

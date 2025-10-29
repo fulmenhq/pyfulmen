@@ -996,25 +996,19 @@ For very large text comparison, consider chunking strategies or alternative algo
 
 **RapidFuzz Integration:**
 
-PyFulmen uses [rapidfuzz](https://github.com/maxbachmann/RapidFuzz) (≥3.10.0) for Damerau-Levenshtein and Jaro-Winkler implementations. RapidFuzz provides high-performance C++ implementations with Python bindings.
+PyFulmen uses [rapidfuzz](https://github.com/maxbachmann/RapidFuzz) (≥3.14.1) for Damerau-Levenshtein and Jaro-Winkler implementations. RapidFuzz provides high-performance C++ implementations with Python bindings and is **required** for Similarity v2.0.0.
 
-**Graceful Degradation:**
+**Why Required:**
 
-If rapidfuzz is not available (e.g., in minimal environments or during bootstrapping), the module degrades gracefully:
+- **Damerau OSA** and **Damerau Unrestricted** have no pure Python implementations in PyFulmen
+- **Jaro-Winkler** requires the rapidfuzz algorithm for accurate results
+- **Crucible fixtures** validate exact algorithm behavior (46/46 fixtures passing)
+- **PyFulmen is the reference implementation** for the Fulmen ecosystem
 
-- **Damerau OSA** → Falls back to standard Levenshtein
-- **Damerau Unrestricted** → Falls back to Damerau OSA (which falls back to Levenshtein)
-- **Jaro-Winkler** → Returns 1.0 for exact matches, 0.0 otherwise
-- **Substring** → Always available (pure Python implementation)
-
-This ensures predictable behavior across all environments, though with reduced accuracy for the Damerau and Jaro-Winkler metrics when rapidfuzz is absent.
-
-**To ensure full functionality, install with:**
+Rapidfuzz is automatically installed as a runtime dependency when you install pyfulmen:
 
 ```bash
-pip install pyfulmen[similarity]  # Includes rapidfuzz
-# or
-pip install pyfulmen rapidfuzz>=3.10.0
+pip install pyfulmen  # Includes rapidfuzz ≥3.14.1
 ```
 
 ### API Reference

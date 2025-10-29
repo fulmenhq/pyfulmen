@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.8] - 2025-10-29
+
+### Changed
+
+- **rapidfuzz is now a required runtime dependency** (≥3.14.1): Moved from optional dev dependency to main dependencies. Similarity v2.0.0 (Damerau-Levenshtein OSA/Unrestricted, Jaro-Winkler) requires rapidfuzz for correct algorithm implementations. Removed fallback behavior that returned incorrect results when rapidfuzz was unavailable.
+
+### Fixed
+
+- **Removed incorrect fallback algorithms**: Damerau OSA/Unrestricted no longer fall back to Levenshtein when rapidfuzz unavailable (would violate Crucible fixtures and API contracts)
+- **Removed incorrect Jaro-Winkler fallback**: No longer returns 0.0/1.0 for non-exact matches when rapidfuzz unavailable
+
 ## [0.1.7] - 2025-10-27
 
 ### Added
@@ -24,8 +35,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - **Example Script**: `examples/similarity_v2_demo.py` with 7 real-world scenarios
   - **Metric Selection Guide**: Clear guidance on when to use each algorithm
   - **Use Cases**: CLI typo correction (Jaro-Winkler), spell checking (Damerau OSA), name matching (Jaro-Winkler), document similarity (substring)
-  - **RapidFuzz Integration**: High-performance C++ implementations via Python bindings
-  - **Graceful Degradation**: Fallback behavior when rapidfuzz unavailable
+  - **RapidFuzz Integration**: High-performance C++ implementations via Python bindings (required dependency as of v0.1.8)
 
 ## [0.1.6] - 2025-10-25
 
