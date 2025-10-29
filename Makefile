@@ -192,8 +192,13 @@ release-build: build
 	@echo "✓ Release artifacts ready in dist/"
 
 .PHONY: prepush
-prepush: check-all
+prepush: check-all validate-ssot-provenance
 	@echo "✓ Pre-push checks passed"
+
+.PHONY: validate-ssot-provenance
+validate-ssot-provenance:
+	@echo "Validating SSOT provenance..."
+	@uv run python scripts/validate_ssot_provenance.py
 
 .PHONY: precommit
 precommit: fmt lint
