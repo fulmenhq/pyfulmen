@@ -116,6 +116,7 @@ def test_get_fulmen_cache_dir():
 def test_macos_paths(monkeypatch, tmp_path):
     """Test path generation on macOS."""
     from unittest.mock import Mock
+
     import pyfulmen.config.paths as paths_module
 
     # Create a fake macOS home directory structure
@@ -140,6 +141,7 @@ def test_macos_paths(monkeypatch, tmp_path):
 def test_linux_paths(monkeypatch, tmp_path):
     """Test path generation on Linux."""
     from unittest.mock import Mock
+
     import pyfulmen.config.paths as paths_module
 
     # Create a fake Linux home directory structure
@@ -165,6 +167,7 @@ def test_linux_paths(monkeypatch, tmp_path):
 def test_windows_paths(monkeypatch, tmp_path):
     """Test path generation on Windows."""
     from unittest.mock import Mock
+
     import pyfulmen.config.paths as paths_module
 
     # Create a fake Windows home directory structure
