@@ -114,9 +114,11 @@ def test_get_fulmen_cache_dir():
 
 
 @patch("pyfulmen.config.paths.detect_platform")
-def test_macos_paths(mock_detect):
+@patch("pyfulmen.config.paths.Path.home")
+def test_macos_paths(mock_home, mock_detect):
     """Test path generation on macOS."""
     mock_detect.return_value = Platform.MACOS
+    mock_home.return_value = Path("/Users/testuser")
 
     base_dirs = paths.get_xdg_base_dirs()
 
@@ -126,9 +128,11 @@ def test_macos_paths(mock_detect):
 
 
 @patch("pyfulmen.config.paths.detect_platform")
-def test_linux_paths(mock_detect):
+@patch("pyfulmen.config.paths.Path.home")
+def test_linux_paths(mock_home, mock_detect):
     """Test path generation on Linux."""
     mock_detect.return_value = Platform.LINUX
+    mock_home.return_value = Path("/home/testuser")
 
     base_dirs = paths.get_xdg_base_dirs()
 
@@ -139,9 +143,11 @@ def test_linux_paths(mock_detect):
 
 
 @patch("pyfulmen.config.paths.detect_platform")
-def test_windows_paths(mock_detect):
+@patch("pyfulmen.config.paths.Path.home")
+def test_windows_paths(mock_home, mock_detect):
     """Test path generation on Windows."""
     mock_detect.return_value = Platform.WINDOWS
+    mock_home.return_value = Path("C:/Users/testuser")
 
     cache_dir = paths.get_app_cache_dir("myapp")
 
