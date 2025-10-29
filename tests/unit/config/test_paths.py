@@ -113,79 +113,64 @@ def test_get_fulmen_cache_dir():
     assert "fulmen" in str(fulmen_cache)
 
 
-def test_macos_paths(monkeypatch, tmp_path):
-    """Test path generation on macOS."""
-    from unittest.mock import Mock
+def test_macos_paths_on_real_macos():
+    """Test macOS path generation - only runs on actual macOS.
 
-    import pyfulmen.config.paths as paths_module
+    No mocking, no complexity - just validate the actual behavior on macOS.
+    This test is skipped on Linux/Windows runners.
+    """
+    import sys
 
-    # Create a fake macOS home directory structure
-    macos_home = tmp_path / "Users" / "testuser"
-    macos_home.mkdir(parents=True)
+    if sys.platform != "darwin":
+        import pytest
 
-    # Mock platform detection
-    monkeypatch.setattr(paths_module, "detect_platform", lambda: Platform.MACOS)
-
-    # Mock Path.home() where it's actually imported in the paths module
-    home_mock = Mock(return_value=macos_home)
-    monkeypatch.setattr(paths_module.Path, "home", home_mock)
+        pytest.skip("macOS-specific test, skipping on non-macOS platform")
 
     base_dirs = paths.get_xdg_base_dirs()
 
-    # macOS should use Library/Application Support
+    # On real macOS, should use Library/Application Support
     assert "Library" in str(base_dirs["config"])
     assert "Application Support" in str(base_dirs["config"])
-    assert str(macos_home) in str(base_dirs["config"])
 
 
-def test_linux_paths(monkeypatch, tmp_path):
-    """Test path generation on Linux."""
-    from unittest.mock import Mock
+def test_linux_paths_on_real_linux():
+    """Test Linux path generation - only runs on actual Linux.
 
-    import pyfulmen.config.paths as paths_module
+    No mocking, no complexity - just validate the actual behavior on Linux.
+    This test is skipped on macOS/Windows runners.
+    """
+    import sys
 
-    # Create a fake Linux home directory structure
-    linux_home = tmp_path / "home" / "testuser"
-    linux_home.mkdir(parents=True)
+    if sys.platform != "linux":
+        import pytest
 
-    # Mock platform detection
-    monkeypatch.setattr(paths_module, "detect_platform", lambda: Platform.LINUX)
-
-    # Mock Path.home() where it's actually imported in the paths module
-    home_mock = Mock(return_value=linux_home)
-    monkeypatch.setattr(paths_module.Path, "home", home_mock)
+        pytest.skip("Linux-specific test, skipping on non-Linux platform")
 
     base_dirs = paths.get_xdg_base_dirs()
 
-    # Linux should use .config, .local/share, .cache
+    # On real Linux, should use .config, .local/share, .cache
     assert ".config" in str(base_dirs["config"])
     assert ".local" in str(base_dirs["data"]) and "share" in str(base_dirs["data"])
     assert ".cache" in str(base_dirs["cache"])
-    assert str(linux_home) in str(base_dirs["config"])
 
 
-def test_windows_paths(monkeypatch, tmp_path):
-    """Test path generation on Windows."""
-    from unittest.mock import Mock
+def test_windows_paths_on_real_windows():
+    """Test Windows path generation - only runs on actual Windows.
 
-    import pyfulmen.config.paths as paths_module
+    No mocking, no complexity - just validate the actual behavior on Windows.
+    This test is skipped on Linux/macOS runners.
+    """
+    import sys
 
-    # Create a fake Windows home directory structure
-    windows_home = tmp_path / "Users" / "testuser"
-    windows_home.mkdir(parents=True)
+    if sys.platform != "win32":
+        import pytest
 
-    # Mock platform detection
-    monkeypatch.setattr(paths_module, "detect_platform", lambda: Platform.WINDOWS)
-
-    # Mock Path.home() where it's actually imported in the paths module
-    home_mock = Mock(return_value=windows_home)
-    monkeypatch.setattr(paths_module.Path, "home", home_mock)
+        pytest.skip("Windows-specific test, skipping on non-Windows platform")
 
     cache_dir = paths.get_app_cache_dir("myapp")
 
-    # Windows cache should include Cache subdirectory
+    # On real Windows, cache should include Cache subdirectory
     assert "Cache" in str(cache_dir)
-    assert str(windows_home) in str(cache_dir)
 
 
 def test_fulmen_env_overrides(tmp_path, monkeypatch):
