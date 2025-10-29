@@ -115,13 +115,18 @@ def test_get_fulmen_cache_dir():
 
 def test_macos_paths(monkeypatch, tmp_path):
     """Test path generation on macOS."""
+    from unittest.mock import Mock
+
     # Create a fake macOS home directory structure
     macos_home = tmp_path / "Users" / "testuser"
     macos_home.mkdir(parents=True)
 
-    # Mock platform detection and Path.home()
+    # Mock platform detection
     monkeypatch.setattr("pyfulmen.config.paths.detect_platform", lambda: Platform.MACOS)
-    monkeypatch.setattr("pathlib.Path.home", lambda: macos_home)
+
+    # Mock Path.home() - must use Mock for classmethods
+    home_mock = Mock(return_value=macos_home)
+    monkeypatch.setattr("pathlib.Path.home", home_mock)
 
     base_dirs = paths.get_xdg_base_dirs()
 
@@ -133,13 +138,18 @@ def test_macos_paths(monkeypatch, tmp_path):
 
 def test_linux_paths(monkeypatch, tmp_path):
     """Test path generation on Linux."""
+    from unittest.mock import Mock
+
     # Create a fake Linux home directory structure
     linux_home = tmp_path / "home" / "testuser"
     linux_home.mkdir(parents=True)
 
-    # Mock platform detection and Path.home()
+    # Mock platform detection
     monkeypatch.setattr("pyfulmen.config.paths.detect_platform", lambda: Platform.LINUX)
-    monkeypatch.setattr("pathlib.Path.home", lambda: linux_home)
+
+    # Mock Path.home() - must use Mock for classmethods
+    home_mock = Mock(return_value=linux_home)
+    monkeypatch.setattr("pathlib.Path.home", home_mock)
 
     base_dirs = paths.get_xdg_base_dirs()
 
@@ -152,13 +162,18 @@ def test_linux_paths(monkeypatch, tmp_path):
 
 def test_windows_paths(monkeypatch, tmp_path):
     """Test path generation on Windows."""
+    from unittest.mock import Mock
+
     # Create a fake Windows home directory structure
     windows_home = tmp_path / "Users" / "testuser"
     windows_home.mkdir(parents=True)
 
-    # Mock platform detection and Path.home()
+    # Mock platform detection
     monkeypatch.setattr("pyfulmen.config.paths.detect_platform", lambda: Platform.WINDOWS)
-    monkeypatch.setattr("pathlib.Path.home", lambda: windows_home)
+
+    # Mock Path.home() - must use Mock for classmethods
+    home_mock = Mock(return_value=windows_home)
+    monkeypatch.setattr("pathlib.Path.home", home_mock)
 
     cache_dir = paths.get_app_cache_dir("myapp")
 
