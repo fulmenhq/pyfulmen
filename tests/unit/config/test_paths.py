@@ -116,17 +116,18 @@ def test_get_fulmen_cache_dir():
 def test_macos_paths(monkeypatch, tmp_path):
     """Test path generation on macOS."""
     from unittest.mock import Mock
+    import pyfulmen.config.paths as paths_module
 
     # Create a fake macOS home directory structure
     macos_home = tmp_path / "Users" / "testuser"
     macos_home.mkdir(parents=True)
 
     # Mock platform detection
-    monkeypatch.setattr("pyfulmen.config.paths.detect_platform", lambda: Platform.MACOS)
+    monkeypatch.setattr(paths_module, "detect_platform", lambda: Platform.MACOS)
 
-    # Mock Path.home() - must use Mock for classmethods
+    # Mock Path.home() where it's actually imported in the paths module
     home_mock = Mock(return_value=macos_home)
-    monkeypatch.setattr("pathlib.Path.home", home_mock)
+    monkeypatch.setattr(paths_module.Path, "home", home_mock)
 
     base_dirs = paths.get_xdg_base_dirs()
 
@@ -139,17 +140,18 @@ def test_macos_paths(monkeypatch, tmp_path):
 def test_linux_paths(monkeypatch, tmp_path):
     """Test path generation on Linux."""
     from unittest.mock import Mock
+    import pyfulmen.config.paths as paths_module
 
     # Create a fake Linux home directory structure
     linux_home = tmp_path / "home" / "testuser"
     linux_home.mkdir(parents=True)
 
     # Mock platform detection
-    monkeypatch.setattr("pyfulmen.config.paths.detect_platform", lambda: Platform.LINUX)
+    monkeypatch.setattr(paths_module, "detect_platform", lambda: Platform.LINUX)
 
-    # Mock Path.home() - must use Mock for classmethods
+    # Mock Path.home() where it's actually imported in the paths module
     home_mock = Mock(return_value=linux_home)
-    monkeypatch.setattr("pathlib.Path.home", home_mock)
+    monkeypatch.setattr(paths_module.Path, "home", home_mock)
 
     base_dirs = paths.get_xdg_base_dirs()
 
@@ -163,17 +165,18 @@ def test_linux_paths(monkeypatch, tmp_path):
 def test_windows_paths(monkeypatch, tmp_path):
     """Test path generation on Windows."""
     from unittest.mock import Mock
+    import pyfulmen.config.paths as paths_module
 
     # Create a fake Windows home directory structure
     windows_home = tmp_path / "Users" / "testuser"
     windows_home.mkdir(parents=True)
 
     # Mock platform detection
-    monkeypatch.setattr("pyfulmen.config.paths.detect_platform", lambda: Platform.WINDOWS)
+    monkeypatch.setattr(paths_module, "detect_platform", lambda: Platform.WINDOWS)
 
-    # Mock Path.home() - must use Mock for classmethods
+    # Mock Path.home() where it's actually imported in the paths module
     home_mock = Mock(return_value=windows_home)
-    monkeypatch.setattr("pathlib.Path.home", home_mock)
+    monkeypatch.setattr(paths_module.Path, "home", home_mock)
 
     cache_dir = paths.get_app_cache_dir("myapp")
 
@@ -206,3 +209,65 @@ def test_config_search_paths_alias():
     assert paths.get_config_search_paths(
         "fulmenhq/myapp", vendor="fulmenhq"
     ) == paths.get_app_config_paths("fulmenhq/myapp", vendor="fulmenhq")
+
+
+def test_platform_paths_via_xdg_env_vars(monkeypatch, tmp_path):
+    """Test platform path logic using XDG env vars instead of mocking Path.home().
+
+    This reality-check test avoids the nightmare of mocking classmethods and
+    import-time bindings. Instead, it uses the environment variable override
+    mechanism that the code already supports, which is how real applications
+    would customize paths anyway.
+    """
+    import pyfulmen.config.paths as paths_module
+
+    # Create test directories
+    test_config = tmp_path / "config"
+    test_data = tmp_path / "data"
+    test_cache = tmp_path / "cache"
+
+    # Use XDG environment variables (real mechanism, not mocks)
+    monkeypatch.setenv("XDG_CONFIG_HOME", str(test_config))
+    monkeypatch.setenv("XDG_DATA_HOME", str(test_data))
+    monkeypatch.setenv("XDG_CACHE_HOME", str(test_cache))
+
+    # Test Linux behavior with env vars
+    monkeypatch.setattr(paths_module, "detect_platform", lambda: Platform.LINUX)
+    result = paths.get_xdg_base_dirs()
+    assert result["config"] == test_config
+    assert result["data"] == test_data
+    assert result["cache"] == test_cache
+
+    # Test macOS behavior (should still respect XDG overrides)
+    monkeypatch.setattr(paths_module, "detect_platform", lambda: Platform.MACOS)
+    result = paths.get_xdg_base_dirs()
+    assert result["config"] == test_config
+    assert result["data"] == test_data
+    assert result["cache"] == test_cache
+
+
+def test_actual_platform_detection_in_ci():
+    """Validate paths work correctly on actual CI runner without mocks.
+
+    This test ensures the code works in the REAL CI environment. It validates
+    actual behavior rather than testing our ability to mock things correctly.
+    This should pass on any platform (Linux CI, macOS CI, local dev).
+    """
+    import sys
+
+    base_dirs = paths.get_xdg_base_dirs()
+
+    # Should return valid absolute paths regardless of platform
+    assert base_dirs["config"].is_absolute()
+    assert base_dirs["data"].is_absolute()
+    assert base_dirs["cache"].is_absolute()
+
+    # Validate platform-specific expectations on REAL platform
+    if sys.platform == "linux":
+        # On Linux (GitHub Actions runners), paths should contain .config or /home/
+        config_str = str(base_dirs["config"])
+        assert ".config" in config_str or "/home/" in config_str
+    elif sys.platform == "darwin":
+        # On macOS, paths should contain Library
+        assert "Library" in str(base_dirs["config"])
+    # Windows would check for AppData, but we're not testing on Windows yet
