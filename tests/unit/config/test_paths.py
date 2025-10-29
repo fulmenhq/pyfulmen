@@ -114,7 +114,7 @@ def test_get_fulmen_cache_dir():
 
 
 @patch("pyfulmen.config.paths.detect_platform")
-@patch("pyfulmen.config.paths.Path.home")
+@patch("pathlib.Path.home")
 def test_macos_paths(mock_home, mock_detect):
     """Test path generation on macOS."""
     mock_detect.return_value = Platform.MACOS
@@ -128,7 +128,7 @@ def test_macos_paths(mock_home, mock_detect):
 
 
 @patch("pyfulmen.config.paths.detect_platform")
-@patch("pyfulmen.config.paths.Path.home")
+@patch("pathlib.Path.home")
 def test_linux_paths(mock_home, mock_detect):
     """Test path generation on Linux."""
     mock_detect.return_value = Platform.LINUX
@@ -143,7 +143,7 @@ def test_linux_paths(mock_home, mock_detect):
 
 
 @patch("pyfulmen.config.paths.detect_platform")
-@patch("pyfulmen.config.paths.Path.home")
+@patch("pathlib.Path.home")
 def test_windows_paths(mock_home, mock_detect):
     """Test path generation on Windows."""
     mock_detect.return_value = Platform.WINDOWS
