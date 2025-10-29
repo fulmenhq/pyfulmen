@@ -113,26 +113,33 @@ def test_get_fulmen_cache_dir():
     assert "fulmen" in str(fulmen_cache)
 
 
-@patch("pyfulmen.config.paths.detect_platform")
-@patch("pathlib.Path.home")
-def test_macos_paths(mock_home, mock_detect):
+def test_macos_paths(monkeypatch, tmp_path):
     """Test path generation on macOS."""
-    mock_detect.return_value = Platform.MACOS
-    mock_home.return_value = Path("/Users/testuser")
+    # Create a fake macOS home directory structure
+    macos_home = tmp_path / "Users" / "testuser"
+    macos_home.mkdir(parents=True)
+
+    # Mock platform detection and Path.home()
+    monkeypatch.setattr("pyfulmen.config.paths.detect_platform", lambda: Platform.MACOS)
+    monkeypatch.setattr("pathlib.Path.home", lambda: macos_home)
 
     base_dirs = paths.get_xdg_base_dirs()
 
     # macOS should use Library/Application Support
     assert "Library" in str(base_dirs["config"])
     assert "Application Support" in str(base_dirs["config"])
+    assert str(macos_home) in str(base_dirs["config"])
 
 
-@patch("pyfulmen.config.paths.detect_platform")
-@patch("pathlib.Path.home")
-def test_linux_paths(mock_home, mock_detect):
+def test_linux_paths(monkeypatch, tmp_path):
     """Test path generation on Linux."""
-    mock_detect.return_value = Platform.LINUX
-    mock_home.return_value = Path("/home/testuser")
+    # Create a fake Linux home directory structure
+    linux_home = tmp_path / "home" / "testuser"
+    linux_home.mkdir(parents=True)
+
+    # Mock platform detection and Path.home()
+    monkeypatch.setattr("pyfulmen.config.paths.detect_platform", lambda: Platform.LINUX)
+    monkeypatch.setattr("pathlib.Path.home", lambda: linux_home)
 
     base_dirs = paths.get_xdg_base_dirs()
 
@@ -140,19 +147,24 @@ def test_linux_paths(mock_home, mock_detect):
     assert ".config" in str(base_dirs["config"])
     assert ".local" in str(base_dirs["data"]) and "share" in str(base_dirs["data"])
     assert ".cache" in str(base_dirs["cache"])
+    assert str(linux_home) in str(base_dirs["config"])
 
 
-@patch("pyfulmen.config.paths.detect_platform")
-@patch("pathlib.Path.home")
-def test_windows_paths(mock_home, mock_detect):
+def test_windows_paths(monkeypatch, tmp_path):
     """Test path generation on Windows."""
-    mock_detect.return_value = Platform.WINDOWS
-    mock_home.return_value = Path("C:/Users/testuser")
+    # Create a fake Windows home directory structure
+    windows_home = tmp_path / "Users" / "testuser"
+    windows_home.mkdir(parents=True)
+
+    # Mock platform detection and Path.home()
+    monkeypatch.setattr("pyfulmen.config.paths.detect_platform", lambda: Platform.WINDOWS)
+    monkeypatch.setattr("pathlib.Path.home", lambda: windows_home)
 
     cache_dir = paths.get_app_cache_dir("myapp")
 
     # Windows cache should include Cache subdirectory
     assert "Cache" in str(cache_dir)
+    assert str(windows_home) in str(cache_dir)
 
 
 def test_fulmen_env_overrides(tmp_path, monkeypatch):
