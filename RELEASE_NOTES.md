@@ -2,6 +2,87 @@
 
 This document tracks release notes and checklists for PyFulmen releases.
 
+## [0.1.8] - 2025-10-29
+
+### CI/CD Infrastructure & Public Release Readiness
+
+**Release Type**: Infrastructure & Quality - CI/CD + Dependency Fixes
+**Release Date**: October 29, 2025
+**Status**: ✅ Released
+
+**Summary**: PyFulmen v0.1.8 establishes production-grade CI/CD infrastructure with GitHub Actions, fixes critical dependency classification for Similarity v2.0.0, and improves test reliability across platforms. This release marks the first public release with comprehensive automated testing on Ubuntu and macOS runners.
+
+#### Key Features
+
+**🚀 GitHub Actions CI/CD**:
+
+- Matrix testing: Ubuntu/macOS × Python 3.12/3.13 (4 combinations)
+- Quality gates: linting (`ruff check`), formatting (`ruff format`), test coverage
+- Package validation: Build checks and metadata verification with `twine`
+- Codecov integration for coverage tracking (optional)
+- Automated workflows for `main` branch pushes and pull requests
+
+**🔧 Dependency Fixes**:
+
+- **rapidfuzz now required** (≥3.14.1): Moved from optional dev dependency to main runtime dependency
+- Similarity v2.0.0 metrics (Damerau-Levenshtein, Jaro-Winkler) require rapidfuzz for correct implementations
+- Removed incorrect fallback algorithms that violated Crucible fixtures
+
+**🧪 Test Reliability Improvements**:
+
+- Platform-conditional tests: macOS/Linux/Windows tests skip on non-native platforms
+- Replaced fragile mock-based tests with actual behavior validation
+- Performance test thresholds adjusted for CI runner characteristics (600% overhead allowance)
+- Reality-check tests using environment variables instead of complex mocking
+
+**📚 Infrastructure**:
+
+- Crucible v0.2.2 sync (from v0.2.1)
+- SSOT provenance validation in pre-push hooks
+- Project URLs added to `pyproject.toml` (Homepage, Documentation, Repository, Changelog)
+
+#### Breaking Changes
+
+- **rapidfuzz dependency**: Now required at runtime. Applications must have `rapidfuzz>=3.14.1` installed.
+
+#### Migration Notes
+
+If you're upgrading from v0.1.7:
+
+```bash
+# rapidfuzz is now automatically installed as a runtime dependency
+pip install --upgrade pyfulmen
+# or with uv
+uv pip install --upgrade pyfulmen
+```
+
+**No code changes required** - rapidfuzz was previously imported conditionally and is now always available.
+
+#### Quality Gates
+
+- [x] All 1286 tests passing (19 skipped platform-specific tests)
+- [x] 93% code coverage maintained
+- [x] CI/CD passing on Ubuntu and macOS runners
+- [x] Package builds successfully and passes `twine check`
+- [x] Codecov reporting enabled (optional)
+- [x] Public readiness audit completed
+- [x] SSOT provenance validation passing
+
+#### Lessons Learned
+
+**Testing Philosophy**:
+
+- Avoid complex mocking when possible - prefer platform-conditional tests with `pytest.skip`
+- Environment variable-based tests are more maintainable than mocking classmethods
+- Reality-check tests that validate actual behavior are more valuable than mock correctness tests
+- Performance tests need generous thresholds for CI runners (different hardware characteristics)
+
+**CI/CD Best Practices**:
+
+- Use `uv tool run` for one-off tools (e.g., `twine`) - don't install via pip
+- Matrix testing across platforms catches platform-specific issues early
+- Performance tests should account for slower CI runners vs local dev machines
+
 ## [0.1.7] - 2025-10-27
 
 ### Foundry Similarity v2.0.0 Upgrade - Multiple Metrics & Advanced Normalization

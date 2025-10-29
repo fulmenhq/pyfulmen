@@ -9,14 +9,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.1.8] - 2025-10-29
 
+### Added
+
+- **GitHub Actions CI/CD**: Comprehensive test and build workflows for Ubuntu and macOS runners
+  - Matrix testing: Ubuntu/macOS × Python 3.12/3.13 (4 combinations)
+  - Quality gates: linting, formatting, test coverage
+  - Package validation: Build checks and metadata verification
+  - Codecov integration for coverage tracking (optional)
+
 ### Changed
 
 - **rapidfuzz is now a required runtime dependency** (≥3.14.1): Moved from optional dev dependency to main dependencies. Similarity v2.0.0 (Damerau-Levenshtein OSA/Unrestricted, Jaro-Winkler) requires rapidfuzz for correct algorithm implementations. Removed fallback behavior that returned incorrect results when rapidfuzz was unavailable.
+- **Crucible v0.2.2 sync**: Updated from v0.2.1, includes SemVer adoption documentation updates
 
 ### Fixed
 
 - **Removed incorrect fallback algorithms**: Damerau OSA/Unrestricted no longer fall back to Levenshtein when rapidfuzz unavailable (would violate Crucible fixtures and API contracts)
 - **Removed incorrect Jaro-Winkler fallback**: No longer returns 0.0/1.0 for non-exact matches when rapidfuzz unavailable
+- **Platform-specific path tests**: Replaced fragile mock-based tests with platform-conditional tests that validate actual behavior
+- **Performance test thresholds**: Adjusted for CI runner characteristics (600% overhead allowance)
 
 ## [0.1.7] - 2025-10-27
 
