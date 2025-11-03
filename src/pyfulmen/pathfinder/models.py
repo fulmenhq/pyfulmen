@@ -84,9 +84,7 @@ class PathResult(FulmenDataModel):
     source_path: str = Field(..., description="Absolute path to the file")
     logical_path: str = Field(..., description="Logical path")
     loader_type: str = Field(default="local", description="Type of loader used")
-    metadata: PathMetadata = Field(
-        default_factory=lambda: PathMetadata(), description="Additional metadata"
-    )
+    metadata: PathMetadata = Field(default_factory=lambda: PathMetadata(), description="Additional metadata")
 
 
 class ConstraintType(str, Enum):
@@ -151,12 +149,8 @@ class PathMetadata(FulmenDataModel):
 
     size: int | None = Field(default=None, ge=0, description="File size in bytes")
     modified: str | None = Field(default=None, description="Last modification timestamp (RFC3339)")
-    permissions: str | None = Field(
-        default=None, description="File permissions (octal or symbolic)"
-    )
-    mime_type: str | None = Field(
-        default=None, description="MIME type of the file", alias="mimeType"
-    )
+    permissions: str | None = Field(default=None, description="File permissions (octal or symbolic)")
+    mime_type: str | None = Field(default=None, description="MIME type of the file", alias="mimeType")
     encoding: str | None = Field(default=None, description="Character encoding")
     checksum: str | None = Field(default=None, description="Checksum or hash")
     checksum_algorithm: str | None = Field(
@@ -206,9 +200,7 @@ class FinderConfig(FulmenConfigModel):
     checksum_algorithm: str = Field(
         default="xxh3-128", alias="checksumAlgorithm", description="Hash algorithm for checksums"
     )
-    checksum_encoding: str = Field(
-        default="hex", alias="checksumEncoding", description="Output encoding for checksums"
-    )
+    checksum_encoding: str = Field(default="hex", alias="checksumEncoding", description="Output encoding for checksums")
 
 
 __all__ = [

@@ -199,9 +199,7 @@ class ProgressiveLogger:
             order = m_config.get("order")
 
             # Build payload for registry: inner config only, plus 'order' if provided
-            cfg_for_registry: dict[str, Any] = (
-                dict(inner_cfg) if isinstance(inner_cfg, dict) else {}
-            )
+            cfg_for_registry: dict[str, Any] = dict(inner_cfg) if isinstance(inner_cfg, dict) else {}
             if order is not None:
                 cfg_for_registry["order"] = order
 

@@ -103,18 +103,14 @@ class ConfigLoader:
         sources.append(
             ConfigSource(
                 layer="user",
-                source=user_overrides.path
-                if user_overrides
-                else self._user_override_path(crucible_path),
+                source=user_overrides.path if user_overrides else self._user_override_path(crucible_path),
                 applied=bool(user_overrides),
             )
         )
         if user_overrides:
             configs.append(user_overrides.data)
 
-        sources.append(
-            ConfigSource(layer="application", source="runtime", applied=bool(app_config))
-        )
+        sources.append(ConfigSource(layer="application", source="runtime", applied=bool(app_config)))
         if app_config:
             configs.append(app_config)
 
@@ -139,9 +135,7 @@ class ConfigLoader:
             return category, version, name
         return None
 
-    def _load_crucible_defaults(
-        self, crucible_path: str, registry: MetricRegistry
-    ) -> _LoadedLayer | None:
+    def _load_crucible_defaults(self, crucible_path: str, registry: MetricRegistry) -> _LoadedLayer | None:
         """Return defaults and source path if available."""
         parsed = self._parse_crucible_path(crucible_path)
         if not parsed:
@@ -170,18 +164,13 @@ class ConfigLoader:
     def _user_override_path(self, crucible_path: str) -> Path:
         return self.user_config_dir / f"{crucible_path}.yaml"
 
-    def _load_user_overrides(
-        self, crucible_path: str, registry: MetricRegistry
-    ) -> _LoadedLayer | None:
+    def _load_user_overrides(self, crucible_path: str, registry: MetricRegistry) -> _LoadedLayer | None:
         for candidate in self._user_override_candidates(crucible_path):
             if not candidate.exists():
                 continue
             try:
                 with open(candidate) as handle:
-                    if candidate.suffix == ".json":
-                        data = yaml.safe_load(handle)  # json safe via YAML parser
-                    else:
-                        data = yaml.safe_load(handle)
+                    data = yaml.safe_load(handle)  # json safe via YAML parser
                 if data is None:
                     data = {}
                 return ConfigLoader._LoadedLayer(data=data, path=candidate)

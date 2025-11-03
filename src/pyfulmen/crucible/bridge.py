@@ -82,9 +82,7 @@ def list_assets(category: str, prefix: str | None = None) -> list[AssetMetadata]
         registry.histogram("crucible_list_assets_ms").observe(duration_ms)
 
 
-def _list_assets_impl(
-    category: str, prefix: str | None, registry: MetricRegistry
-) -> list[AssetMetadata]:
+def _list_assets_impl(category: str, prefix: str | None, registry: MetricRegistry) -> list[AssetMetadata]:
     """Implementation of list_assets with telemetry support."""
     if category not in ["docs", "schemas", "config"]:
         valid_categories = ", ".join(list_categories())
@@ -244,9 +242,7 @@ def _find_schema_impl(schema_id: str, registry: MetricRegistry) -> tuple[dict, A
     try:
         parts = schema_id.split("/")
         if len(parts) < 3:
-            raise ValueError(
-                f"Invalid schema ID format: {schema_id}. Expected format: category/version/name"
-            )
+            raise ValueError(f"Invalid schema ID format: {schema_id}. Expected format: category/version/name")
 
         version = parts[-2]
         name = parts[-1]
@@ -317,9 +313,7 @@ def _find_config_impl(config_id: str, registry: MetricRegistry) -> tuple[dict, A
     try:
         parts = config_id.split("/")
         if len(parts) < 3:
-            raise ValueError(
-                f"Invalid config ID format: {config_id}. Expected format: category/version/name"
-            )
+            raise ValueError(f"Invalid config ID format: {config_id}. Expected format: category/version/name")
 
         version = parts[-2]
         name = parts[-1]
@@ -448,8 +442,7 @@ def load_schema_by_id(schema_id: str) -> dict:
     import warnings
 
     warnings.warn(
-        "load_schema_by_id() is deprecated. Use find_schema() to get schema with metadata. "
-        "Will be removed in v0.2.0.",
+        "load_schema_by_id() is deprecated. Use find_schema() to get schema with metadata. Will be removed in v0.2.0.",
         DeprecationWarning,
         stacklevel=2,
     )

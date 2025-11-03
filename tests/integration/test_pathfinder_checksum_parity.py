@@ -22,12 +22,7 @@ class TestPathfinderChecksumParity:
     def fulhash_fixtures(self):
         """Load FulHash fixtures for parity validation."""
         fixtures_path = (
-            Path(__file__).parent.parent.parent
-            / "config"
-            / "crucible-py"
-            / "library"
-            / "fulhash"
-            / "fixtures.yaml"
+            Path(__file__).parent.parent.parent / "config" / "crucible-py" / "library" / "fulhash" / "fixtures.yaml"
         )
         with open(fixtures_path) as f:
             return yaml.safe_load(f)
@@ -73,9 +68,7 @@ class TestPathfinderChecksumParity:
     def test_hello_world_xxh3_128_parity(self, sample_files_dir, fulhash_fixtures):
         """Verify hello-world.txt checksum matches FulHash hello-world fixture (xxh3-128)."""
         finder = Finder(FinderConfig(calculateChecksums=True, checksumAlgorithm="xxh3-128"))
-        results = finder.find_files(
-            FindQuery(root=str(sample_files_dir), include=["hello-world.txt"])
-        )
+        results = finder.find_files(FindQuery(root=str(sample_files_dir), include=["hello-world.txt"]))
 
         assert len(results) == 1
         result = results[0]
@@ -92,9 +85,7 @@ class TestPathfinderChecksumParity:
     def test_hello_world_sha256_parity(self, sample_files_dir, fulhash_fixtures):
         """Verify hello-world.txt checksum matches FulHash hello-world fixture (sha256)."""
         finder = Finder(FinderConfig(calculateChecksums=True, checksumAlgorithm="sha256"))
-        results = finder.find_files(
-            FindQuery(root=str(sample_files_dir), include=["hello-world.txt"])
-        )
+        results = finder.find_files(FindQuery(root=str(sample_files_dir), include=["hello-world.txt"]))
 
         assert len(results) == 1
         result = results[0]
@@ -110,9 +101,7 @@ class TestPathfinderChecksumParity:
     def test_single_char_xxh3_128_parity(self, sample_files_dir, fulhash_fixtures):
         """Verify single-char.txt checksum matches FulHash single-byte fixture (xxh3-128)."""
         finder = Finder(FinderConfig(calculateChecksums=True, checksumAlgorithm="xxh3-128"))
-        results = finder.find_files(
-            FindQuery(root=str(sample_files_dir), include=["single-char.txt"])
-        )
+        results = finder.find_files(FindQuery(root=str(sample_files_dir), include=["single-char.txt"]))
 
         assert len(results) == 1
         result = results[0]
@@ -129,9 +118,7 @@ class TestPathfinderChecksumParity:
     def test_single_char_sha256_parity(self, sample_files_dir, fulhash_fixtures):
         """Verify single-char.txt checksum matches FulHash single-byte fixture (sha256)."""
         finder = Finder(FinderConfig(calculateChecksums=True, checksumAlgorithm="sha256"))
-        results = finder.find_files(
-            FindQuery(root=str(sample_files_dir), include=["single-char.txt"])
-        )
+        results = finder.find_files(FindQuery(root=str(sample_files_dir), include=["single-char.txt"]))
 
         assert len(results) == 1
         result = results[0]
@@ -147,17 +134,13 @@ class TestPathfinderChecksumParity:
     def test_unicode_emoji_xxh3_128_parity(self, sample_files_dir, fulhash_fixtures):
         """Verify unicode-emoji.txt checksum matches FulHash unicode-emoji fixture (xxh3-128)."""
         finder = Finder(FinderConfig(calculateChecksums=True, checksumAlgorithm="xxh3-128"))
-        results = finder.find_files(
-            FindQuery(root=str(sample_files_dir), include=["unicode-emoji.txt"])
-        )
+        results = finder.find_files(FindQuery(root=str(sample_files_dir), include=["unicode-emoji.txt"]))
 
         assert len(results) == 1
         result = results[0]
 
         # Get expected checksum from FulHash fixtures
-        unicode_fixture = next(
-            f for f in fulhash_fixtures["fixtures"] if f["name"] == "unicode-emoji"
-        )
+        unicode_fixture = next(f for f in fulhash_fixtures["fixtures"] if f["name"] == "unicode-emoji")
         expected_checksum = unicode_fixture["xxh3_128"]
 
         assert result.metadata.checksum == expected_checksum
@@ -169,17 +152,13 @@ class TestPathfinderChecksumParity:
     def test_unicode_emoji_sha256_parity(self, sample_files_dir, fulhash_fixtures):
         """Verify unicode-emoji.txt checksum matches FulHash unicode-emoji fixture (sha256)."""
         finder = Finder(FinderConfig(calculateChecksums=True, checksumAlgorithm="sha256"))
-        results = finder.find_files(
-            FindQuery(root=str(sample_files_dir), include=["unicode-emoji.txt"])
-        )
+        results = finder.find_files(FindQuery(root=str(sample_files_dir), include=["unicode-emoji.txt"]))
 
         assert len(results) == 1
         result = results[0]
 
         # Get expected checksum from FulHash fixtures
-        unicode_fixture = next(
-            f for f in fulhash_fixtures["fixtures"] if f["name"] == "unicode-emoji"
-        )
+        unicode_fixture = next(f for f in fulhash_fixtures["fixtures"] if f["name"] == "unicode-emoji")
         expected_checksum = unicode_fixture["sha256"]
 
         assert result.metadata.checksum == expected_checksum
@@ -228,9 +207,7 @@ class TestPathfinderCaseInsensitiveAlgorithms:
     def test_uppercase_xxh3_128_normalized(self, sample_files_dir):
         """Verify XXH3-128 (uppercase) is normalized to xxh3-128."""
         finder = Finder(FinderConfig(calculateChecksums=True, checksumAlgorithm="XXH3-128"))
-        results = finder.find_files(
-            FindQuery(root=str(sample_files_dir), include=["hello-world.txt"])
-        )
+        results = finder.find_files(FindQuery(root=str(sample_files_dir), include=["hello-world.txt"]))
 
         assert len(results) == 1
         result = results[0]
@@ -243,9 +220,7 @@ class TestPathfinderCaseInsensitiveAlgorithms:
     def test_mixed_case_sha256_normalized(self, sample_files_dir):
         """Verify Sha256 (mixed case) is normalized to sha256."""
         finder = Finder(FinderConfig(calculateChecksums=True, checksumAlgorithm="Sha256"))
-        results = finder.find_files(
-            FindQuery(root=str(sample_files_dir), include=["hello-world.txt"])
-        )
+        results = finder.find_files(FindQuery(root=str(sample_files_dir), include=["hello-world.txt"]))
 
         assert len(results) == 1
         result = results[0]
@@ -259,9 +234,7 @@ class TestPathfinderCaseInsensitiveAlgorithms:
     def test_uppercase_sha256_normalized(self, sample_files_dir):
         """Verify SHA256 (all uppercase) is normalized to sha256."""
         finder = Finder(FinderConfig(calculateChecksums=True, checksumAlgorithm="SHA256"))
-        results = finder.find_files(
-            FindQuery(root=str(sample_files_dir), include=["single-char.txt"])
-        )
+        results = finder.find_files(FindQuery(root=str(sample_files_dir), include=["single-char.txt"]))
 
         assert len(results) == 1
         result = results[0]
@@ -299,13 +272,9 @@ class TestPathfinderChecksumConsistency:
         """Verify different algorithms produce different checksums for same file."""
         query = FindQuery(root=str(sample_files_dir), include=["hello-world.txt"])
 
-        xxh3_results = Finder(
-            FinderConfig(calculateChecksums=True, checksumAlgorithm="xxh3-128")
-        ).find_files(query)
+        xxh3_results = Finder(FinderConfig(calculateChecksums=True, checksumAlgorithm="xxh3-128")).find_files(query)
 
-        sha256_results = Finder(
-            FinderConfig(calculateChecksums=True, checksumAlgorithm="sha256")
-        ).find_files(query)
+        sha256_results = Finder(FinderConfig(calculateChecksums=True, checksumAlgorithm="sha256")).find_files(query)
 
         # Same file, different algorithms -> different checksums
         assert xxh3_results[0].metadata.checksum != sha256_results[0].metadata.checksum

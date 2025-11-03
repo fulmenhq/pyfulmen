@@ -163,9 +163,7 @@ class FulmenDataModel(FulmenBaseModel):
             )
         )
 
-    def to_json_dict_with_computed(
-        self, exclude_none: bool = True, exclude_defaults: bool = False
-    ) -> dict[str, Any]:
+    def to_json_dict_with_computed(self, exclude_none: bool = True, exclude_defaults: bool = False) -> dict[str, Any]:
         """Convenience method to include computed fields in serialization.
 
         Args:
@@ -191,9 +189,7 @@ class FulmenDataModel(FulmenBaseModel):
             >>> event.to_json_dict_with_computed()  # Includes computed
             {'message': 'test', 'severity': 'INFO', 'severity_level': 20}
         """
-        return self.to_json_dict(
-            exclude_none=exclude_none, exclude_defaults=exclude_defaults, include_computed=True
-        )
+        return self.to_json_dict(exclude_none=exclude_none, exclude_defaults=exclude_defaults, include_computed=True)
 
     def get_computed_field_names(self) -> set[str]:
         """Get names of all computed fields on this model.
@@ -269,9 +265,7 @@ class FulmenConfigModel(FulmenBaseModel):
         """
         from ..config.merger import deep_merge
 
-        merged_dict = deep_merge(
-            self.model_dump(exclude_none=True), other.model_dump(exclude_none=True)
-        )
+        merged_dict = deep_merge(self.model_dump(exclude_none=True), other.model_dump(exclude_none=True))
         return self.__class__(**merged_dict)
 
 

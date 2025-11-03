@@ -39,9 +39,7 @@ class TestBlockFixtures:
         # Verify against fixture
         expected = fixture["xxh3_128"]
         assert digest.formatted == expected, (
-            f"XXH3-128 mismatch for '{fixture['name']}'\n"
-            f"  Expected: {expected}\n"
-            f"  Got:      {digest.formatted}"
+            f"XXH3-128 mismatch for '{fixture['name']}'\n  Expected: {expected}\n  Got:      {digest.formatted}"
         )
 
         # Verify hex length (32 chars for xxh3-128)
@@ -64,9 +62,7 @@ class TestBlockFixtures:
         # Verify against fixture
         expected = fixture["sha256"]
         assert digest.formatted == expected, (
-            f"SHA-256 mismatch for '{fixture['name']}'\n"
-            f"  Expected: {expected}\n"
-            f"  Got:      {digest.formatted}"
+            f"SHA-256 mismatch for '{fixture['name']}'\n  Expected: {expected}\n  Got:      {digest.formatted}"
         )
 
         # Verify hex length (64 chars for sha256)

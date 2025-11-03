@@ -76,10 +76,7 @@ def distance(a: str, b: str, metric: MetricType = "levenshtein") -> int:
             "Use score(a, b, metric='jaro_winkler') instead."
         )
     if metric == "substring":
-        raise ValueError(
-            "substring metric does not produce distances. "
-            "Use substring_match(needle, haystack) instead."
-        )
+        raise ValueError("substring metric does not produce distances. Use substring_match(needle, haystack) instead.")
 
     if metric == "levenshtein":
         return _levenshtein_distance(a, b)
@@ -89,8 +86,7 @@ def distance(a: str, b: str, metric: MetricType = "levenshtein") -> int:
         return _damerau_unrestricted_distance(a, b)
     else:
         raise ValueError(
-            f"Invalid metric: {metric!r}. "
-            f"Valid options: 'levenshtein', 'damerau_osa', 'damerau_unrestricted'"
+            f"Invalid metric: {metric!r}. Valid options: 'levenshtein', 'damerau_osa', 'damerau_unrestricted'"
         )
 
 
@@ -120,9 +116,7 @@ def _levenshtein_distance(a: str, b: str) -> int:
         for i in range(1, len_a + 1):
             cost = 0 if a[i - 1] == b[j - 1] else 1
 
-            current_row[i] = min(
-                previous_row[i] + 1, current_row[i - 1] + 1, previous_row[i - 1] + cost
-            )
+            current_row[i] = min(previous_row[i] + 1, current_row[i - 1] + 1, previous_row[i - 1] + cost)
 
         previous_row, current_row = current_row, previous_row
 
@@ -224,9 +218,7 @@ def score(
     return 1.0 - (edit_distance / max_len)
 
 
-def _jaro_winkler_similarity(
-    a: str, b: str, prefix_scale: float = 0.1, max_prefix: int = 4
-) -> float:
+def _jaro_winkler_similarity(a: str, b: str, prefix_scale: float = 0.1, max_prefix: int = 4) -> float:
     """Calculate Jaro-Winkler similarity score.
 
     Internal implementation using rapidfuzz.

@@ -83,10 +83,7 @@ class ThrottleController:
         if window_size <= 0:
             raise ValueError("window_size must be positive")
         if drop_policy not in ("drop-oldest", "drop-newest", "block"):
-            raise ValueError(
-                f"Invalid drop_policy '{drop_policy}'. "
-                f"Must be 'drop-oldest', 'drop-newest', or 'block'"
-            )
+            raise ValueError(f"Invalid drop_policy '{drop_policy}'. Must be 'drop-oldest', 'drop-newest', or 'block'")
 
     def should_emit(self, event: dict[str, Any] | None = None) -> bool:
         """Check if event should be emitted based on throttling rules.

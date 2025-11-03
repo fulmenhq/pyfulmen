@@ -124,9 +124,7 @@ def hash(data: bytes | str | Path, algorithm: Algorithm = Algorithm.XXH3_128) ->
     elif isinstance(data, Path):
         return hash_file(data, algorithm)
     else:
-        raise TypeError(
-            f"Unsupported data type: {type(data).__name__}. Expected bytes, str, or Path."
-        )
+        raise TypeError(f"Unsupported data type: {type(data).__name__}. Expected bytes, str, or Path.")
 
 
 __all__ = ["hash_file", "hash"]

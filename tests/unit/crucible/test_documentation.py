@@ -109,9 +109,7 @@ class TestGetDocumentationWithMetadata:
 
     def test_metadata_and_content_extracted_correctly(self):
         """Both content and metadata are properly extracted."""
-        content, metadata = docs.get_documentation_with_metadata(
-            "standards/observability/logging.md"
-        )
+        content, metadata = docs.get_documentation_with_metadata("standards/observability/logging.md")
 
         # Content should be non-empty
         assert len(content) > 0

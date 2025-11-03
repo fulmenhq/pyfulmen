@@ -87,9 +87,7 @@ class TestMetricEvent:
         """Test creating event with all fields."""
         ts = datetime.now(UTC)
         tags = {"env": "prod", "service": "api"}
-        event = MetricEvent(
-            timestamp=ts, name="requests_total", value=1000, tags=tags, unit="count"
-        )
+        event = MetricEvent(timestamp=ts, name="requests_total", value=1000, tags=tags, unit="count")
 
         assert event.timestamp == ts
         assert event.name == "requests_total"

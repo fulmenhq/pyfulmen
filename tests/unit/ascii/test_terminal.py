@@ -19,9 +19,7 @@ class TestTerminalConfig:
 
     def test_terminal_config_creation(self):
         """Should create terminal config with all fields."""
-        config = TerminalConfig(
-            name="Test Terminal", overrides={"🔧": 2, "⚠️": 2}, notes="Test notes"
-        )
+        config = TerminalConfig(name="Test Terminal", overrides={"🔧": 2, "⚠️": 2}, notes="Test notes")
         assert config.name == "Test Terminal"
         assert config.overrides["🔧"] == 2
         assert config.notes == "Test notes"
@@ -45,9 +43,7 @@ class TestTerminalOverrides:
 
     def test_terminal_overrides_creation(self):
         """Should create overrides catalog."""
-        overrides = TerminalOverrides(
-            version="1.0.0", terminals={"test": TerminalConfig(name="Test Terminal")}
-        )
+        overrides = TerminalOverrides(version="1.0.0", terminals={"test": TerminalConfig(name="Test Terminal")})
         assert overrides.version == "1.0.0"
         assert "test" in overrides.terminals
 
@@ -193,9 +189,7 @@ class TestReloadTerminalOverrides:
     def test_reload_resets_to_defaults(self):
         """Reload should reset to defaults + user config."""
         # Modify config
-        custom = TerminalOverrides(
-            version="1.0.0", terminals={"custom": TerminalConfig(name="Custom")}
-        )
+        custom = TerminalOverrides(version="1.0.0", terminals={"custom": TerminalConfig(name="Custom")})
         set_terminal_overrides(custom)
 
         # Verify custom config is set

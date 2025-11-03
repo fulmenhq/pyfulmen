@@ -217,9 +217,7 @@ class MimeType(FulmenCatalogModel):
     id: str = Field(description="Unique MIME type identifier")
     mime: str = Field(description="MIME type string (e.g., application/json)")
     name: str = Field(description="Human-readable name")
-    extensions: list[str] = Field(
-        default_factory=list, description="File extensions for this MIME type"
-    )
+    extensions: list[str] = Field(default_factory=list, description="File extensions for this MIME type")
     description: str = Field(default="", description="MIME type description")
 
     def matches_extension(self, extension: str) -> bool:
@@ -276,9 +274,7 @@ class HttpStatusGroup(FulmenCatalogModel):
     id: str = Field(description="Unique group identifier")
     name: str = Field(description="Human-readable group name")
     description: str = Field(default="", description="Group description")
-    codes: list[HttpStatusCode] = Field(
-        default_factory=list, description="Status codes in this group"
-    )
+    codes: list[HttpStatusCode] = Field(default_factory=list, description="Status codes in this group")
 
     def contains(self, status_code: int) -> bool:
         """Check if status code is in this group.
@@ -337,9 +333,7 @@ class Country(FulmenCatalogModel):
     alpha3: str = Field(description="ISO 3166-1 alpha-3 three-letter country code (e.g., USA, CAN)")
     numeric: str = Field(description="ISO 3166-1 numeric country code as string (e.g., 840, 076)")
     name: str = Field(description="Common English name of the country")
-    official_name: str | None = Field(
-        None, alias="officialName", description="Official name of the country"
-    )
+    official_name: str | None = Field(None, alias="officialName", description="Official name of the country")
 
     def matches_code(self, code: str) -> bool:
         """Check if given code matches this country's codes (case-insensitive).

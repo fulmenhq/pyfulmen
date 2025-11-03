@@ -72,8 +72,7 @@ def get_crucible_version() -> CrucibleVersion:
 
     if not sync_keys_path.exists():
         raise CrucibleVersionError(
-            f"Crucible metadata not found at {sync_keys_path}. "
-            "Run 'make sync-crucible' to sync Crucible assets."
+            f"Crucible metadata not found at {sync_keys_path}. Run 'make sync-crucible' to sync Crucible assets."
         )
 
     try:

@@ -105,7 +105,5 @@ def _map_severity_level(severity: str) -> int:
     """
     level = _SEVERITY_MAP.get(severity.lower())
     if level is None:
-        raise ValueError(
-            f"Invalid severity '{severity}'. Must be one of: {', '.join(_SEVERITY_MAP.keys())}"
-        )
+        raise ValueError(f"Invalid severity '{severity}'. Must be one of: {', '.join(_SEVERITY_MAP.keys())}")
     return level

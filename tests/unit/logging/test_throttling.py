@@ -33,9 +33,7 @@ class TestThrottleController:
 
     def test_burst_capacity(self):
         """Burst capacity allows temporary rate increases."""
-        controller = ThrottleController(
-            max_rate=10, burst_size=20, window_size=1.0, drop_policy="drop-newest"
-        )
+        controller = ThrottleController(max_rate=10, burst_size=20, window_size=1.0, drop_policy="drop-newest")
 
         # Should allow up to burst_size events
         for _ in range(20):
@@ -47,9 +45,7 @@ class TestThrottleController:
 
     def test_drop_oldest_policy(self):
         """Drop-oldest policy removes oldest events when limit reached."""
-        controller = ThrottleController(
-            max_rate=5, burst_size=5, window_size=1.0, drop_policy="drop-oldest"
-        )
+        controller = ThrottleController(max_rate=5, burst_size=5, window_size=1.0, drop_policy="drop-oldest")
 
         # Fill to capacity
         for _ in range(5):
@@ -62,9 +58,7 @@ class TestThrottleController:
 
     def test_drop_newest_policy(self):
         """Drop-newest policy rejects new events when limit reached."""
-        controller = ThrottleController(
-            max_rate=5, burst_size=5, window_size=1.0, drop_policy="drop-newest"
-        )
+        controller = ThrottleController(max_rate=5, burst_size=5, window_size=1.0, drop_policy="drop-newest")
 
         # Fill to capacity
         for _ in range(5):
@@ -79,9 +73,7 @@ class TestThrottleController:
 
     def test_block_policy(self):
         """Block policy drops events (blocking would require sleep/retry)."""
-        controller = ThrottleController(
-            max_rate=5, burst_size=5, window_size=1.0, drop_policy="block"
-        )
+        controller = ThrottleController(max_rate=5, burst_size=5, window_size=1.0, drop_policy="block")
 
         # Fill to capacity
         for _ in range(5):
@@ -111,9 +103,7 @@ class TestThrottleController:
 
     def test_get_dropped_count(self):
         """Dropped count tracks rejected events."""
-        controller = ThrottleController(
-            max_rate=3, burst_size=3, window_size=1.0, drop_policy="drop-newest"
-        )
+        controller = ThrottleController(max_rate=3, burst_size=3, window_size=1.0, drop_policy="drop-newest")
 
         # Fill capacity
         for _ in range(3):
@@ -128,9 +118,7 @@ class TestThrottleController:
 
     def test_reset_dropped_count(self):
         """Reset dropped count and return previous value."""
-        controller = ThrottleController(
-            max_rate=2, burst_size=2, window_size=1.0, drop_policy="drop-newest"
-        )
+        controller = ThrottleController(max_rate=2, burst_size=2, window_size=1.0, drop_policy="drop-newest")
 
         # Fill and drop
         for _ in range(2):
@@ -240,9 +228,7 @@ class TestThrottlingMiddleware:
 
     def test_middleware_drops_events_over_limit(self):
         """Middleware drops events over throttle limit."""
-        middleware = ThrottlingMiddleware(
-            max_rate=5, burst_size=5, window_size=1.0, drop_policy="drop-newest"
-        )
+        middleware = ThrottlingMiddleware(max_rate=5, burst_size=5, window_size=1.0, drop_policy="drop-newest")
 
         # Fill capacity
         for _ in range(5):
@@ -260,9 +246,7 @@ class TestThrottlingMiddleware:
 
     def test_middleware_config(self):
         """Middleware stores configuration."""
-        middleware = ThrottlingMiddleware(
-            max_rate=100, burst_size=150, window_size=1.0, drop_policy="drop-oldest"
-        )
+        middleware = ThrottlingMiddleware(max_rate=100, burst_size=150, window_size=1.0, drop_policy="drop-oldest")
 
         assert middleware.config["max_rate"] == 100
         assert middleware.config["burst_size"] == 150
@@ -271,9 +255,7 @@ class TestThrottlingMiddleware:
 
     def test_middleware_get_dropped_count(self):
         """Middleware tracks dropped event count."""
-        middleware = ThrottlingMiddleware(
-            max_rate=3, burst_size=3, window_size=1.0, drop_policy="drop-newest"
-        )
+        middleware = ThrottlingMiddleware(max_rate=3, burst_size=3, window_size=1.0, drop_policy="drop-newest")
 
         # Fill and exceed
         for _ in range(3):
@@ -295,9 +277,7 @@ class TestThrottlingMiddleware:
         """Example integration with middleware pipeline."""
         from pyfulmen.logging.middleware import MiddlewarePipeline
 
-        throttle = ThrottlingMiddleware(
-            max_rate=10, burst_size=15, window_size=1.0, drop_policy="drop-newest"
-        )
+        throttle = ThrottlingMiddleware(max_rate=10, burst_size=15, window_size=1.0, drop_policy="drop-newest")
         pipeline = MiddlewarePipeline([throttle])
 
         passed = 0
@@ -344,9 +324,7 @@ class TestThrottlingScenarios:
 
     def test_burst_then_steady(self):
         """Handle burst followed by steady rate."""
-        controller = ThrottleController(
-            max_rate=10, burst_size=20, window_size=1.0, drop_policy="drop-newest"
-        )
+        controller = ThrottleController(max_rate=10, burst_size=20, window_size=1.0, drop_policy="drop-newest")
 
         # Burst phase
         burst_passed = 0
@@ -374,9 +352,7 @@ class TestThrottlingScenarios:
     def test_mixed_drop_policies(self):
         """Different drop policies have different behaviors."""
         # Drop-oldest allows continuous flow
-        oldest = ThrottleController(
-            max_rate=5, burst_size=5, window_size=1.0, drop_policy="drop-oldest"
-        )
+        oldest = ThrottleController(max_rate=5, burst_size=5, window_size=1.0, drop_policy="drop-oldest")
 
         for _ in range(5):
             oldest.should_emit()
@@ -386,9 +362,7 @@ class TestThrottlingScenarios:
             assert oldest.should_emit() is True
 
         # Drop-newest blocks new events
-        newest = ThrottleController(
-            max_rate=5, burst_size=5, window_size=1.0, drop_policy="drop-newest"
-        )
+        newest = ThrottleController(max_rate=5, burst_size=5, window_size=1.0, drop_policy="drop-newest")
 
         for _ in range(5):
             newest.should_emit()

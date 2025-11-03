@@ -91,9 +91,7 @@ class TestFulmenError:
     def test_explicit_severity_level_preserved(self):
         """Test explicit severity_level is not overwritten."""
         ts = datetime.now(UTC)
-        err = FulmenError(
-            code="TEST", message="Test", timestamp=ts, severity="high", severity_level=99
-        )
+        err = FulmenError(code="TEST", message="Test", timestamp=ts, severity="high", severity_level=99)
 
         assert err.severity_level == 99  # Explicit value preserved
 
@@ -124,9 +122,7 @@ class TestFulmenError:
     def test_original_as_string(self):
         """Test original field accepts string."""
         ts = datetime.now(UTC)
-        err = FulmenError(
-            code="TEST", message="Test", timestamp=ts, original="Traceback string here"
-        )
+        err = FulmenError(code="TEST", message="Test", timestamp=ts, original="Traceback string here")
 
         assert err.original == "Traceback string here"
 

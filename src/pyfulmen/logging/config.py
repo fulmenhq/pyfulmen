@@ -105,12 +105,8 @@ def validate_logger_config(config: LoggerConfig) -> list[str]:
         errors.append(f"Invalid profile: {config.profile}")
 
     # Profile-specific validation
-    sinks_list = [
-        sink.__dict__ if hasattr(sink, "__dict__") else sink for sink in (config.sinks or [])
-    ]
-    middleware_list = [
-        mw.__dict__ if hasattr(mw, "__dict__") else mw for mw in (config.middleware or [])
-    ]
+    sinks_list = [sink.__dict__ if hasattr(sink, "__dict__") else sink for sink in (config.sinks or [])]
+    middleware_list = [mw.__dict__ if hasattr(mw, "__dict__") else mw for mw in (config.middleware or [])]
 
     profile_errors = validate_profile_requirements(
         profile=config.profile,

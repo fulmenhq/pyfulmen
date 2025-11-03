@@ -100,9 +100,7 @@ class TestParseChecksum:
 
     def test_parse_sha256(self):
         """Test parsing SHA-256 checksum."""
-        algo, hex_digest = parse_checksum(
-            "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
-        )
+        algo, hex_digest = parse_checksum("sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855")
         assert algo == "sha256"
         assert hex_digest == "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
 
@@ -164,9 +162,7 @@ class TestValidateChecksumString:
 
     def test_validate_valid_sha256(self):
         """Test validation accepts valid SHA-256."""
-        assert validate_checksum_string(
-            "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
-        )
+        assert validate_checksum_string("sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855")
 
     def test_validate_with_whitespace(self):
         """Test validation strips whitespace."""

@@ -161,9 +161,7 @@ class Finder:
                         continue
 
                     # Skip hidden files/directories unless explicitly included
-                    if not query.include_hidden and any(
-                        part.startswith(".") for part in rel_path.parts
-                    ):
+                    if not query.include_hidden and any(part.startswith(".") for part in rel_path.parts):
                         continue
 
                     # Check max depth if specified
@@ -174,13 +172,9 @@ class Finder:
                     if (
                         constraint
                         and constraint_root
-                        and self._violates_constraint(
-                            constraint, constraint_root, rel_path, abs_match
-                        )
+                        and self._violates_constraint(constraint, constraint_root, rel_path, abs_match)
                     ):
-                        violation = PathTraversalError(
-                            f"Path {abs_match} violates constraint root {constraint_root}"
-                        )
+                        violation = PathTraversalError(f"Path {abs_match} violates constraint root {constraint_root}")
                         registry.counter("pathfinder_security_warnings").inc()
 
                         enforcement_value = constraint.enforcement_level
@@ -394,15 +388,11 @@ class Finder:
         path_posix = relative_path.as_posix()
 
         # Allowed patterns override constraint failures.
-        if constraint.allowed_patterns and any(
-            fnmatch(path_posix, pattern) for pattern in constraint.allowed_patterns
-        ):
+        if constraint.allowed_patterns and any(fnmatch(path_posix, pattern) for pattern in constraint.allowed_patterns):
             return False
 
         # Blocked patterns cause immediate violation.
-        if constraint.blocked_patterns and any(
-            fnmatch(path_posix, pattern) for pattern in constraint.blocked_patterns
-        ):
+        if constraint.blocked_patterns and any(fnmatch(path_posix, pattern) for pattern in constraint.blocked_patterns):
             return True
 
         try:

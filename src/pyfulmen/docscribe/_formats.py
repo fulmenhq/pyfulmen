@@ -135,9 +135,7 @@ def inspect_document(content: str | bytes) -> DocumentInfo:
     header_count = sum(1 for line in lines if line.strip().startswith("#"))
 
     # Estimate sections (only level 1 headers)
-    estimated_sections = sum(
-        1 for line in lines if line.strip().startswith("# ") or line.strip() == "#"
-    )
+    estimated_sections = sum(1 for line in lines if line.strip().startswith("# ") or line.strip() == "#")
 
     return DocumentInfo(
         has_frontmatter=has_fm,

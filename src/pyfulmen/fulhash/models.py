@@ -99,9 +99,7 @@ class Digest(BaseModel):
         }[algorithm]
 
         if len(v) != expected_length:
-            raise ValueError(
-                f"{algorithm.value} requires {expected_length} hex characters, got {len(v)}"
-            )
+            raise ValueError(f"{algorithm.value} requires {expected_length} hex characters, got {len(v)}")
 
         return v
 

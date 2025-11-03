@@ -447,9 +447,7 @@ class TestPatternAccessor:
             pattern = catalog.get_pattern(pattern_id)
             assert pattern is not None, f"Pattern {pattern_id} should be accessible"
             assert pattern.id == pattern_id, f"Pattern ID should match: {pattern_id}"
-            assert pattern.kind in ["regex", "glob", "literal"], (
-                f"Pattern {pattern_id} should have valid kind"
-            )
+            assert pattern.kind in ["regex", "glob", "literal"], f"Pattern {pattern_id} should have valid kind"
             assert pattern.pattern, f"Pattern {pattern_id} should have pattern string"
 
 

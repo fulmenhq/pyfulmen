@@ -76,6 +76,4 @@ class TerminalOverrides(FulmenConfigModel):
     version: str = Field(..., description="Schema version")
     last_updated: str = Field(default="", description="Last update date")
     notes: str = Field(default="", description="Catalog notes")
-    terminals: dict[str, TerminalConfig] = Field(
-        default_factory=dict, description="Terminal configurations"
-    )
+    terminals: dict[str, TerminalConfig] = Field(default_factory=dict, description="Terminal configurations")

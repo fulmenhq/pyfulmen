@@ -106,9 +106,7 @@ def validate_data(schema_id: str, data: Any, *, use_goneat: bool = True) -> Vali
     schema = crucible.schemas.load_schema(info.category, info.version, info.name)
     validator = Draft7Validator(schema)
     diagnostics = _diagnostics_from_errors(validator.iter_errors(data))
-    return ValidationResult(
-        schema=info, is_valid=not diagnostics, diagnostics=diagnostics, source="jsonschema"
-    )
+    return ValidationResult(schema=info, is_valid=not diagnostics, diagnostics=diagnostics, source="jsonschema")
 
 
 def validate_file(schema_id: str, path: Path | str, *, use_goneat: bool = True) -> ValidationResult:
@@ -195,9 +193,7 @@ def _validate_with_goneat(info: catalog.SchemaInfo, data: Any) -> ValidationResu
         if not line.strip():
             continue
         diagnostics.append(
-            Diagnostic(
-                pointer="", message=line.strip(), keyword=None, severity="ERROR", source="goneat"
-            )
+            Diagnostic(pointer="", message=line.strip(), keyword=None, severity="ERROR", source="goneat")
         )
 
     return ValidationResult(schema=info, is_valid=False, diagnostics=diagnostics, source="goneat")

@@ -70,8 +70,7 @@ def load_policy(policy_file: str | Path) -> LoggingPolicy:
 
     if policy_path is None:
         raise FileNotFoundError(
-            f"Policy file not found: {policy_file}. "
-            f"Searched: {', '.join(str(p) for p in search_paths)}"
+            f"Policy file not found: {policy_file}. Searched: {', '.join(str(p) for p in search_paths)}"
         )
 
     # Load and parse YAML
@@ -130,17 +129,14 @@ def validate_config_against_policy(
 
     # Check if profile is allowed
     if config.profile not in policy.allowed_profiles:
-        violations.append(
-            f"Profile '{config.profile}' not in allowed profiles: {policy.allowed_profiles}"
-        )
+        violations.append(f"Profile '{config.profile}' not in allowed profiles: {policy.allowed_profiles}")
 
     # Check environment rules
     if environment and environment in policy.environment_rules:
         allowed_for_env = policy.environment_rules[environment]
         if config.profile not in allowed_for_env:
             violations.append(
-                f"Profile '{config.profile}' not allowed in environment '{environment}'. "
-                f"Allowed: {allowed_for_env}"
+                f"Profile '{config.profile}' not allowed in environment '{environment}'. Allowed: {allowed_for_env}"
             )
 
     # Check app type requirements
@@ -148,8 +144,7 @@ def validate_config_against_policy(
         required_for_app = policy.required_profiles[app_type]
         if config.profile not in required_for_app:
             violations.append(
-                f"Profile '{config.profile}' not required for app type '{app_type}'. "
-                f"Required: {required_for_app}"
+                f"Profile '{config.profile}' not required for app type '{app_type}'. Required: {required_for_app}"
             )
 
     # Check profile-specific requirements
@@ -161,18 +156,15 @@ def validate_config_against_policy(
         for feature in required_features:
             if feature == "correlation" and not _has_correlation(config):
                 violations.append(
-                    f"Profile '{config.profile}' requires 'correlation' feature "
-                    f"but correlation_id is not configured"
+                    f"Profile '{config.profile}' requires 'correlation' feature but correlation_id is not configured"
                 )
             elif feature == "middleware" and not config.middleware:
                 violations.append(
-                    f"Profile '{config.profile}' requires 'middleware' feature "
-                    f"but no middleware configured"
+                    f"Profile '{config.profile}' requires 'middleware' feature but no middleware configured"
                 )
             elif feature == "throttling" and not config.throttling:
                 violations.append(
-                    f"Profile '{config.profile}' requires 'throttling' feature "
-                    f"but no throttling configured"
+                    f"Profile '{config.profile}' requires 'throttling' feature but no throttling configured"
                 )
 
     # Handle strict mode

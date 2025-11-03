@@ -213,9 +213,7 @@ class TestModelInteraction:
         """Models should roundtrip through JSON."""
         # Create original objects
         query = FindQuery(root=".", include=["*.py"], max_depth=3)
-        result = PathResult(
-            relative_path="test.py", source_path="/abs/test.py", logical_path="test.py"
-        )
+        result = PathResult(relative_path="test.py", source_path="/abs/test.py", logical_path="test.py")
 
         # Serialize to dict
         query_data = query.model_dump()

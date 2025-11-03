@@ -29,9 +29,7 @@ class TestSuggest:
 
     def test_missing_character(self):
         """Test suggestion for missing character."""
-        suggestions = similarity.suggest(
-            "confg", ["config", "configure", "conform"], min_score=0.6, max_suggestions=3
-        )
+        suggestions = similarity.suggest("confg", ["config", "configure", "conform"], min_score=0.6, max_suggestions=3)
 
         assert len(suggestions) >= 1
         assert suggestions[0].value == "config"
@@ -68,18 +66,14 @@ class TestSuggest:
 
     def test_sorting_by_score_descending(self):
         """Test suggestions sorted by score descending."""
-        suggestions = similarity.suggest(
-            "test", ["best", "rest", "test", "testing"], min_score=0.5, max_suggestions=10
-        )
+        suggestions = similarity.suggest("test", ["best", "rest", "test", "testing"], min_score=0.5, max_suggestions=10)
 
         for i in range(len(suggestions) - 1):
             assert suggestions[i].score >= suggestions[i + 1].score
 
     def test_alphabetical_tie_breaking(self):
         """Test alphabetical sorting for equal scores."""
-        suggestions = similarity.suggest(
-            "test", ["test1", "test3", "test2"], min_score=0.6, max_suggestions=10
-        )
+        suggestions = similarity.suggest("test", ["test1", "test3", "test2"], min_score=0.6, max_suggestions=10)
 
         assert all(s.score == 0.8 for s in suggestions)
         assert [s.value for s in suggestions] == ["test1", "test2", "test3"]
@@ -98,9 +92,7 @@ class TestSuggest:
 
     def test_normalization_enabled(self):
         """Test normalization affects matching."""
-        suggestions = similarity.suggest(
-            "  CAFÉ  ", ["cafe", "coffee"], min_score=0.9, normalize_text=True
-        )
+        suggestions = similarity.suggest("  CAFÉ  ", ["cafe", "coffee"], min_score=0.9, normalize_text=True)
 
         # With normalization and accent stripping in normalize()
         # Note: normalize() by default does NOT strip accents
@@ -111,9 +103,7 @@ class TestSuggest:
 
     def test_normalization_disabled(self):
         """Test case-sensitive matching when normalization disabled."""
-        suggestions = similarity.suggest(
-            "Hello", ["hello", "HELLO", "Hello"], min_score=0.9, normalize_text=False
-        )
+        suggestions = similarity.suggest("Hello", ["hello", "HELLO", "Hello"], min_score=0.9, normalize_text=False)
 
         assert len(suggestions) == 1
         assert suggestions[0].value == "Hello"

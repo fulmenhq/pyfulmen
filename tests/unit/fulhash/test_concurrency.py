@@ -77,9 +77,7 @@ class TestStreamHasherIndependence:
         for thread_id, expected_data in test_data.items():
             expected = hash_bytes(expected_data).formatted
             actual = results[thread_id]
-            assert actual == expected, (
-                f"Thread {thread_id} produced wrong hash. Expected: {expected}, Got: {actual}"
-            )
+            assert actual == expected, f"Thread {thread_id} produced wrong hash. Expected: {expected}, Got: {actual}"
 
     def test_concurrent_same_data_different_hashers(self):
         """Test multiple threads hashing SAME data with independent hashers.
@@ -152,9 +150,7 @@ class TestBlockHashingConcurrency:
             results[index] = hash_bytes(data).formatted
 
         with ThreadPoolExecutor(max_workers=10) as executor:
-            futures = [
-                executor.submit(compute_hash, i, test_data[i]) for i in range(num_operations)
-            ]
+            futures = [executor.submit(compute_hash, i, test_data[i]) for i in range(num_operations)]
             for future in as_completed(futures):
                 future.result()  # Raise any exceptions
 
@@ -173,9 +169,7 @@ class TestBlockHashingConcurrency:
             results[index] = hash_string(text).formatted
 
         with ThreadPoolExecutor(max_workers=10) as executor:
-            futures = [
-                executor.submit(compute_hash, i, test_data[i]) for i in range(num_operations)
-            ]
+            futures = [executor.submit(compute_hash, i, test_data[i]) for i in range(num_operations)]
             for future in as_completed(futures):
                 future.result()
 
@@ -325,9 +319,7 @@ class TestStatePollution:
             expected = hash_bytes(expected_data).formatted
 
             actual = results[thread_id]
-            assert actual == expected, (
-                f"Thread {thread_id} state was polluted. Expected: {expected}, Got: {actual}"
-            )
+            assert actual == expected, f"Thread {thread_id} state was polluted. Expected: {expected}, Got: {actual}"
 
     def test_no_pollution_with_reset(self):
         """Test that reset() doesn't affect other concurrent hashers."""
@@ -492,9 +484,7 @@ class TestLongRunningStress:
                     with lock:
                         errors.append((thread_id, i, e))
 
-        threads = [
-            threading.Thread(target=sustained_hashing, args=(i,)) for i in range(num_threads)
-        ]
+        threads = [threading.Thread(target=sustained_hashing, args=(i,)) for i in range(num_threads)]
 
         start = time.time()
         for t in threads:

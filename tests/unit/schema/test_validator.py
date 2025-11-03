@@ -57,9 +57,7 @@ def test_validate_against_schema_invalid():
         invalid_data = {}
 
         with pytest.raises(SchemaValidationError) as exc_info:
-            validate_against_schema(
-                invalid_data, "observability/logging", "v1.0.0", "logger-config"
-            )
+            validate_against_schema(invalid_data, "observability/logging", "v1.0.0", "logger-config")
 
         error = exc_info.value
         assert len(error.errors) > 0
@@ -152,9 +150,7 @@ class TestTelemetry:
 
         # Should raise SchemaValidationError
         with pytest.raises(SchemaValidationError):
-            validate_against_schema(
-                invalid_data, "observability/logging", "v1.0.0", "logger-config"
-            )
+            validate_against_schema(invalid_data, "observability/logging", "v1.0.0", "logger-config")
 
         # Counter is emitted but to independent registry instance.
         # Full metric assertion requires module-level helpers per ADR-0008.

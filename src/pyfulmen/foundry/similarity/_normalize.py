@@ -179,8 +179,7 @@ def apply_normalization_preset(text: str, preset: NormalizationPreset) -> str:
         return normalized
 
     raise ValueError(
-        f"Invalid normalization preset: {preset!r}. "
-        f"Valid options: 'none', 'minimal', 'default', 'aggressive'"
+        f"Invalid normalization preset: {preset!r}. Valid options: 'none', 'minimal', 'default', 'aggressive'"
     )
 
 

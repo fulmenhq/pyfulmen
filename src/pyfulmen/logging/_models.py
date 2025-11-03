@@ -256,9 +256,7 @@ class LoggingPolicy(FulmenConfigModel):
     )
     profile_requirements: dict[str, dict[str, Any]] = Field(
         default_factory=dict,
-        description=(
-            "Feature requirements per profile (e.g., ENTERPRISE: {requiredFeatures: [correlation]})"
-        ),
+        description=("Feature requirements per profile (e.g., ENTERPRISE: {requiredFeatures: [correlation]})"),
     )
     audit_settings: dict[str, Any] = Field(
         default_factory=dict,

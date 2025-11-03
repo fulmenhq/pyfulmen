@@ -64,9 +64,7 @@ class TestPathfinderFulHashIntegration:
         for result in results:
             assert result.metadata.checksum is not None
             assert result.metadata.checksum.startswith("xxh3-128:")
-            assert (
-                len(result.metadata.checksum) == len("xxh3-128:") + 32
-            )  # 32 hex chars for 128-bit
+            assert len(result.metadata.checksum) == len("xxh3-128:") + 32  # 32 hex chars for 128-bit
             assert result.metadata.checksum_algorithm == "xxh3-128"
             assert result.metadata.checksum_error is None
 
@@ -74,9 +72,7 @@ class TestPathfinderFulHashIntegration:
         """Test sha256 checksum calculation for various file types."""
         finder = Finder(FinderConfig(calculateChecksums=True, checksumAlgorithm="sha256"))
 
-        results = finder.find_files(
-            FindQuery(root=str(test_file_tree), include=["*.py", "*.txt", "*.json"])
-        )
+        results = finder.find_files(FindQuery(root=str(test_file_tree), include=["*.py", "*.txt", "*.json"]))
 
         assert len(results) == 5  # Python, text, and JSON files
 
@@ -219,9 +215,7 @@ class TestPathfinderFulHashErrorHandling:
             test_file = Path(tmpdir) / "test.py"
             test_file.write_text("print('test')\n")
 
-            finder = Finder(
-                FinderConfig(calculateChecksums=True, checksumAlgorithm="invalid-algorithm")
-            )
+            finder = Finder(FinderConfig(calculateChecksums=True, checksumAlgorithm="invalid-algorithm"))
 
             results = finder.find_files(FindQuery(root=str(tmpdir), include=["*.py"]))
 
@@ -230,10 +224,7 @@ class TestPathfinderFulHashErrorHandling:
 
             assert result.metadata.checksum is None
             assert result.metadata.checksum_algorithm is None
-            assert (
-                result.metadata.checksum_error
-                == "Unsupported checksum algorithm: invalid-algorithm"
-            )
+            assert result.metadata.checksum_error == "Unsupported checksum algorithm: invalid-algorithm"
 
 
 class TestPathfinderFulHashPerformance:
@@ -254,19 +245,13 @@ class TestPathfinderFulHashPerformance:
             # Test without checksums
             finder_no_checksum = Finder(FinderConfig(calculateChecksums=False))
             start = time.time()
-            results_no_checksum = finder_no_checksum.find_files(
-                FindQuery(root=str(root), include=["*.txt"])
-            )
+            results_no_checksum = finder_no_checksum.find_files(FindQuery(root=str(root), include=["*.txt"]))
             time_no_checksum = time.time() - start
 
             # Test with checksums
-            finder_with_checksum = Finder(
-                FinderConfig(calculateChecksums=True, checksumAlgorithm="xxh3-128")
-            )
+            finder_with_checksum = Finder(FinderConfig(calculateChecksums=True, checksumAlgorithm="xxh3-128"))
             start = time.time()
-            results_with_checksum = finder_with_checksum.find_files(
-                FindQuery(root=str(root), include=["*.txt"])
-            )
+            results_with_checksum = finder_with_checksum.find_files(FindQuery(root=str(root), include=["*.txt"]))
             time_with_checksum = time.time() - start
 
             # Both should find the same files

@@ -34,11 +34,7 @@ def validate_metric_event(event: MetricEvent | dict[str, Any]) -> bool:
         True if valid against observability/metrics/v1.0.0/metrics-event schema
     """
     try:
-        payload = (
-            event.model_dump(mode="json", exclude_none=True)
-            if isinstance(event, MetricEvent)
-            else event
-        )
+        payload = event.model_dump(mode="json", exclude_none=True) if isinstance(event, MetricEvent) else event
 
         # Basic structural validation
         required_fields = ["timestamp", "name", "value"]

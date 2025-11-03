@@ -128,9 +128,7 @@ def suggest(
             normalized_candidate = candidate
 
         if metric == "substring":
-            matched_range, similarity_score = substring_match(
-                normalized_input, normalized_candidate
-            )
+            matched_range, similarity_score = substring_match(normalized_input, normalized_candidate)
             if similarity_score >= min_score:
                 norm_val = normalized_candidate if normalize_preset or normalize_text else None
                 suggestion = Suggestion(

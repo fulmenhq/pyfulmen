@@ -26,9 +26,7 @@ class TestRealDocumentAccess:
 
     def test_combined_access(self):
         """Get both content and metadata together."""
-        content, metadata = crucible.get_documentation_with_metadata(
-            "standards/observability/logging.md"
-        )
+        content, metadata = crucible.get_documentation_with_metadata("standards/observability/logging.md")
         assert isinstance(content, str)
         assert len(content) > 0
         # Metadata may or may not exist
@@ -48,9 +46,7 @@ class TestRealDocumentAccess:
 
     def test_newly_synced_doc_with_frontmatter(self):
         """Test the newly synced documentation module standard."""
-        content, metadata = crucible.get_documentation_with_metadata(
-            "standards/library/modules/documentation.md"
-        )
+        content, metadata = crucible.get_documentation_with_metadata("standards/library/modules/documentation.md")
         assert isinstance(content, str)
         assert len(content) > 0
 
@@ -132,9 +128,7 @@ class TestPerformance:
 
         start = time.perf_counter()
         for _ in range(100):
-            content, metadata = crucible.get_documentation_with_metadata(
-                "standards/library/modules/documentation.md"
-            )
+            content, metadata = crucible.get_documentation_with_metadata("standards/library/modules/documentation.md")
         elapsed = time.perf_counter() - start
 
         # 100 iterations should complete in reasonable time
@@ -143,6 +137,4 @@ class TestPerformance:
 
         # Individual operations should be very fast
         avg_per_call = elapsed / 100
-        assert avg_per_call < 0.05, (
-            f"Average extraction time: {avg_per_call * 1000:.2f}ms (target <10ms)"
-        )
+        assert avg_per_call < 0.05, f"Average extraction time: {avg_per_call * 1000:.2f}ms (target <10ms)"

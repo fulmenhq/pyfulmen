@@ -57,9 +57,7 @@ def list_config_versions(category: str) -> list[str]:
     if not category_path.exists():
         return []
 
-    versions = [
-        d.name for d in category_path.iterdir() if d.is_dir() and not d.name.startswith(".")
-    ]
+    versions = [d.name for d in category_path.iterdir() if d.is_dir() and not d.name.startswith(".")]
 
     return sorted(versions)
 

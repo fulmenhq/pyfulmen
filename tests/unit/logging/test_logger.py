@@ -71,9 +71,7 @@ class TestProgressiveLogger:
 
     def test_enterprise_profile_full_envelope(self, capsys):
         """Test ENTERPRISE profile emits full LogEvent envelope."""
-        logger = Logger(
-            service="test-service", profile=LoggingProfile.ENTERPRISE, component="payment-processor"
-        )
+        logger = Logger(service="test-service", profile=LoggingProfile.ENTERPRISE, component="payment-processor")
 
         logger.info(
             "Transaction completed",

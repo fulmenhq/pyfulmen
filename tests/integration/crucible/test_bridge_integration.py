@@ -97,18 +97,14 @@ class TestBridgeIntegration:
 
         # Check that no IDs start with 'docs/'
         docs_prefix_assets = [a for a in assets if a.id.startswith("docs/")]
-        assert len(docs_prefix_assets) == 0, (
-            f"Found {len(docs_prefix_assets)} assets with 'docs/' prefix"
-        )
+        assert len(docs_prefix_assets) == 0, f"Found {len(docs_prefix_assets)} assets with 'docs/' prefix"
 
         # Check for known architecture docs
         arch_docs = [a for a in assets if "architecture" in a.id]
         if arch_docs:
             example = arch_docs[0]
             # Should start with 'architecture/' not 'docs/architecture/'
-            assert example.id.startswith("architecture/"), (
-                f"Expected architecture/... but got {example.id}"
-            )
+            assert example.id.startswith("architecture/"), f"Expected architecture/... but got {example.id}"
 
     def test_open_asset_with_architecture_doc(self):
         """open_asset works with architecture docs using correct ID (no docs/ prefix)."""
@@ -371,9 +367,7 @@ class TestNewShimHelpers:
         assert fm_meta is not None
         assert "title" in fm_meta
 
-        content, meta = get_documentation_with_metadata(
-            "standards/library/modules/crucible-shim.md"
-        )
+        content, meta = get_documentation_with_metadata("standards/library/modules/crucible-shim.md")
         assert content == clean_doc
         assert meta == fm_meta
 

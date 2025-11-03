@@ -48,10 +48,7 @@ class TestDigestBasics:
         assert digest.algorithm == Algorithm.SHA256
         assert digest.hex == "dffd6021bb2bd5b0af676290809ec3a53191dd81c7f70a4b28688a362182986f"
         assert digest.bytes is None
-        assert (
-            digest.formatted
-            == "sha256:dffd6021bb2bd5b0af676290809ec3a53191dd81c7f70a4b28688a362182986f"
-        )
+        assert digest.formatted == "sha256:dffd6021bb2bd5b0af676290809ec3a53191dd81c7f70a4b28688a362182986f"
 
     def test_digest_with_bytes(self):
         """Test digest with bytes field."""
@@ -162,10 +159,7 @@ class TestDigestFormatted:
             algorithm=Algorithm.SHA256,
             hex="dffd6021bb2bd5b0af676290809ec3a53191dd81c7f70a4b28688a362182986f",
         )
-        assert (
-            digest.formatted
-            == "sha256:dffd6021bb2bd5b0af676290809ec3a53191dd81c7f70a4b28688a362182986f"
-        )
+        assert digest.formatted == "sha256:dffd6021bb2bd5b0af676290809ec3a53191dd81c7f70a4b28688a362182986f"
 
     def test_formatted_matches_schema_pattern(self):
         """Test formatted matches checksum-string.schema.json pattern."""

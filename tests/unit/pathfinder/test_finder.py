@@ -269,9 +269,7 @@ class TestFindFiles:
             error_count[0] += 1
 
         finder = Finder()
-        query = FindQuery(
-            root=str(temp_file_tree), include=["**/*.nonexistent"], error_handler=count_errors
-        )
+        query = FindQuery(root=str(temp_file_tree), include=["**/*.nonexistent"], error_handler=count_errors)
         results = finder.find_files(query)
 
         # No matching files, but error handler shouldn't be called for non-matches
@@ -285,9 +283,7 @@ class TestFindFiles:
             progress_calls.append((processed, total, current_path))
 
         finder = Finder()
-        query = FindQuery(
-            root=str(temp_file_tree), include=["*.py", "*.txt"], progress_callback=track_progress
-        )
+        query = FindQuery(root=str(temp_file_tree), include=["*.py", "*.txt"], progress_callback=track_progress)
         results = finder.find_files(query)
 
         # Progress callback should be called for each result

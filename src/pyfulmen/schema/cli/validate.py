@@ -12,9 +12,7 @@ from ..validator import format_diagnostics, validate_data, validate_file
 
 @click.command("validate")
 @click.argument("schema_id")
-@click.option(
-    "--file", "file_path", type=click.Path(path_type=Path), help="Path to JSON/YAML payload"
-)
+@click.option("--file", "file_path", type=click.Path(path_type=Path), help="Path to JSON/YAML payload")
 @click.option("--data", "inline_data", help="Inline JSON string to validate")
 @click.option("--format", "format_", type=click.Choice(["text", "json"]), default="text")
 @click.option(

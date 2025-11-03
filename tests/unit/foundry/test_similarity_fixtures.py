@@ -99,8 +99,7 @@ class TestNormalizationFixtures:
 
             if actual != expected:
                 failures.append(
-                    f"{description}: normalization mismatch - "
-                    f"expected {repr(expected)}, got {repr(actual)}"
+                    f"{description}: normalization mismatch - expected {repr(expected)}, got {repr(actual)}"
                 )
 
         if failures:
@@ -161,8 +160,7 @@ class TestSuggestionFixtures:
 
                 if abs(actual.score - exp["score"]) >= 1e-10:
                     failures.append(
-                        f"{description} [#{i}]: score mismatch - "
-                        f"expected {exp['score']:.16f}, got {actual.score:.16f}"
+                        f"{description} [#{i}]: score mismatch - expected {exp['score']:.16f}, got {actual.score:.16f}"
                     )
 
         if failures:
@@ -206,8 +204,6 @@ class TestFixtureMetadata:
             if category in ("levenshtein", "damerau_osa", "damerau_unrestricted"):
                 assert len(cases) >= 4, f"{category} category has only {len(cases)} cases"
             elif category == "normalization_presets":
-                assert len(cases) >= 7, (
-                    f"normalization_presets category has only {len(cases)} cases"
-                )
+                assert len(cases) >= 7, f"normalization_presets category has only {len(cases)} cases"
             elif category == "suggestions":
                 assert len(cases) >= 4, f"Suggestions category has only {len(cases)} cases"

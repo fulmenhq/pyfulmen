@@ -258,9 +258,7 @@ def detect_mime_type(data: bytes) -> "MimeType | None":
     return None
 
 
-def detect_mime_type_from_reader(
-    reader: io.IOBase, max_bytes: int = 512
-) -> tuple["MimeType | None", io.IOBase]:
+def detect_mime_type_from_reader(reader: io.IOBase, max_bytes: int = 512) -> tuple["MimeType | None", io.IOBase]:
     """Detect MIME type from streaming data without consuming stream.
 
     Reads up to max_bytes from reader, detects MIME type, and returns

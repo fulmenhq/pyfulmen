@@ -34,9 +34,7 @@ def list_available_schemas() -> list[str]:
     if not schemas_dir.exists():
         return []
 
-    categories = [
-        d.name for d in schemas_dir.iterdir() if d.is_dir() and not d.name.startswith(".")
-    ]
+    categories = [d.name for d in schemas_dir.iterdir() if d.is_dir() and not d.name.startswith(".")]
 
     return sorted(categories)
 
@@ -60,9 +58,7 @@ def list_schema_versions(category: str) -> list[str]:
     if not category_path.exists():
         return []
 
-    versions = [
-        d.name for d in category_path.iterdir() if d.is_dir() and not d.name.startswith(".")
-    ]
+    versions = [d.name for d in category_path.iterdir() if d.is_dir() and not d.name.startswith(".")]
 
     return sorted(versions)
 

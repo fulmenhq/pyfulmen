@@ -49,8 +49,7 @@ def format_checksum(algorithm: str | Algorithm, hex_digest: str) -> str:
     # Validate algorithm is supported
     if algo_str not in ALGORITHM_HEX_LENGTHS:
         raise ValueError(
-            f"Unsupported algorithm: {algo_str}. "
-            f"Supported algorithms: {', '.join(ALGORITHM_HEX_LENGTHS.keys())}"
+            f"Unsupported algorithm: {algo_str}. Supported algorithms: {', '.join(ALGORITHM_HEX_LENGTHS.keys())}"
         )
 
     # Validate hex format
@@ -59,9 +58,7 @@ def format_checksum(algorithm: str | Algorithm, hex_digest: str) -> str:
         raise ValueError(f"Invalid hex format: must be lowercase hexadecimal, got: {hex_digest!r}")
 
     if len(hex_digest) != expected_length:
-        raise ValueError(
-            f"{algo_str} requires {expected_length} hex characters, got {len(hex_digest)}"
-        )
+        raise ValueError(f"{algo_str} requires {expected_length} hex characters, got {len(hex_digest)}")
 
     return f"{algo_str}:{hex_digest}"
 
@@ -93,24 +90,19 @@ def parse_checksum(checksum: str) -> tuple[str, str]:
 
     # Check for colon separator
     if ":" not in checksum:
-        raise ValueError(
-            f"Invalid checksum format: expected format 'algorithm:hex', got: {checksum!r}"
-        )
+        raise ValueError(f"Invalid checksum format: expected format 'algorithm:hex', got: {checksum!r}")
 
     # Split on first colon only
     parts = checksum.split(":", 1)
     if len(parts) != 2:
-        raise ValueError(
-            f"Invalid checksum format: expected format 'algorithm:hex', got: {checksum!r}"
-        )
+        raise ValueError(f"Invalid checksum format: expected format 'algorithm:hex', got: {checksum!r}")
 
     algorithm, hex_digest = parts
 
     # Validate algorithm is supported
     if algorithm not in ALGORITHM_HEX_LENGTHS:
         raise ValueError(
-            f"Unsupported algorithm: {algorithm}. "
-            f"Supported algorithms: {', '.join(ALGORITHM_HEX_LENGTHS.keys())}"
+            f"Unsupported algorithm: {algorithm}. Supported algorithms: {', '.join(ALGORITHM_HEX_LENGTHS.keys())}"
         )
 
     # Validate hex format
@@ -119,9 +111,7 @@ def parse_checksum(checksum: str) -> tuple[str, str]:
         raise ValueError(f"Invalid hex format: must be lowercase hexadecimal, got: {hex_digest!r}")
 
     if len(hex_digest) != expected_length:
-        raise ValueError(
-            f"{algorithm} requires {expected_length} hex characters, got {len(hex_digest)}"
-        )
+        raise ValueError(f"{algorithm} requires {expected_length} hex characters, got {len(hex_digest)}")
 
     return algorithm, hex_digest
 

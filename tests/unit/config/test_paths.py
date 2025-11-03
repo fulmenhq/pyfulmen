@@ -75,9 +75,7 @@ def test_get_app_config_paths_no_legacy():
 
 def test_get_app_config_paths_with_legacy():
     """Test getting app config paths with legacy names."""
-    config_paths = paths.get_app_config_paths(
-        "fulmenhq/myapp", legacy_names=["fulmenhq/oldapp", "fulmenhq/ancientapp"]
-    )
+    config_paths = paths.get_app_config_paths("fulmenhq/myapp", legacy_names=["fulmenhq/oldapp", "fulmenhq/ancientapp"])
 
     assert isinstance(config_paths, list)
     assert len(config_paths) == 3
@@ -194,9 +192,9 @@ def test_ensure_dir(tmp_path):
 
 def test_config_search_paths_alias():
     """get_config_search_paths should match get_app_config_paths."""
-    assert paths.get_config_search_paths(
+    assert paths.get_config_search_paths("fulmenhq/myapp", vendor="fulmenhq") == paths.get_app_config_paths(
         "fulmenhq/myapp", vendor="fulmenhq"
-    ) == paths.get_app_config_paths("fulmenhq/myapp", vendor="fulmenhq")
+    )
 
 
 def test_platform_paths_via_xdg_env_vars(monkeypatch, tmp_path):

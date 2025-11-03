@@ -101,9 +101,7 @@ def test_three_layer_merge():
         # Layer 3: App config
         app_config = {"app_layer": {"value": 3}}
 
-        result = loader.load_with_metadata(
-            "terminal/v1.0.0/terminal-overrides-defaults", app_config=app_config
-        )
+        result = loader.load_with_metadata("terminal/v1.0.0/terminal-overrides-defaults", app_config=app_config)
         config = result.data
 
         # Should have all layers

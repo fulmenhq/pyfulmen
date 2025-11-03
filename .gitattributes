@@ -1,9 +1,87 @@
 # Git attributes for pyfulmen repository
 # Ensures consistent file handling across platforms
 
+# ==============================================================================
+# Line Ending Normalization
+# ==============================================================================
+# Enforce LF line endings for all text files to prevent Windows CRLF issues
+# This is critical for:
+# - Cross-platform development (macOS, Linux, Windows)
+# - CI/CD consistency
+# - Checksum integrity in tests
+* text=auto eol=lf
+
+# ==============================================================================
+# Python Source Files
+# ==============================================================================
+*.py text eol=lf
+*.pyi text eol=lf
+*.pyx text eol=lf
+
+# ==============================================================================
+# Configuration Files
+# ==============================================================================
+*.toml text eol=lf
+*.yaml text eol=lf
+*.yml text eol=lf
+*.json text eol=lf
+*.ini text eol=lf
+*.cfg text eol=lf
+.editorconfig text eol=lf
+.gitignore text eol=lf
+.gitattributes text eol=lf
+.goneatignore text eol=lf
+
+# ==============================================================================
+# Documentation
+# ==============================================================================
+*.md text eol=lf
+*.rst text eol=lf
+*.txt text eol=lf
+LICENSE text eol=lf
+README* text eol=lf
+CHANGELOG* text eol=lf
+CONTRIBUTING* text eol=lf
+MAINTAINERS* text eol=lf
+
+# ==============================================================================
+# Scripts
+# ==============================================================================
+*.sh text eol=lf
+*.bash text eol=lf
+Makefile text eol=lf
+makefile text eol=lf
+
+# ==============================================================================
+# CI/CD
+# ==============================================================================
+.github/**/* text eol=lf
+.goneat/**/* text eol=lf
+
+# ==============================================================================
+# Binary Files
+# ==============================================================================
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.pdf binary
+*.whl binary
+*.egg binary
+*.pyc binary
+*.pyo binary
+*.so binary
+*.dylib binary
+*.dll binary
+
+# ==============================================================================
+# Special Cases - Binary Content Preservation
+# ==============================================================================
 # Pathfinder checksum parity test fixtures - preserve exact binary content
 # These files have known checksums that must not change due to line-ending conversion
+# On Windows with core.autocrlf=true, git will NOT convert LF to CRLF for these files
 tests/fixtures/pathfinder/sample-files/* -text
 
 # Prevent line-ending conversion that would break checksum validation
-# On Windows with core.autocrlf=true, git will NOT convert LF to CRLF for these files
+# The -text attribute disables all text processing including line-ending normalization

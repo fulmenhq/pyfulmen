@@ -87,13 +87,9 @@ class TestListAssets:
         # Should find nested schemas like observability/logging
         if len(assets) > 0:
             # Check that we have nested paths (contains /)
-            nested_assets = [
-                a for a in assets if a.id.count("/") >= 3
-            ]  # category/subcategory/version/name
+            nested_assets = [a for a in assets if a.id.count("/") >= 3]  # category/subcategory/version/name
             # If observability schemas exist, at least some should be nested
-            assert len(nested_assets) > 0, (
-                "Expected to find nested schema paths like observability/logging/v1.0.0/..."
-            )
+            assert len(nested_assets) > 0, "Expected to find nested schema paths like observability/logging/v1.0.0/..."
 
             # Verify specific nested schema exists (if observability is synced)
             logging_schemas = [a for a in assets if "logging" in a.id]
@@ -121,9 +117,7 @@ class TestListAssets:
         if len(assets) > 0:
             # Check that no IDs start with 'docs/'
             for asset in assets:
-                assert not asset.id.startswith("docs/"), (
-                    f"Doc ID should not start with 'docs/': {asset.id}"
-                )
+                assert not asset.id.startswith("docs/"), f"Doc ID should not start with 'docs/': {asset.id}"
 
             # Check for known docs (if they exist)
             arch_docs = [a for a in assets if "architecture" in a.id]
