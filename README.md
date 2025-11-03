@@ -2,7 +2,7 @@
 
 Python Fulmen libraries for enterprise-scale development.
 
-**Lifecycle Phase**: `alpha` | **Version**: 0.1.8 | **Coverage**: 93%
+**Lifecycle Phase**: `alpha` | **Version**: 0.1.9 | **Coverage**: 93%
 
 ## Overview
 
@@ -16,6 +16,7 @@ PyFulmen is part of the Fulmen ecosystem, providing templates, processes, and to
 
 - **Progressive Logging** - Zero-complexity to enterprise-grade logging with SIMPLE → STRUCTURED → ENTERPRISE profiles
 - **Error Handling** - Pathfinder-compatible errors with telemetry metadata and schema validation (v0.1.6+)
+- **Exit Codes** - Standardized 54-code catalog with simplified modes for monitoring/alerting (v0.1.9+)
 - **Telemetry & Metrics** - Counter/gauge/histogram recording with Crucible taxonomy validation (v0.1.6+)
 - **FulHash** - Fast, consistent hashing with xxh3-128 (default) and sha256 support, thread-safe streaming (v0.1.6+)
 - **Crucible Shim** - Idiomatic Python access to Crucible schemas, docs, and config defaults
@@ -315,6 +316,69 @@ for result in results:
 ```
 
 **Performance**: ~23,800 files/sec with checksums enabled. See [ADR-0010](docs/development/adr/ADR-0010-pathfinder-checksum-performance-acceptable-delta.md) for overhead analysis.
+
+### Exit Codes - Standardized Process Exit Codes (v0.1.9+)
+
+Standardized exit codes for consistent error reporting across the Fulmen ecosystem, with simplified mode mappings for monitoring systems.
+
+```python
+from pyfulmen.foundry import ExitCode, SimplifiedMode, get_exit_code_info, map_to_simplified
+
+# Use semantic exit codes
+import sys
+sys.exit(ExitCode.EXIT_PORT_IN_USE.value)  # 10
+
+# Get exit code metadata
+info = get_exit_code_info(10)
+print(info["name"])          # "EXIT_PORT_IN_USE"
+print(info["description"])   # "Specified port is already in use"
+print(info["category"])      # "networking"
+print(info.get("retry_hint")) # "Check if port is available, try alternative port"
+
+# Map to simplified modes (for monitoring/alerting)
+simplified = map_to_simplified(10, SimplifiedMode.BASIC)
+print(simplified)  # 1 (success=0, any_error=1)
+
+simplified = map_to_simplified(10, SimplifiedMode.SEVERITY)
+print(simplified)  # 2 (0=success, 1=warning, 2=error, 3=critical)
+
+# Use with error handling
+from pyfulmen.error_handling import FulmenError
+from datetime import datetime, UTC
+
+error = FulmenError(
+    code="SERVER_STARTUP_FAILED",
+    message="Failed to bind to port 8080",
+    exit_code=ExitCode.EXIT_PORT_IN_USE.value,
+    severity="high",
+    timestamp=datetime.now(UTC),
+    context={"port": 8080, "service": "api-server"}
+)
+
+# Log and exit with appropriate code
+sys.exit(error.exit_code)
+```
+
+**54 Exit Codes across 11 categories**:
+
+- **Standard** (0-1): SUCCESS, FAILURE
+- **Networking** (10-15): PORT_IN_USE, CONNECTION_TIMEOUT, CONNECTION_REFUSED, etc.
+- **Configuration** (20-24): CONFIG_INVALID, CONFIG_MISSING, CONFIG_PARSE_FAILED, etc.
+- **Runtime** (30-34): TIMEOUT, OUT_OF_MEMORY, DISK_FULL, PROCESS_LIMIT, etc.
+- **Usage** (40-44): USAGE_ERROR, NO_INPUT, DATAERR
+- **Permissions** (50-54): PERMISSION_DENIED, EACCES, EPERM, ENOENT, etc.
+- **Data** (60-63): VALIDATION_FAILED, CORRUPTION, FORMAT_ERROR, CHECKSUM_MISMATCH
+- **Security** (70-73): AUTH_FAILED, CERT_INVALID, TOKEN_EXPIRED, CRYPTO_ERROR
+- **Observability** (80-84): TELEMETRY_INIT_FAILED, LOGGING_INIT_FAILED, etc.
+- **Testing** (91-96): TEST_FAILURE, TEST_TIMEOUT, FIXTURE_ERROR, etc.
+- **Signals** (129-160): SIGHUP, SIGINT, SIGTERM, SIGKILL, SIGQUIT, etc.
+
+**Key Features**:
+
+- **Cross-Language Parity** - Same codes in gofulmen, pyfulmen, tsfulmen
+- **Simplified Modes** - Basic (0/1) and Severity (0-3) for monitoring
+- **Rich Metadata** - Description, context, category, retry hints
+- **BSD Compatibility** - Maps to standard sysexits.h codes where applicable
 
 ### Other Features
 

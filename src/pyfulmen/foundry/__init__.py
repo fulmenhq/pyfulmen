@@ -6,6 +6,7 @@ This module provides:
 - RFC3339Nano timestamp generation
 - UUIDv7 correlation ID generation
 - Pattern catalog for regex, MIME types, HTTP statuses, country codes
+- Exit codes with simplified mode mappings
 - Text similarity and normalization utilities (similarity submodule)
 """
 
@@ -39,6 +40,16 @@ from .catalog import (
     list_countries,
     list_mime_types,
     validate_country_code,
+)
+from .exit_codes import (
+    EXIT_CODE_METADATA,
+    EXIT_CODES_VERSION,
+    ExitCode,
+    SimplifiedMode,
+    get_detailed_codes,
+    get_exit_code_info,
+    get_exit_codes_version,
+    map_to_simplified,
 )
 from .models import (
     FulmenBaseModel,
@@ -84,5 +95,13 @@ __all__ = [
     "get_country_by_alpha3",
     "get_country_by_numeric",
     "list_countries",
+    "EXIT_CODE_METADATA",
+    "EXIT_CODES_VERSION",
+    "ExitCode",
+    "SimplifiedMode",
+    "get_detailed_codes",
+    "get_exit_code_info",
+    "get_exit_codes_version",
+    "map_to_simplified",
     "similarity",
 ]

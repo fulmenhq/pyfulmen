@@ -28,6 +28,11 @@ sources:
         paths:
           - '**/*'
         subdir: .crucible/metadata
+      - type: src
+        source_path: src/pyfulmen
+        paths:
+          - '**/*.py'
+        subdir: src/pyfulmen
 strategy:
   on_conflict: overwrite
   prune_stale: true
