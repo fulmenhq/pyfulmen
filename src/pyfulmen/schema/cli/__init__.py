@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import click
 
-from . import info, listing, validate
+from . import export, info, listing, validate
 
 
 @click.group(help="Explore PyFulmen schema catalog and validate payloads.")
@@ -15,6 +15,7 @@ def cli() -> None:
 cli.add_command(listing.list_schemas)
 cli.add_command(info.show_schema)
 cli.add_command(validate.validate_payload)
+cli.add_command(export.export_schema_cmd)
 
 
 __all__ = ["cli"]

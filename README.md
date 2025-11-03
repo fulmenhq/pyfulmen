@@ -20,6 +20,7 @@ PyFulmen is part of the Fulmen ecosystem, providing templates, processes, and to
 - **Telemetry & Metrics** - Counter/gauge/histogram recording with Crucible taxonomy validation (v0.1.6+)
 - **FulHash** - Fast, consistent hashing with xxh3-128 (default) and sha256 support, thread-safe streaming (v0.1.6+)
 - **Crucible Shim** - Idiomatic Python access to Crucible schemas, docs, and config defaults
+- **Schema Export** - Export Crucible schemas to local files with provenance metadata (v0.1.9+)
 - **Config Path API** - XDG-compliant, platform-aware configuration paths
 - **Three-Layer Config Loading** - Crucible defaults → User overrides → App config
 - **Schema Validation** - Helpers for validating data against Crucible JSON schemas
@@ -143,6 +144,70 @@ config = crucible.get_config_defaults('terminal', 'v1.0.0', 'terminal-overrides-
 schema, meta = crucible.find_schema('observability/logging/v1.0.0/logger-config')
 config, cfg_meta = crucible.find_config('terminal/v1.0.0/terminal-overrides-defaults')
 ```
+
+### Schema Export (v0.1.9+)
+
+Export Crucible schemas to local files with provenance metadata, validation, and overwrite safeguards.
+
+```python
+from pyfulmen.schema import export_schema
+
+# Export schema to JSON with provenance
+path = export_schema(
+    "observability/logging/v1.0.0/logger-config",
+    "schemas/logger-config.json"
+)
+print(f"Exported to: {path}")
+
+# Export to YAML without provenance
+path = export_schema(
+    "observability/logging/v1.0.0/logger-config",
+    "schemas/logger-config.yaml",
+    include_provenance=False
+)
+
+# Overwrite existing file
+path = export_schema(
+    "observability/logging/v1.0.0/logger-config",
+    "schemas/logger-config.json",
+    overwrite=True
+)
+```
+
+**CLI Usage:**
+
+```bash
+# Export schema
+uv run python -m pyfulmen.schema.cli export \
+    observability/logging/v1.0.0/logger-config \
+    --out schemas/logger-config.json
+
+# Export without provenance
+uv run python -m pyfulmen.schema.cli export \
+    observability/logging/v1.0.0/logger-config \
+    --out schemas/logger-config.json \
+    --no-provenance
+
+# Force overwrite
+uv run python -m pyfulmen.schema.cli export \
+    observability/logging/v1.0.0/logger-config \
+    --out schemas/logger-config.json \
+    --force
+
+# Verbose output
+uv run python -m pyfulmen.schema.cli export \
+    observability/logging/v1.0.0/logger-config \
+    --out schemas/logger-config.json \
+    --verbose
+```
+
+**Key Features:**
+
+- **Provenance Metadata** - Includes Crucible version, PyFulmen version, revision hash, and export timestamp
+- **Format Support** - JSON and YAML output with automatic format detection
+- **Validation** - Optional schema validation before export
+- **Safety** - Overwrite protection with force option
+- **CLI Integration** - Full command-line interface with exit codes
 
 ### Error Handling (v0.1.6+)
 
@@ -399,7 +464,14 @@ schema.validator.validate_data(
     name='log-event',
     data={'severity': 'info'}
 )
+
+# Export schemas to local files
+path = schema.export_schema(
+    'observability/logging/v1.0.0/logger-config',
+    'schemas/logger-config.json'
+)
 ```
+
 
 ### Version Management
 
