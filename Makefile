@@ -96,7 +96,7 @@ sync-ssot: sync-crucible
 .PHONY: fmt
 fmt: bin/goneat
 	@echo "Formatting code..."
-	@uv run ruff format src/ tests/ scripts/
+	@uv run ruff format src/ tests/ scripts/ --exclude tests/fixtures/
 	@echo "Formatting docs and config..."
 	@bash -c './bin/goneat format --types yaml,json,markdown --folders . --staged-only 2>&1 | grep -v -E "(fixtures/invalid/malformed-yaml.yaml|encountered the following formatting errors)" || (echo "Formatting completed with expected error on malformed test fixture" && exit 0)'
 	@echo "✓ All files formatted"
@@ -193,6 +193,8 @@ release-build: build
 
 .PHONY: prepush
 prepush: check-all validate-ssot-provenance
+	@echo "Running goneat pre-push assessment..."
+	@./bin/goneat assess --hook pre-push
 	@echo "✓ Pre-push checks passed"
 
 .PHONY: validate-ssot-provenance
@@ -202,6 +204,8 @@ validate-ssot-provenance:
 
 .PHONY: precommit
 precommit: fmt lint
+	@echo "Running goneat pre-commit assessment..."
+	@./bin/goneat assess --hook pre-commit
 	@echo "✓ Pre-commit hooks passed"
 
 .PHONY: clean
