@@ -12,12 +12,12 @@ Usage:
 """
 
 from pyfulmen.foundry.similarity import (
-    distance,
-    score,
-    suggest,
-    normalize,
     apply_normalization_preset,
+    distance,
+    normalize,
+    score,
     substring_match,
+    suggest,
 )
 
 
@@ -114,14 +114,14 @@ def demo_normalization_impact() -> None:
 
     # Without normalization
     dist_raw = distance(word1, word2)
-    print(f"\n  Without normalization:")
+    print("\n  Without normalization:")
     print(f"    Distance: {dist_raw} (different)")
 
     # With normalization (default)
     norm1 = normalize(word1, preset="default")
     norm2 = normalize(word2, preset="default")
     dist_normalized = distance(norm1, norm2)
-    print(f"\n  With 'default' normalization:")
+    print("\n  With 'default' normalization:")
     print(f"    '{word1}' → '{norm1}'")
     print(f"    '{word2}' → '{norm2}'")
     print(f"    Distance: {dist_normalized} (still different - accents preserved)")
@@ -130,7 +130,7 @@ def demo_normalization_impact() -> None:
     norm1_agg = normalize(word1, preset="aggressive")
     norm2_agg = normalize(word2, preset="aggressive")
     dist_aggressive = distance(norm1_agg, norm2_agg)
-    print(f"\n  With 'aggressive' normalization:")
+    print("\n  With 'aggressive' normalization:")
     print(f"    '{word1}' → '{norm1_agg}'")
     print(f"    '{word2}' → '{norm2_agg}'")
     print(f"    Distance: {dist_aggressive} (same - accents stripped)")
@@ -156,13 +156,13 @@ def demo_cli_suggestions() -> None:
 
     # Using Levenshtein (default)
     suggestions_lev = suggest(typo, commands, metric="levenshtein", max_suggestions=3)
-    print(f"\n  With Levenshtein (edit distance):")
+    print("\n  With Levenshtein (edit distance):")
     for sug in suggestions_lev:
         print(f"    {sug.value:<20} (score: {sug.score:.3f})")
 
     # Using Jaro-Winkler (prefix-aware)
     suggestions_jw = suggest(typo, commands, metric="jaro_winkler", max_suggestions=3)
-    print(f"\n  With Jaro-Winkler (prefix-aware):")
+    print("\n  With Jaro-Winkler (prefix-aware):")
     for sug in suggestions_jw:
         print(f"    {sug.value:<20} (score: {sug.score:.3f})")
 
@@ -191,7 +191,7 @@ It has multiple lines."""
 
     # Find common substring
     common_range, common_score = substring_match("test document", doc1)
-    print(f'\n  Finding "test document" in Doc1:')
+    print('\n  Finding "test document" in Doc1:')
     print(f"    Range: {common_range}, Score: {common_score:.3f}")
 
 
