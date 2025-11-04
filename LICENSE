@@ -40,8 +40,30 @@ limitations under the License.
 
 ## Trademark Notice
 
-"3 Leaps®" is a registered trademark of 3 Leaps, LLC, a Florida LLC with offices in South Carolina. "Fulmen™", "Fulmens™", "FulmenHQ™", "FulDX™", "MDMeld™", "Docemist™", the "Fulmen logo™", the "MDMeld icon™", and the "Docemist logo™" are trademarks of 3 Leaps, LLC, claimed through use in commerce, with plans for USPTO registration.
+"3 Leaps®" is a registered trademark of 3 Leaps, LLC, a Florida LLC with offices in South Carolina. "Fulmen™", "Fulmens™", "FulmenHQ™", "MDMeld™", "Docemist™", the "Fulmen logo™", the "MDMeld icon™", and the "Docemist logo™" are trademarks of 3 Leaps, LLC, claimed through use in commerce, with plans for USPTO registration.
 
-While code and documentation are open under the MIT License above, use of these trademarks and associated logos, icons, and visual elements is reserved for official implementations to prevent confusion and protect the ecosystem. Use of these marks in derivative works does not imply endorsement by 3 Leaps, LLC. As a courtesy, rename derivative projects to avoid using "3leaps", "fulmen", "fulmens", "fulmenhq", "fuldx", "mdmeld", or "docemist" in repository or package names.
+While code and documentation are open under the MIT License above, use of these trademarks and associated logos, icons, and visual elements is reserved for official implementations to prevent confusion and protect the ecosystem. Use of these marks in derivative works does not imply endorsement by 3 Leaps, LLC. As a courtesy, rename derivative projects to avoid using "3leaps", "fulmen", "fulmens", "fulmenhq", "mdmeld", or "docemist" in repository or package names. Setup scripts provided in Fulmen repositories will assist in this process.
 
 For questions regarding trademark usage, contact legal@3leaps.net.
+
+---
+
+## Acceptable Use of "Fulmen"
+
+"Fulmen" (Latin for lightning or thunderbolt) is a reusable project template by 3 Leaps, LLC, designed for lightning-fast, enterprise-grade solutions. Use "Fulmen" as a standalone noun (for example, "Use a fulmen to start your project") and avoid descriptors like "template" or "blueprint." We encourage referencing "fulmen" in contexts identifying permissibly licensed content, provided the `3leaps-` prefix is not used to avoid confusion with official 3 Leaps content. As a courtesy, acknowledge the origin by linking to `https://github.com/fulmenhq/fulmen-cosmography` in your documentation. For full branding guidelines, visit `https://fulmenhq.dev`.
+
+---
+
+## Python Ecosystem Considerations
+
+This is a Python library in the FulmenHQ ecosystem. When packaging or distributing PyFulmen:
+
+- Maintain the `pyfulmen` package name on PyPI and other repositories
+- Use `pyfulmen` in import statements and documentation
+- Follow Python packaging standards (pyproject.toml, src/ layout)
+- Respect the Python ecosystem's conventions for dependencies and virtual environments
+- Consider compatibility with Python 3.12+ when making changes
+
+---
+
+For additional governance details and contributor obligations, see the 3 Leaps Open Source Policies at https://github.com/3leaps/oss-policies.
