@@ -2,6 +2,53 @@
 
 This document tracks release notes and checklists for PyFulmen releases.
 
+## [0.1.9] - 2025-11-04
+
+### Schema Export, Exit Codes & Crucible v0.2.4 Sync
+
+**Release Type**: Major Feature Enhancement - Schema Management + Error Standardization + Infrastructure
+**Release Date**: November 4, 2025
+**Status**: ✅ Ready for Release
+
+**Summary**: PyFulmen v0.1.9 delivers three major enhancements: comprehensive schema export functionality, standardized exit codes integration with 54 semantic codes, and Crucible v0.2.4 sync with schema migration to 2020-12 draft and new app-identity module. This release significantly expands PyFulmen's enterprise capabilities.
+
+#### Key Features
+
+**📤 Schema Export API**:
+
+- Complete schema materialization system with JSON/YAML format support
+- `export_schema()` function with provenance metadata embedding and validation
+- CLI integration: `pyfulmen schema export` with comprehensive options
+- Provenance tracking with configurable metadata inclusion
+- 23 comprehensive tests (14 unit + 9 integration, 100% pass rate)
+
+**🚨 Standardized Exit Codes**:
+
+- 54 semantic exit codes across 11 categories for enterprise error handling
+- Simplified mode mappings for monitoring/alerting system integration
+- Cross-language consistency with gofulmen/tsfulmen exit codes
+- 8 exported APIs for exit code management and metadata access
+- 13 parity tests ensuring ecosystem consistency
+
+**🔧 Crucible v0.2.4 Infrastructure**:
+
+- Schema migration: JSON Schema draft-07 → 2020-12 across all schemas
+- App-identity repository configuration module with validation fixtures
+- Additional standards: server management, web styling, protocol standards
+- Code generation templates and repository structure standards
+
+#### Quality Gates
+
+- [x] All 1343 tests passing (1322 passed, 21 skipped)
+- [x] 93% code coverage maintained
+- [x] Schema export functionality fully tested
+- [x] Crucible sync validated and committed
+- [x] Documentation updated
+
+#### Breaking Changes
+
+- None (fully backward compatible with v0.1.8)
+
 ## [0.1.8] - 2025-10-29
 
 ### CI/CD Infrastructure & Public Release Readiness

@@ -7,6 +7,37 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.9] - 2025-11-04
+
+### Added
+
+- **Schema Export API**: Complete schema materialization system with JSON/YAML support, provenance metadata, and CLI integration
+  - `export_schema()` function with format selection, validation, and provenance embedding
+  - CLI command `pyfulmen schema export` with comprehensive options (--format, --output, --no-provenance, --force)
+  - Provenance utilities for consistent metadata handling across formats
+  - Comprehensive test suite (23 tests: 14 unit + 9 integration, 100% pass rate)
+  - Documentation updates with usage examples and CLI reference
+
+- **Exit Codes Module**: Standardized exit codes integration from Crucible v0.2.3
+  - 54 semantic exit codes across 11 categories (standard, networking, configuration, runtime, usage, permissions, data, security, observability, testing, signals)
+  - Simplified mode mappings for monitoring/alerting system integration
+  - 8 exported APIs: ExitCode enum, SimplifiedMode enum, version info, metadata access functions
+  - Comprehensive parity tests (13 tests) ensuring cross-language consistency
+  - Generated exit_codes.py (1246 lines) with full IntEnum implementation
+
+- **App-Identity Configuration Module**: New repository configuration module for application identity management
+  - Complete schema definitions and validation fixtures
+  - Example configurations for different repository types (monorepo API, worker, etc.)
+  - Integration with three-layer config system
+
+- **Additional Crucible Standards**: Server management, web styling, protocol standards, and code generation templates from v0.2.4 sync
+
+### Changed
+
+- **Schema Standards Migration**: Updated all schemas from JSON Schema draft-07 to 2020-12
+- **Crucible Sync**: Updated to v0.2.4 with comprehensive infrastructure updates
+- **Documentation**: Enhanced README with schema export and exit codes sections
+
 ## [0.1.8] - 2025-10-29
 
 ### Added

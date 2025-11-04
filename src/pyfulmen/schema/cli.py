@@ -90,7 +90,7 @@ def main(argv: Sequence[str] | None = None) -> int:
                 out_path=args.out,
                 include_provenance=not args.no_provenance,
                 validate=not args.no_validate,
-                overwrite=args.force
+                overwrite=args.force,
             )
 
             if args.verbose:

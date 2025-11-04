@@ -6,8 +6,6 @@ Ensures PyFulmen exit codes exactly match the Crucible SSOT catalog.
 import json
 from pathlib import Path
 
-import pytest
-
 from pyfulmen.foundry.exit_codes import (
     ExitCode,
     SimplifiedMode,
@@ -15,7 +13,6 @@ from pyfulmen.foundry.exit_codes import (
     get_exit_codes_version,
     map_to_simplified,
 )
-from pyfulmen import crucible
 
 
 class TestExitCodesParity:
@@ -51,17 +48,16 @@ class TestExitCodesParity:
                 "category": info["category"],
             }
             # Add optional fields only if present
-            if info.get("retry_hint"):
+            if "retry_hint" in info and info["retry_hint"]:
                 computed_codes[str(code.value)]["retry_hint"] = info["retry_hint"]
-            if info.get("bsd_equivalent"):
+            if "bsd_equivalent" in info and info["bsd_equivalent"]:
                 computed_codes[str(code.value)]["bsd_equivalent"] = info["bsd_equivalent"]
 
         canonical_codes = canonical["codes"]
 
         # Compare counts
         assert len(computed_codes) == len(canonical_codes), (
-            f"Code count mismatch: PyFulmen has {len(computed_codes)}, "
-            f"canonical has {len(canonical_codes)}"
+            f"Code count mismatch: PyFulmen has {len(computed_codes)}, canonical has {len(canonical_codes)}"
         )
 
         # Deep compare each code
@@ -70,22 +66,15 @@ class TestExitCodesParity:
             computed = computed_codes[code_str]
 
             assert computed["name"] == expected["name"], (
-                f"Code {code_str}: name mismatch: "
-                f"{computed['name']} != {expected['name']}"
+                f"Code {code_str}: name mismatch: {computed['name']} != {expected['name']}"
             )
-            assert computed["description"] == expected["description"], (
-                f"Code {code_str}: description mismatch"
-            )
-            assert computed["context"] == expected["context"], (
-                f"Code {code_str}: context mismatch"
-            )
+            assert computed["description"] == expected["description"], f"Code {code_str}: description mismatch"
+            assert computed["context"] == expected["context"], f"Code {code_str}: context mismatch"
             assert computed["category"] == expected["category"], (
-                f"Code {code_str}: category mismatch: "
-                f"{computed['category']} != {expected['category']}"
+                f"Code {code_str}: category mismatch: {computed['category']} != {expected['category']}"
             )
             assert computed.get("retry_hint") == expected.get("retry_hint"), (
-                f"Code {code_str}: retry_hint mismatch: "
-                f"{computed.get('retry_hint')} != {expected.get('retry_hint')}"
+                f"Code {code_str}: retry_hint mismatch: {computed.get('retry_hint')} != {expected.get('retry_hint')}"
             )
             assert computed.get("bsd_equivalent") == expected.get("bsd_equivalent"), (
                 f"Code {code_str}: bsd_equivalent mismatch"
@@ -110,8 +99,7 @@ class TestExitCodesParity:
                 for code in codes:
                     computed = map_to_simplified(code, SimplifiedMode.BASIC)
                     assert computed == simplified_code, (
-                        f"Basic mode: code {code} should map to {simplified_code}, "
-                        f"got {computed}"
+                        f"Basic mode: code {code} should map to {simplified_code}, got {computed}"
                     )
 
         # Test severity mode mappings
@@ -122,8 +110,7 @@ class TestExitCodesParity:
                 for code in codes:
                     computed = map_to_simplified(code, SimplifiedMode.SEVERITY)
                     assert computed == simplified_code, (
-                        f"Severity mode: code {code} should map to {simplified_code}, "
-                        f"got {computed}"
+                        f"Severity mode: code {code} should map to {simplified_code}, got {computed}"
                     )
 
     def test_all_exit_codes_have_metadata(self):
@@ -140,27 +127,19 @@ class TestExitCodesParity:
     def test_exit_code_names_follow_convention(self):
         """Verify all exit code names follow EXIT_* convention."""
         for code in ExitCode:
-            assert code.name.startswith("EXIT_"), (
-                f"Code {code.value} name '{code.name}' does not start with EXIT_"
-            )
-            assert code.name.isupper(), (
-                f"Code {code.value} name '{code.name}' is not uppercase"
-            )
+            assert code.name.startswith("EXIT_"), f"Code {code.value} name '{code.name}' does not start with EXIT_"
+            assert code.name.isupper(), f"Code {code.value} name '{code.name}' is not uppercase"
 
     def test_exit_code_ranges_valid(self):
         """Verify all exit codes are in valid 0-255 range."""
         for code in ExitCode:
-            assert 0 <= code.value <= 255, (
-                f"Code {code.name} value {code.value} outside valid range 0-255"
-            )
+            assert 0 <= code.value <= 255, f"Code {code.name} value {code.value} outside valid range 0-255"
 
     def test_no_duplicate_exit_codes(self):
         """Verify no duplicate exit code values."""
         seen_values = set()
         for code in ExitCode:
-            assert code.value not in seen_values, (
-                f"Duplicate code value {code.value} for {code.name}"
-            )
+            assert code.value not in seen_values, f"Duplicate code value {code.value} for {code.name}"
             seen_values.add(code.value)
 
 
@@ -202,7 +181,7 @@ class TestExitCodesBasicFunctionality:
         result = map_to_simplified(10, SimplifiedMode.BASIC)
         assert result == 1  # All errors map to 1 in basic mode
 
-    def test_intEnum_comparison_works(self):
+    def test_intenum_comparison_works(self):
         """Test IntEnum allows direct integer comparison."""
         assert ExitCode.EXIT_SUCCESS == 0
         assert ExitCode.EXIT_FAILURE == 1

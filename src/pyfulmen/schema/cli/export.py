@@ -32,7 +32,7 @@ def export_schema_cmd(
             out_path=out_path,
             include_provenance=not no_provenance,
             validate=not no_validate,
-            overwrite=force
+            overwrite=force,
         )
 
         if verbose:

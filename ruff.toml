@@ -26,12 +26,19 @@ select = [
 [lint.per-file-ignores]
 # config.py uses camelCase field names to match JSON schema for cross-language API compatibility
 "src/pyfulmen/logging/config.py" = ["N815"]
-# Test files: allow asserts, generic Exception in pytest.raises, and unused test fixtures
+# Test files: allows asserts, generic Exception in pytest.raises, and unused test fixtures
 "tests/**/*.py" = ["S101", "B017", "F841"]
 # Example files: allow imports not at top (E402) for pedagogical inline demonstrations
 "examples/**/*.py" = ["E402"]
 # Demo scripts: allow imports not at top (E402) for sys.path manipulation
 "scripts/demos/*.py" = ["E402"]
+# Module __main__.py files: allow imports not at top (E402) for sys.path manipulation
+"**/__main__.py" = ["E402"]
+# Generated exit_codes.py: allow long lines (E501) for context strings
+"src/pyfulmen/foundry/exit_codes.py" = ["E501"]
+# Test fixture files: ignore all linting (they are data files, not code)
+"tests/fixtures/foundry/mime/*.json" = ["ALL"]
+"tests/fixtures/pathfinder/sample-files/*.txt" = ["ALL"]
 
 [format]
 quote-style = "double"

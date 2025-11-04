@@ -16,11 +16,7 @@ class TestSchemaExportCLI:
         out_file = tmp_path / "schema.json"
 
         runner = CliRunner()
-        result = runner.invoke(cli, [
-            "export",
-            "observability/logging/v1.0.0/logger-config",
-            "--out", str(out_file)
-        ])
+        result = runner.invoke(cli, ["export", "observability/logging/v1.0.0/logger-config", "--out", str(out_file)])
 
         assert result.exit_code == 0
         assert out_file.exists()
@@ -33,12 +29,9 @@ class TestSchemaExportCLI:
         out_file = tmp_path / "schema.json"
 
         runner = CliRunner()
-        result = runner.invoke(cli, [
-            "export",
-            "observability/logging/v1.0.0/logger-config",
-            "--out", str(out_file),
-            "--verbose"
-        ])
+        result = runner.invoke(
+            cli, ["export", "observability/logging/v1.0.0/logger-config", "--out", str(out_file), "--verbose"]
+        )
 
         assert result.exit_code == 0
         assert "✅ Exported schema" in result.output
@@ -50,12 +43,9 @@ class TestSchemaExportCLI:
         out_file = tmp_path / "schema.json"
 
         runner = CliRunner()
-        result = runner.invoke(cli, [
-            "export",
-            "observability/logging/v1.0.0/logger-config",
-            "--out", str(out_file),
-            "--no-provenance"
-        ])
+        result = runner.invoke(
+            cli, ["export", "observability/logging/v1.0.0/logger-config", "--out", str(out_file), "--no-provenance"]
+        )
 
         assert result.exit_code == 0
 
@@ -71,12 +61,9 @@ class TestSchemaExportCLI:
         out_file.write_text("{}")
 
         runner = CliRunner()
-        result = runner.invoke(cli, [
-            "export",
-            "observability/logging/v1.0.0/logger-config",
-            "--out", str(out_file),
-            "--force"
-        ])
+        result = runner.invoke(
+            cli, ["export", "observability/logging/v1.0.0/logger-config", "--out", str(out_file), "--force"]
+        )
 
         assert result.exit_code == 0
         assert out_file.exists()
@@ -92,11 +79,7 @@ class TestSchemaExportCLI:
         out_file.write_text("{}")
 
         runner = CliRunner()
-        result = runner.invoke(cli, [
-            "export",
-            "observability/logging/v1.0.0/logger-config",
-            "--out", str(out_file)
-        ])
+        result = runner.invoke(cli, ["export", "observability/logging/v1.0.0/logger-config", "--out", str(out_file)])
 
         assert result.exit_code != 0
         assert "File exists" in result.output or "already exists" in result.output
@@ -106,11 +89,7 @@ class TestSchemaExportCLI:
         out_file = tmp_path / "schema.json"
 
         runner = CliRunner()
-        result = runner.invoke(cli, [
-            "export",
-            "nonexistent/v1.0.0/schema",
-            "--out", str(out_file)
-        ])
+        result = runner.invoke(cli, ["export", "nonexistent/v1.0.0/schema", "--out", str(out_file)])
 
         assert result.exit_code != 0
         assert "not found" in result.output.lower()
@@ -122,11 +101,7 @@ class TestSchemaExportCLI:
         out_file = tmp_path / "schema.yaml"
 
         runner = CliRunner()
-        result = runner.invoke(cli, [
-            "export",
-            "observability/logging/v1.0.0/logger-config",
-            "--out", str(out_file)
-        ])
+        result = runner.invoke(cli, ["export", "observability/logging/v1.0.0/logger-config", "--out", str(out_file)])
 
         assert result.exit_code == 0
         assert out_file.exists()
@@ -141,24 +116,25 @@ class TestSchemaExportCLI:
         out_file = tmp_path / "schema.json"
 
         runner = CliRunner()
-        result = runner.invoke(cli, [
-            "export",
-            "observability/logging/v1.0.0/logger-config",
-            "--out", str(out_file),
-            "--no-validate"
-        ])
+        result = runner.invoke(
+            cli, ["export", "observability/logging/v1.0.0/logger-config", "--out", str(out_file), "--no-validate"]
+        )
 
         assert result.exit_code == 0
         assert out_file.exists()
 
         # Verify verbose output mentions validation was skipped
-        result_verbose = runner.invoke(cli, [
-            "export",
-            "observability/logging/v1.0.0/logger-config",
-            "--out", str(tmp_path / "schema2.json"),
-            "--no-validate",
-            "--verbose"
-        ])
+        result_verbose = runner.invoke(
+            cli,
+            [
+                "export",
+                "observability/logging/v1.0.0/logger-config",
+                "--out",
+                str(tmp_path / "schema2.json"),
+                "--no-validate",
+                "--verbose",
+            ],
+        )
 
         assert "Validation: skipped" in result_verbose.output
 
@@ -167,11 +143,7 @@ class TestSchemaExportCLI:
         out_file = tmp_path / "schema.JSON"
 
         runner = CliRunner()
-        result = runner.invoke(cli, [
-            "export",
-            "observability/logging/v1.0.0/logger-config",
-            "--out", str(out_file)
-        ])
+        result = runner.invoke(cli, ["export", "observability/logging/v1.0.0/logger-config", "--out", str(out_file)])
 
         assert result.exit_code == 0
         assert out_file.exists()

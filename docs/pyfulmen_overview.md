@@ -3,10 +3,10 @@ title: "PyFulmen Overview"
 description: "Python foundation library for the Fulmen ecosystem"
 author: "PyFulmen Architect"
 date: "2025-10-11"
-last_updated: "2025-10-27"
+last_updated: "2025-11-04"
 status: "active"
 lifecycle_phase: "alpha"
-version: "0.1.7"
+version: "0.1.9"
 tags:
   ["python", "library", "fulmen", "enterprise", "telemetry", "observability"]
 ---

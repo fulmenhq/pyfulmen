@@ -15,10 +15,7 @@ class TestExportSchema:
         """Test successful JSON export."""
         out_file = tmp_path / "test-schema.json"
 
-        result = export_schema(
-            "observability/logging/v1.0.0/logger-config",
-            out_file
-        )
+        result = export_schema("observability/logging/v1.0.0/logger-config", out_file)
 
         assert result == out_file.absolute()
         assert out_file.exists()
@@ -39,10 +36,7 @@ class TestExportSchema:
 
         out_file = tmp_path / "test-schema.yaml"
 
-        result = export_schema(
-            "observability/logging/v1.0.0/logger-config",
-            out_file
-        )
+        result = export_schema("observability/logging/v1.0.0/logger-config", out_file)
 
         assert result == out_file.absolute()
         assert out_file.exists()
@@ -57,11 +51,7 @@ class TestExportSchema:
         """Test export without provenance metadata."""
         out_file = tmp_path / "test-schema.json"
 
-        export_schema(
-            "observability/logging/v1.0.0/logger-config",
-            out_file,
-            include_provenance=False
-        )
+        export_schema("observability/logging/v1.0.0/logger-config", out_file, include_provenance=False)
 
         with open(out_file) as f:
             data = json.load(f)
@@ -74,22 +64,14 @@ class TestExportSchema:
         out_file.write_text("{}")
 
         with pytest.raises(FileExistsError, match="already exists"):
-            export_schema(
-                "observability/logging/v1.0.0/logger-config",
-                out_file,
-                overwrite=False
-            )
+            export_schema("observability/logging/v1.0.0/logger-config", out_file, overwrite=False)
 
     def test_export_file_exists_with_overwrite(self, tmp_path):
         """Test that export overwrites with flag."""
         out_file = tmp_path / "existing.json"
         out_file.write_text("{}")
 
-        result = export_schema(
-            "observability/logging/v1.0.0/logger-config",
-            out_file,
-            overwrite=True
-        )
+        result = export_schema("observability/logging/v1.0.0/logger-config", out_file, overwrite=True)
 
         assert result == out_file.absolute()
         assert out_file.exists()
@@ -128,19 +110,13 @@ class TestExportSchema:
         out_file = tmp_path / "test.json"
 
         with pytest.raises(FileNotFoundError, match="Schema not found"):
-            export_schema(
-                "nonexistent/v1.0.0/schema",
-                out_file
-            )
+            export_schema("nonexistent/v1.0.0/schema", out_file)
 
     def test_export_creates_parent_directories(self, tmp_path):
         """Test that export creates parent directories."""
         out_file = tmp_path / "nested" / "path" / "schema.json"
 
-        result = export_schema(
-            "observability/logging/v1.0.0/logger-config",
-            out_file
-        )
+        result = export_schema("observability/logging/v1.0.0/logger-config", out_file)
 
         assert result.exists()
         assert result.parent.exists()
@@ -149,10 +125,7 @@ class TestExportSchema:
         """Test provenance metadata structure."""
         out_file = tmp_path / "test-schema.json"
 
-        export_schema(
-            "observability/logging/v1.0.0/logger-config",
-            out_file
-        )
+        export_schema("observability/logging/v1.0.0/logger-config", out_file)
 
         with open(out_file) as f:
             data = json.load(f)
@@ -171,17 +144,9 @@ class TestExportSchema:
         out_file1 = tmp_path / "test1.json"
         out_file2 = tmp_path / "test2.json"
 
-        export_schema(
-            "observability/logging/v1.0.0/logger-config",
-            out_file1,
-            include_provenance=False
-        )
+        export_schema("observability/logging/v1.0.0/logger-config", out_file1, include_provenance=False)
 
-        export_schema(
-            "observability/logging/v1.0.0/logger-config",
-            out_file2,
-            include_provenance=False
-        )
+        export_schema("observability/logging/v1.0.0/logger-config", out_file2, include_provenance=False)
 
         # Compare byte-for-byte (except timestamp would differ with provenance)
         content1 = out_file1.read_bytes()
@@ -226,7 +191,7 @@ class TestExportSchema:
             return {
                 "$schema": "https://json-schema.org/draft/2020-12/schema",
                 "$comment": "existing comment",
-                "type": "object"
+                "type": "object",
             }
 
         monkeypatch.setattr("pyfulmen.crucible.schemas.load_schema", mock_load_schema)
