@@ -1,0 +1,20 @@
+# PyFulmen Library Identity
+app:
+  binary_name: pyfulmen
+  vendor: fulmenhq
+  env_prefix: FULMEN_
+  config_name: pyfulmen
+  description: Python Fulmen libraries
+
+metadata:
+  project_url: https://github.com/fulmenhq/pyfulmen
+  support_email: dev@3leaps.net
+  license: MIT
+  repository_category: library
+  telemetry_namespace: fulmenhq_pyfulmen
+  python:
+    distribution_name: pyfulmen
+    package_name: pyfulmen
+    console_scripts:
+      - name: pyfulmen
+        entry_point: pyfulmen.cli:main

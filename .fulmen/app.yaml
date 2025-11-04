@@ -1,0 +1,15 @@
+app:
+  binary_name: pyfulmen
+  vendor: fulmenhq
+  env_prefix: PYFULMEN_
+  config_name: pyfulmen
+  description: PyFulmen Python library for enterprise-grade applications
+
+metadata:
+  project_url: https://github.com/fulmenhq/pyfulmen
+  support_email: support@fulmenhq.com
+  license: MIT
+  repository_category: library
+  python:
+    distribution_name: pyfulmen
+    package_name: pyfulmen

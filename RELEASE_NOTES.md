@@ -344,6 +344,13 @@ for event in events:
 
 ## [Unreleased]
 
+### v0.1.10 - AppIdentity Module (Planned)
+
+- Complete application identity management system
+- Progressive interface with enterprise features
+- Crucible v0.2.4 standard compliance
+- Comprehensive caching and testing support
+
 ### v0.2.0 - Enterprise Complete (Planned)
 
 - Full enterprise logging implementation

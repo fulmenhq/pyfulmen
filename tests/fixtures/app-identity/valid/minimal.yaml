@@ -1,0 +1,7 @@
+# Minimal valid identity
+app:
+  binary_name: testapp
+  vendor: testvendor
+  env_prefix: TEST_
+  config_name: testapp
+  description: Test application
