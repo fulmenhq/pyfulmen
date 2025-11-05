@@ -51,21 +51,22 @@ Rather than copying Crucible assets into every project, helper libraries provide
 
 PyFulmen implements the mandatory core modules defined in the [Module Manifest](config/crucible-py/library/v1.0.0/module-manifest.yaml). Each module follows the progressive interface pattern and targets 90%+ test coverage.
 
-| Module ID                      | Status    | Coverage Target | Specification                                                            | Description                                                                                             |
-| ------------------------------ | --------- | --------------- | ------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------- |
-| **app-identity**              | ✅ Stable | 90%             | [Spec](docs/crucible-py/standards/library/modules/app-identity.md)      | Canonical application metadata with discovery, validation, and caching (v0.1.10+)                        |
-| **crucible-shim**              | ✅ Stable | 90%             | [Spec](docs/crucible-py/standards/library/modules/crucible-shim.md)      | Idiomatic Python access to Crucible schemas, docs, and config defaults via bridge API                   |
-| **docscribe**                  | ✅ Stable | 95%             | [Spec](docs/crucible-py/standards/library/modules/docscribe.md)          | Frontmatter parsing, header extraction, and clean content access for markdown assets (v0.1.4+)          |
-| **config-path-api**            | ✅ Stable | 90%             | [Spec](docs/crucible-py/standards/config/fulmen-config-paths.md)         | Platform-aware config/data/cache paths (XDG-compliant on Linux/macOS, Windows-aware)                    |
-| **three-layer-config**         | ✅ Stable | 90%             | [Spec](docs/crucible-py/standards/library/modules/three-layer-config.md) | Crucible defaults → User overrides → Runtime config with YAML/JSON support                              |
-| **schema-validation**          | ✅ Stable | 90%             | [Spec](docs/crucible-py/standards/library/modules/schema-validation.md)  | JSON Schema validation helpers using jsonschema library                                                 |
-| **observability-logging**      | ✅ Stable | 95%             | [Spec](docs/crucible-py/standards/observability/logging.md)              | Progressive logging with SIMPLE/STRUCTURED/ENTERPRISE profiles, policy enforcement                      |
-| **error-handling-propagation** | ✅ Stable | 95%             | [Spec](docs/crucible-py/standards/error-handling/)                       | Pathfinder error wrapper with telemetry metadata, severity mapping, schema validation (v0.1.6+)         |
-| **telemetry-metrics**          | ✅ Stable | 85%             | [Spec](docs/crucible-py/standards/observability/metrics/)                | Counter/gauge/histogram with Crucible taxonomy validation, logging integration (v0.1.6+)                |
-| **fulhash**                    | ✅ Stable | 95%             | [Spec](docs/crucible-py/standards/library/modules/fulhash.md)            | Fast, consistent hashing with xxh3-128/sha256, thread-safe streaming, cross-language fixtures (v0.1.6+) |
-| **goneat-bootstrap**           | ✅ Stable | 90%             | [Spec](docs/crucible-py/guides/bootstrap-goneat.md)                      | Goneat tool installation and SSOT sync automation                                                       |
-| **ssot-sync**                  | ✅ Stable | 90%             | -                                                                        | Automated sync of Crucible assets via goneat                                                            |
-| **foundry-patterns**           | ✅ Stable | 90%             | [Spec](docs/crucible-py/standards/library/foundry/interfaces.md)         | Pattern catalogs, MIME detection, HTTP status helpers                                                   |
+| Module ID                      | Status    | Coverage Target | Specification                                                            | Description                                                                                                   |
+| ------------------------------ | --------- | --------------- | ------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------- |
+| **app-identity**               | ✅ Stable | 90%             | [Spec](docs/crucible-py/standards/library/modules/app-identity.md)       | Canonical application metadata with discovery, validation, and caching (v0.1.10+)                             |
+| **crucible-shim**              | ✅ Stable | 90%             | [Spec](docs/crucible-py/standards/library/modules/crucible-shim.md)      | Idiomatic Python access to Crucible schemas, docs, and config defaults via bridge API                         |
+| **docscribe**                  | ✅ Stable | 95%             | [Spec](docs/crucible-py/standards/library/modules/docscribe.md)          | Frontmatter parsing, header extraction, and clean content access for markdown assets (v0.1.4+)                |
+| **config-path-api**            | ✅ Stable | 90%             | [Spec](docs/crucible-py/standards/config/fulmen-config-paths.md)         | Platform-aware config/data/cache paths (XDG-compliant on Linux/macOS, Windows-aware)                          |
+| **three-layer-config**         | ✅ Stable | 90%             | [Spec](docs/crucible-py/standards/library/modules/three-layer-config.md) | Crucible defaults → User overrides → Runtime config with YAML/JSON support                                    |
+| **schema-validation**          | ✅ Stable | 90%             | [Spec](docs/crucible-py/standards/library/modules/schema-validation.md)  | JSON Schema validation helpers using jsonschema library                                                       |
+| **observability-logging**      | ✅ Stable | 95%             | [Spec](docs/crucible-py/standards/observability/logging.md)              | Progressive logging with SIMPLE/STRUCTURED/ENTERPRISE profiles, policy enforcement                            |
+| **error-handling-propagation** | ✅ Stable | 95%             | [Spec](docs/crucible-py/standards/error-handling/)                       | Pathfinder error wrapper with telemetry metadata, severity mapping, schema validation (v0.1.6+)               |
+| **telemetry-metrics**          | ✅ Stable | 85%             | [Spec](docs/crucible-py/standards/observability/metrics/)                | Counter/gauge/histogram with Crucible taxonomy validation, logging integration (v0.1.6+)                      |
+| **fulhash**                    | ✅ Stable | 95%             | [Spec](docs/crucible-py/standards/library/modules/fulhash.md)            | Fast, consistent hashing with xxh3-128/sha256, thread-safe streaming, cross-language fixtures (v0.1.6+)       |
+| **signal-handling**            | ✅ Stable | 95%             | [Spec](docs/crucible-py/standards/library/modules/signal-handling.md)    | Cross-platform signal handling with Windows fallback, asyncio integration, and enterprise features (v0.1.11+) |
+| **goneat-bootstrap**           | ✅ Stable | 90%             | [Spec](docs/crucible-py/guides/bootstrap-goneat.md)                      | Goneat tool installation and SSOT sync automation                                                             |
+| **ssot-sync**                  | ✅ Stable | 90%             | -                                                                        | Automated sync of Crucible assets via goneat                                                                  |
+| **foundry-patterns**           | ✅ Stable | 90%             | [Spec](docs/crucible-py/standards/library/foundry/interfaces.md)         | Pattern catalogs, MIME detection, HTTP status helpers                                                         |
 
 ### Extension Modules (Optional)
 
@@ -109,6 +110,43 @@ PyFulmen implements the mandatory core modules defined in the [Module Manifest](
 - Complete documentation with examples and troubleshooting
 
 **Dependencies**: yaml (safe loading), jsonschema (validation)
+
+### Module Highlights: Signal Handling (v0.1.11+)
+
+**Purpose**: Cross-platform signal handling with Windows fallback, asyncio integration, and enterprise features
+
+**Core Features**:
+
+- **Cross-Platform Support**: Unix signals with Windows HTTP endpoint fallbacks
+- **Asyncio Integration**: Safe async and sync signal handler execution
+- **Progressive Interface**: Zero-complexity defaults with enterprise power-ups
+- **Structured Logging**: Comprehensive logging with contextual information
+- **Telemetry Emission**: Signal events with proper metadata and tags
+- **Config Reload**: Restart-based configuration reload with validation
+- **HTTP Helpers**: Windows fallback signal management via HTTP endpoints
+
+**APIs**:
+
+- Signal Registration: `on_shutdown()`, `on_reload()`, `on_force_quit()`
+- Config Management: `reload_config()`, `register_shutdown_callback()`
+- HTTP Helpers: `get_http_helper()`, `build_signal_request()`
+- Platform Support: `supports_signal()`, `get_module_info()`
+
+**Integration**:
+
+- Seamless logging module integration with structured context
+- Telemetry module integration for signal event emission
+- Config module integration for reload workflows
+- Application identity integration for validation
+
+**Quality Metrics**:
+
+- 143 comprehensive tests with 100% functionality coverage
+- Cross-platform compatibility (Linux, macOS, Windows)
+- Enterprise-grade reliability with fallback mechanisms
+- Complete documentation with examples and migration guide
+
+**Dependencies**: No additional runtime dependencies (uses only Python stdlib)
 
 ### Module Highlights: FulHash (v0.1.6+)
 

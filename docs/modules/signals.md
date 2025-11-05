@@ -7,6 +7,7 @@ The PyFulmen signals module provides enterprise-grade signal handling with cross
 ## Features
 
 ### Core Signal Handling
+
 - **Cross-platform signal support** with Windows fallback mechanisms
 - **Progressive interfaces** - zero-complexity defaults with enterprise power-ups
 - **Asyncio integration** for async and sync signal handlers
@@ -15,6 +16,7 @@ The PyFulmen signals module provides enterprise-grade signal handling with cross
 - **Telemetry emission** for observability
 
 ### Enterprise Features
+
 - **Configuration reload workflow** with app identity validation
 - **HTTP endpoint helpers** for Windows fallback signal management
 - **Graceful shutdown callbacks** for cleanup operations
@@ -34,7 +36,7 @@ def cleanup():
     print("Cleaning up resources...")
     # Cleanup logic here
 
-# Register config reload handler  
+# Register config reload handler
 @on_reload
 def reload_config():
     print("Reloading configuration...")
@@ -101,6 +103,7 @@ print(docs)
 ### Signal Registration
 
 #### `on_shutdown(handler)`
+
 Register a handler for SIGTERM and SIGINT signals.
 
 ```python
@@ -110,15 +113,17 @@ def handler(signum, frame):
 ```
 
 #### `on_reload(handler)`
+
 Register a handler for SIGHUP signal (configuration reload).
 
 ```python
-@on_reload  
+@on_reload
 def handler(signum, frame):
     print("Reloading config...")
 ```
 
 #### `on_force_quit(handler)`
+
 Register a handler for SIGQUIT signal (force quit).
 
 ```python
@@ -130,6 +135,7 @@ def handler(signum, frame):
 ### Configuration Management
 
 #### `reload_config()`
+
 Trigger configuration reload with validation and process restart.
 
 ```python
@@ -142,6 +148,7 @@ except RuntimeError as e:
 ```
 
 #### `register_shutdown_callback(callback)`
+
 Register callback for graceful shutdown during config reload.
 
 ```python
@@ -154,6 +161,7 @@ register_shutdown_callback(lambda: close_connections())
 ### HTTP Endpoint Helpers
 
 #### `get_http_helper()`
+
 Get the global HTTP endpoint helper instance.
 
 ```python
@@ -164,6 +172,7 @@ request = helper.build_signal_request("sighup")
 ```
 
 #### `build_signal_request(signal_name, base_url, headers, timeout)`
+
 Build HTTP request for signal triggering.
 
 ```python
@@ -179,6 +188,7 @@ request = build_signal_request(
 ### Platform Support
 
 #### `supports_signal(signal_name)`
+
 Check if a signal is supported on the current platform.
 
 ```python
@@ -194,11 +204,11 @@ else:
 
 On Windows, the module provides HTTP endpoint fallbacks for signals not natively supported:
 
-| Signal | Windows Fallback | HTTP Endpoint |
-|--------|------------------|---------------|
-| SIGHUP | HTTP POST to `/api/signals/sighup` | Config reload |
-| SIGTERM | HTTP POST to `/api/signals/sigterm` | Graceful shutdown |
-| SIGINT | HTTP POST to `/api/signals/sigint` | Interrupt handling |
+| Signal  | Windows Fallback                    | HTTP Endpoint      |
+| ------- | ----------------------------------- | ------------------ |
+| SIGHUP  | HTTP POST to `/api/signals/sighup`  | Config reload      |
+| SIGTERM | HTTP POST to `/api/signals/sigterm` | Graceful shutdown  |
+| SIGINT  | HTTP POST to `/api/signals/sigint`  | Interrupt handling |
 
 ### Windows HTTP API
 
@@ -209,7 +219,7 @@ POST /api/signals/sighup
     "config_path": "/path/to/config.yaml"  # Optional
 }
 
-# SIGTERM - Graceful Shutdown  
+# SIGTERM - Graceful Shutdown
 POST /api/signals/sigterm
 {
     "timeout_seconds": 30  # Optional
@@ -229,7 +239,7 @@ The module provides seamless asyncio integration for async signal handlers:
 ```python
 import asyncio
 from pyfulmen.signals import (
-    on_shutdown, 
+    on_shutdown,
     register_with_asyncio_if_available,
     is_asyncio_available
 )
@@ -237,7 +247,7 @@ from pyfulmen.signals import (
 # Check if asyncio is available
 if is_asyncio_available():
     print("Asyncio integration available")
-    
+
     # Register with current event loop
     register_with_asyncio_if_available()
 
@@ -253,13 +263,16 @@ async def async_handler(signum, frame):
 The module emits structured telemetry events and logs:
 
 ### Telemetry Events
+
 - `fulmen.signal.registered` - Signal handler registered
-- `fulmen.signal.dispatched` - Signal dispatched to handlers  
+- `fulmen.signal.dispatched` - Signal dispatched to handlers
 - `fulmen.signal.unsupported` - Unsupported signal with fallback
 - `fulmen.signal.double_tap` - SIGINT double-tap detected
 
 ### Structured Logging
+
 All operations include structured context:
+
 - `event_type` - Type of event occurring
 - `signal_name` - Name of the signal
 - `platform` - Current platform
@@ -278,11 +291,11 @@ try:
     @on_shutdown
     def handler(signum, frame):
         print("Shutting down...")
-        
+
     # Get signal metadata
     metadata = get_signal_metadata("sigterm")
     print(f"Signal: {metadata['name']}")
-    
+
 except Exception as e:
     print(f"Signal handling error: {e}")
     # Fallback behavior automatically applied
@@ -324,6 +337,7 @@ def handler(signum, frame):
 ```
 
 ### Benefits of Migration
+
 - Cross-platform compatibility
 - Asyncio support
 - Structured logging and telemetry
@@ -333,6 +347,7 @@ def handler(signum, frame):
 ## Examples
 
 See the `examples/` directory for complete working examples:
+
 - Basic signal handling
 - Asyncio integration
 - Configuration reload workflow

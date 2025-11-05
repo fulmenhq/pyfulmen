@@ -27,12 +27,14 @@ from pyfulmen.signals._catalog import (
     _load_catalog,
     get_signal_metadata,
     get_signals_version,
+    list_all_signals,
 )
 from pyfulmen.signals._http import (
     SignalEndpointHelper,
     build_signal_request,
     build_windows_fallback_docs,
     get_http_helper,
+    get_windows_fallback_signals,
 )
 from pyfulmen.signals._platform import supports_signal
 from pyfulmen.signals._registry import (
@@ -53,37 +55,35 @@ from pyfulmen.signals._reload import (
 __all__ = [
     # Version and metadata
     "get_signals_version",
-    "get_signal_metadata", 
+    "get_signal_metadata",
     "supports_signal",
-    
+    "list_all_signals",
     # Handler registration
     "handle",
     "on_shutdown",
-    "on_reload", 
+    "on_reload",
     "on_force_quit",
-    
+    "clear_all_handlers",
+    "get_registry",
     # Config reload workflow
     "get_config_reloader",
     "register_shutdown_callback",
     "reload_config",
-    
     # HTTP endpoint helpers
     "SignalEndpointHelper",
     "build_signal_request",
     "build_windows_fallback_docs",
     "get_http_helper",
-    
+    "get_windows_fallback_signals",
     # Asyncio integration
     "is_asyncio_available",
     "get_running_loop",
     "register_with_asyncio_if_available",
     "wrap_async_handler",
     "create_async_safe_handler",
-    
-    # Testing and utilities
-    "clear_all_handlers",
-    "get_registry",
     "reset_asyncio_detection",
+    # Module info
+    "get_module_info",
 ]
 
 # Load catalog at import time for performance
@@ -95,15 +95,18 @@ except Exception as e:
 # Module version (matches PyFulmen version)
 __version__ = "0.1.10"
 
+
 def get_module_info() -> Mapping[str, Any]:
     """Get comprehensive module information for debugging and diagnostics.
-    
+
     Returns:
-        Dictionary with module version, catalog provenance, and platform info.
+        Module information dictionary.
     """
     return {
         "pyfulmen_version": __version__,
         "catalog_version": get_signals_version(),
         "python_version": sys.version,
         "platform": sys.platform,
+        "name": "PyFulmen Signals",
+        "description": "Standard signal handling semantics for Fulmen ecosystem",
     }

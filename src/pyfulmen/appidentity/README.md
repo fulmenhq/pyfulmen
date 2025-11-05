@@ -53,7 +53,7 @@ metadata:
   license: "MIT"
   repository_category: "application"
   telemetry_namespace: "myapp.telemetry"
-  
+
   # Python-specific metadata
   python:
     distribution_name: "myapp"
@@ -68,33 +68,40 @@ metadata:
 ### Core Functions
 
 #### `get_identity() -> AppIdentity`
+
 Get the current application identity using automatic discovery and caching.
 
 **Returns:** `AppIdentity` instance
 
 **Raises:**
+
 - `AppIdentityNotFoundError`: If no identity file is found
 - `AppIdentityValidationError`: If the identity file is invalid
 
 #### `load_from_path(path: Path) -> AppIdentity`
+
 Load application identity from an explicit file path.
 
 **Parameters:**
+
 - `path`: Path to the identity YAML file
 
 **Returns:** `AppIdentity` instance
 
 #### `reload_identity() -> AppIdentity`
+
 Force reload of application identity, clearing any cached values.
 
 **Returns:** Freshly loaded `AppIdentity` instance
 
 #### `clear_identity_cache() -> None`
+
 Clear all cached application identities. The next call to `get_identity()` will trigger a fresh load.
 
 ### Testing Utilities
 
 #### `override_identity_for_testing(identity: AppIdentity) -> ContextManager`
+
 Context manager for temporarily overriding application identity in tests.
 
 ```python
@@ -103,34 +110,37 @@ from pyfulmen.appidentity import AppIdentity, override_identity_for_testing
 def test_something():
     test_identity = AppIdentity(
         binary_name="testapp",
-        vendor="testvendor", 
+        vendor="testvendor",
         env_prefix="TEST_",
         config_name="testapp",
         description="Test application",
         _raw_metadata={},
         _provenance={}
     )
-    
+
     with override_identity_for_testing(test_identity):
         identity = get_identity()  # Returns test_identity
         # ... test code here ...
-    
+
     # Original identity restored after context
 ```
 
 ### Data Model
 
 #### `AppIdentity`
+
 Immutable dataclass containing application metadata:
 
 **Required Fields:**
+
 - `binary_name: str` - Application binary name
-- `vendor: str` - Vendor/organization name  
+- `vendor: str` - Vendor/organization name
 - `env_prefix: str` - Environment variable prefix (must end with `_`)
 - `config_name: str` - Configuration directory name
 - `description: str` - Application description
 
 **Optional Fields:**
+
 - `project_url: str | None` - Project homepage URL
 - `support_email: str | None` - Support contact email
 - `license: str | None` - License identifier
@@ -142,12 +152,14 @@ Immutable dataclass containing application metadata:
 - `console_scripts: list[dict] | None` - Console script definitions
 
 **Internal Fields:**
+
 - `_raw_metadata: dict[str, Any]` - Raw metadata from YAML
 - `_provenance: dict[str, str]` - Loading provenance information
 
 #### Methods
 
 ##### `to_json() -> str`
+
 Serialize the identity to JSON format.
 
 ```python
@@ -164,7 +176,7 @@ print(json_output)
 # Show current identity in text format
 pyfulmen appidentity show
 
-# Show identity in JSON format  
+# Show identity in JSON format
 pyfulmen appidentity show --format json
 
 # Show identity from specific file
@@ -219,12 +231,12 @@ def test_with_mock_identity():
         binary_name="test",
         vendor="test",
         env_prefix="TEST_",
-        config_name="test", 
+        config_name="test",
         description="Test",
         _raw_metadata={},
         _provenance={}
     )
-    
+
     with override_identity_for_testing(mock_identity):
         from pyfulmen.appidentity import get_identity
         identity = get_identity()
@@ -236,7 +248,7 @@ def test_with_mock_identity():
 Test fixtures are available in `tests/fixtures/app-identity/`:
 
 - `valid/library.yaml` - Standard library identity
-- `valid/cli.yaml` - Library + CLI identity  
+- `valid/cli.yaml` - Library + CLI identity
 - `valid/minimal.yaml` - Minimal required fields
 - `invalid/` - Various invalid configurations for testing
 
@@ -245,17 +257,20 @@ Test fixtures are available in `tests/fixtures/app-identity/`:
 ### Common Issues
 
 #### "App identity not found"
+
 - Ensure `.fulmen/app.yaml` exists in your repository
 - Check file permissions
 - Use `FULMEN_APP_IDENTITY_PATH` environment variable to specify location
 
 #### "Validation failed"
+
 - Verify YAML syntax is correct
 - Ensure all required fields are present
 - Check that `env_prefix` ends with underscore `_`
 - Validate against the schema: `pyfulmen appidentity validate .fulmen/app.yaml`
 
 #### Performance Issues
+
 - Identity is cached after first load - subsequent calls are fast
 - Use `clear_identity_cache()` if you need to force reload
 - For testing, use `override_identity_for_testing()` instead of file I/O
@@ -317,6 +332,7 @@ All exceptions include detailed error messages to help diagnose issues.
 ---
 
 For more information, see:
+
 - [PyFulmen Main Documentation](../../../README.md)
 - [Crucible App Identity Standard](../../../../docs/crucible-py/standards/library/modules/app-identity.md)
 - [Integration Guide](../../../../docs/guides/consuming-crucible-assets.md)

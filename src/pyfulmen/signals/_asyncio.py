@@ -15,15 +15,15 @@ from typing import Any
 
 class AsyncioIntegration:
     """Manages asyncio integration for signal handlers."""
-    
+
     def __init__(self) -> None:
         self._lock = threading.Lock()
         self._loop: asyncio.AbstractEventLoop | None = None
         self._loop_checked = False
-    
+
     def get_running_loop(self) -> asyncio.AbstractEventLoop | None:
         """Get the current running event loop.
-        
+
         Returns:
             The running event loop or None if no loop is running.
         """
@@ -35,27 +35,27 @@ class AsyncioIntegration:
                     # No running loop
                     self._loop = None
                 self._loop_checked = True
-            
+
             return self._loop
-    
+
     def register_async_handler(
         self,
         sig: stdlib_signal.Signals,
         handler: Callable[[], Any],
     ) -> bool:
         """Register a handler with the running event loop.
-        
+
         Args:
             sig: Signal to register for.
             handler: Handler function (can be sync or async).
-            
+
         Returns:
             True if registered with event loop, False if no loop available.
         """
         loop = self.get_running_loop()
         if loop is None:
             return False
-        
+
         # Wrap handler to handle both sync and async functions
         async def async_wrapper() -> None:
             try:
@@ -65,7 +65,7 @@ class AsyncioIntegration:
                     handler()
             except Exception as e:
                 print(f"Error in async signal handler for {sig.name}: {e}")
-        
+
         # Register with event loop
         try:
             loop.add_signal_handler(sig, lambda: asyncio.create_task(async_wrapper()))
@@ -73,16 +73,16 @@ class AsyncioIntegration:
         except (NotImplementedError, RuntimeError):
             # Event loop doesn't support signal handling
             return False
-    
+
     def is_async_available(self) -> bool:
         """Check if asyncio signal handling is available.
-        
+
         Returns:
             True if running loop supports signal handling.
         """
         loop = self.get_running_loop()
         return loop is not None
-    
+
     def reset(self) -> None:
         """Reset loop detection (for testing)."""
         with self._lock:
@@ -99,11 +99,11 @@ def register_with_asyncio_if_available(
     handler: Callable[[], Any],
 ) -> bool:
     """Register a handler with asyncio if available, otherwise return False.
-    
+
     Args:
         sig: Signal to register for.
         handler: Handler function to register.
-        
+
     Returns:
         True if registered with asyncio, False if fallback needed.
     """
@@ -112,7 +112,7 @@ def register_with_asyncio_if_available(
 
 def is_asyncio_available() -> bool:
     """Check if asyncio signal handling is available.
-    
+
     Returns:
         True if running event loop supports signal handling.
     """
@@ -121,7 +121,7 @@ def is_asyncio_available() -> bool:
 
 def get_running_loop() -> asyncio.AbstractEventLoop | None:
     """Get the current running event loop.
-    
+
     Returns:
         The running event loop or None if no loop is running.
     """
@@ -130,7 +130,7 @@ def get_running_loop() -> asyncio.AbstractEventLoop | None:
 
 def reset_asyncio_detection() -> None:
     """Reset asyncio loop detection (for testing).
-    
+
     This allows testing of asyncio detection in different contexts.
     """
     _asyncio_integration.reset()
@@ -138,15 +138,15 @@ def reset_asyncio_detection() -> None:
 
 class AsyncSignalHandler:
     """Base class for async signal handlers.
-    
+
     Provides a convenient way to create async signal handlers
     that work both with and without asyncio.
     """
-    
+
     def __init__(self, handler: Callable[[], Any]) -> None:
         self._handler = handler
         self._is_async = asyncio.iscoroutinefunction(handler)
-    
+
     def __call__(self) -> Any:
         """Call handler appropriately based on context."""
         if self._is_async:
@@ -161,7 +161,7 @@ class AsyncSignalHandler:
         else:
             # Sync handler - call directly
             return self._handler()
-    
+
     def is_async(self) -> bool:
         """Check if this is an async handler."""
         return self._is_async
@@ -169,10 +169,10 @@ class AsyncSignalHandler:
 
 def wrap_async_handler(handler: Callable[[], Any]) -> AsyncSignalHandler:
     """Wrap a handler for async/sync compatibility.
-    
+
     Args:
         handler: Handler function to wrap.
-        
+
     Returns:
         Wrapped handler that works in both async and sync contexts.
     """
@@ -184,14 +184,15 @@ def create_async_safe_handler(
     fallback: Callable[[], Any] | None = None,
 ) -> Callable[[], Any]:
     """Create a handler that works safely in both async and sync contexts.
-    
+
     Args:
         handler: Primary handler (can be sync or async).
         fallback: Optional fallback handler for sync contexts.
-        
+
     Returns:
         Handler that adapts to current context.
     """
+
     def safe_handler() -> Any:
         try:
             if is_asyncio_available():
@@ -209,5 +210,5 @@ def create_async_safe_handler(
                     return handler()
         except Exception as e:
             print(f"Error in async-safe signal handler: {e}")
-    
+
     return safe_handler

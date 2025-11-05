@@ -1,8 +1,10 @@
 # pyfulmen
 
+** Curated Libraries for Scale**
+
 Python Fulmen libraries for enterprise-scale development.
 
-**Lifecycle Phase**: `alpha` | **Version**: 0.1.9 | **Coverage**: 93%
+**Lifecycle Phase**: `alpha` | **Version**: 0.1.11 | **Coverage**: 93%
 
 ## Overview
 
@@ -26,6 +28,7 @@ PyFulmen is part of the Fulmen ecosystem, providing templates, processes, and to
 - **Schema Validation** - Helpers for validating data against Crucible JSON schemas
 - **Version Management** - Utilities for reading and validating repository versions
 - **Application Identity** - Canonical app metadata from `.fulmen/app.yaml` with discovery, validation, and caching (v0.1.10+)
+- **Signal Handling** - Cross-platform signal handling with Windows fallbacks, asyncio integration, and enterprise features (v0.1.11+)
 
 ## Application Identity (v0.1.10+)
 
@@ -63,7 +66,7 @@ metadata:
   license: "MIT"
   repository_category: "application"
   telemetry_namespace: "myapp.telemetry"
-  
+
   # Python-specific metadata
   python:
     distribution_name: "myapp"
@@ -116,6 +119,71 @@ The module follows this precedence order for discovering identity files:
 
 📖 **[Complete Application Identity Documentation](src/pyfulmen/appidentity/README.md)** for detailed API reference, testing utilities, and troubleshooting.
 
+## Signal Handling (v0.1.11+)
+
+PyFulmen provides enterprise-grade signal handling with cross-platform support, Windows HTTP fallbacks, and asyncio integration. The `pyfulmen.signals` module implements the Crucible signal-handling standard with progressive interface design.
+
+### Quick Start
+
+```python
+from pyfulmen.signals import on_shutdown, on_reload
+
+def cleanup_handler():
+    print("Shutting down gracefully...")
+
+def reload_handler():
+    print("Reloading configuration...")
+
+# Register handlers - zero complexity defaults
+on_shutdown(cleanup_handler)
+on_reload(reload_handler)
+```
+
+### Cross-Platform Support
+
+```python
+from pyfulmen.signals import supports_signal, get_signal_metadata
+import signal
+
+# Check signal support on current platform
+if supports_signal(signal.SIGHUP):
+    print("SIGHUP is supported")
+else:
+    print("SIGHUP not supported - will use HTTP fallback")
+
+# Get signal metadata
+metadata = get_signal_metadata("SIGHUP")
+print(f"Description: {metadata['description']}")
+```
+
+### Windows HTTP Fallbacks
+
+For signals not supported on Windows, PyFulmen provides HTTP endpoint fallbacks:
+
+```python
+from pyfulmen.signals import get_http_helper, build_signal_request
+
+helper = get_http_helper()
+request = build_signal_request("SIGHUP")
+curl_cmd = helper.format_curl_command(request)
+print(f"Windows fallback: {curl_cmd}")
+```
+
+### CLI Commands
+
+```bash
+# Show signals module information
+pyfulmen signals info
+
+# List available signals with platform support
+pyfulmen signals list
+
+# Show Windows fallback documentation
+pyfulmen signals windows-fallback --format markdown
+```
+
+📖 **[Complete Signal Handling Documentation](src/pyfulmen/signals/README.md)** for detailed API reference, asyncio integration, and enterprise features.
+
 ## Installation
 
 ### From PyPI (when published)
@@ -134,10 +202,10 @@ make build
 
 # Install in another project
 cd /path/to/your/project
-pip install /path/to/pyfulmen/dist/pyfulmen-0.1.9-py3-none-any.whl
+pip install /path/to/pyfulmen/dist/pyfulmen-0.1.11-py3-none-any.whl
 
 # Or with uv
-uv add /path/to/pyfulmen/dist/pyfulmen-0.1.9-py3-none-any.whl
+uv add /path/to/pyfulmen/dist/pyfulmen-0.1.11-py3-none-any.whl
 ```
 
 ### Editable Install (for library development)

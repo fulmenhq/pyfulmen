@@ -3,17 +3,15 @@
 import signal as stdlib_signal
 from unittest.mock import patch
 
-import pytest
-
 from pyfulmen.signals._platform import (
-    supports_signal,
+    _get_platform_name,
+    get_platform_info,
+    get_platform_signal_number,
     get_signal_fallback_behavior,
     get_windows_event_mapping,
-    get_platform_signal_number,
     list_supported_signals,
     list_unsupported_signals,
-    get_platform_info,
-    _get_platform_name,
+    supports_signal,
 )
 
 
@@ -67,9 +65,9 @@ class TestSignalSupport:
         with patch("pyfulmen.signals._platform._get_platform_name", return_value="windows"):
             # Only these signals are supported on Windows
             assert supports_signal(stdlib_signal.SIGTERM)  # CTRL_CLOSE_EVENT
-            assert supports_signal(stdlib_signal.SIGINT)   # CTRL_C_EVENT
+            assert supports_signal(stdlib_signal.SIGINT)  # CTRL_C_EVENT
             assert supports_signal(stdlib_signal.SIGQUIT)  # CTRL_BREAK_EVENT
-            
+
             # These are not supported on Windows
             assert not supports_signal(stdlib_signal.SIGHUP)
             assert not supports_signal(stdlib_signal.SIGPIPE)
@@ -113,13 +111,13 @@ class TestWindowsFallbacks:
         """Test Windows event mapping for supported signals."""
         # SIGTERM maps to CTRL_CLOSE_EVENT (2)
         assert get_windows_event_mapping("SIGTERM") == 2
-        
+
         # SIGINT maps to CTRL_C_EVENT (0)
         assert get_windows_event_mapping("SIGINT") == 0
-        
+
         # SIGQUIT maps to CTRL_BREAK_EVENT (1)
         assert get_windows_event_mapping("SIGQUIT") == 1
-        
+
         # SIGHUP has no Windows mapping
         assert get_windows_event_mapping("SIGHUP") is None
 
@@ -129,7 +127,7 @@ class TestWindowsFallbacks:
         term_num = get_platform_signal_number("SIGTERM")
         assert isinstance(term_num, int)
         assert term_num > 0
-        
+
         int_num = get_platform_signal_number("SIGINT")
         assert isinstance(int_num, int)
         assert int_num > 0
@@ -142,7 +140,7 @@ class TestSignalListing:
         """Test listing supported signals on Unix."""
         with patch("pyfulmen.signals._platform._get_platform_name", return_value="linux"):
             supported = list_supported_signals()
-            
+
             assert isinstance(supported, list)
             assert len(supported) == 8  # All signals supported on Unix
             assert "SIGTERM" in supported
@@ -153,7 +151,7 @@ class TestSignalListing:
         """Test listing supported signals on Windows."""
         with patch("pyfulmen.signals._platform._get_platform_name", return_value="windows"):
             supported = list_supported_signals()
-            
+
             assert isinstance(supported, list)
             assert len(supported) == 3  # Only 3 signals supported on Windows
             assert "SIGTERM" in supported
@@ -165,7 +163,7 @@ class TestSignalListing:
         """Test listing unsupported signals on Unix."""
         with patch("pyfulmen.signals._platform._get_platform_name", return_value="linux"):
             unsupported = list_unsupported_signals()
-            
+
             assert isinstance(unsupported, list)
             assert len(unsupported) == 0  # All signals supported on Unix
 
@@ -173,7 +171,7 @@ class TestSignalListing:
         """Test listing unsupported signals on Windows."""
         with patch("pyfulmen.signals._platform._get_platform_name", return_value="windows"):
             unsupported = list_unsupported_signals()
-            
+
             assert isinstance(unsupported, list)
             assert len(unsupported) == 5  # 5 signals not supported on Windows
             assert "SIGHUP" in unsupported
@@ -189,7 +187,7 @@ class TestPlatformInfo:
     def test_get_platform_info_structure(self):
         """Test platform info structure."""
         info = get_platform_info()
-        
+
         assert isinstance(info, dict)
         assert "platform" in info
         assert "python_platform" in info
@@ -200,7 +198,7 @@ class TestPlatformInfo:
     def test_get_platform_info_values(self):
         """Test platform info values are reasonable."""
         info = get_platform_info()
-        
+
         assert info["platform"] in ["windows", "linux", "darwin", "freebsd", "unix"]
         assert isinstance(info["python_platform"], str)
         assert isinstance(info["supported_signals"], list)
@@ -212,7 +210,7 @@ class TestPlatformInfo:
     def test_get_platform_info_windows(self, mock_platform):
         """Test platform info on Windows."""
         info = get_platform_info()
-        
+
         assert info["platform"] == "windows"
         assert len(info["supported_signals"]) == 3
         assert len(info["unsupported_signals"]) == 5
@@ -221,7 +219,7 @@ class TestPlatformInfo:
     def test_get_platform_info_linux(self, mock_platform):
         """Test platform info on Linux."""
         info = get_platform_info()
-        
+
         assert info["platform"] == "linux"
         assert len(info["supported_signals"]) == 8
         assert len(info["unsupported_signals"]) == 0
@@ -233,14 +231,14 @@ class TestFallbackBehaviorDetails:
     def test_sighup_fallback_details(self):
         """Test SIGHUP fallback behavior details."""
         fallback = get_signal_fallback_behavior("SIGHUP")
-        
+
         if fallback:  # Only test if fallback exists (Windows)
             assert fallback["fallback_behavior"] == "http_admin_endpoint"
             assert fallback["log_level"] == "INFO"
             assert "SIGHUP unavailable on Windows" in fallback["log_message"]
             assert "POST /admin/signal with signal=HUP" in fallback["operation_hint"]
             assert fallback["telemetry_event"] == "fulmen.signal.unsupported"
-            
+
             tags = fallback["telemetry_tags"]
             assert tags["signal"] == "SIGHUP"
             assert tags["platform"] == "windows"
@@ -249,7 +247,7 @@ class TestFallbackBehaviorDetails:
     def test_sigpipe_fallback_details(self):
         """Test SIGPIPE fallback behavior details."""
         fallback = get_signal_fallback_behavior("SIGPIPE")
-        
+
         if fallback:  # Only test if fallback exists (Windows)
             assert fallback["fallback_behavior"] == "exception_handling"
             assert fallback["log_level"] == "INFO"
@@ -259,7 +257,7 @@ class TestFallbackBehaviorDetails:
     def test_sigalrm_fallback_details(self):
         """Test SIGALRM fallback behavior details."""
         fallback = get_signal_fallback_behavior("SIGALRM")
-        
+
         if fallback:  # Only test if fallback exists (Windows)
             assert fallback["fallback_behavior"] == "timer_api"
             assert fallback["log_level"] == "INFO"

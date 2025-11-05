@@ -2,6 +2,120 @@
 
 This document tracks release notes and checklists for PyFulmen releases.
 
+## [Unreleased]
+
+### [0.1.11] - Signal Handling Module - 2025-11-05
+
+**Release Type**: Major Feature Enhancement - Enterprise Signal Handling
+**Release Date**: November 5, 2025
+**Status**: ✅ Ready for Release
+
+**Summary**: PyFulmen v0.1.11 delivers comprehensive enterprise signal handling module with cross-platform support, Windows HTTP fallbacks, asyncio integration, and progressive interface design. This completes the signal-handling core module requirement from Crucible v0.2.6, providing production-ready signal management for Fulmen ecosystem applications.
+
+#### Key Features
+
+**🚦 Cross-Platform Signal Handling**:
+
+- Complete Unix signal support with platform-specific behavior detection
+- Windows HTTP endpoint fallbacks for unsupported signals (SIGHUP, SIGPIPE, SIGALRM, SIGUSR1, SIGUSR2)
+- Automatic platform detection and appropriate handler registration
+- 8 standard signals with comprehensive metadata and behavior definitions
+
+**🔄 Asyncio Integration**:
+
+- Safe async and sync signal handler execution with automatic loop detection
+- `create_async_safe_handler()` for asyncio-compatible signal handling
+- Thread-safe handler registration and dispatch with proper error isolation
+- Graceful degradation when asyncio unavailable
+
+**⚡ Progressive Interface Design**:
+
+- Zero-complexity defaults: `on_shutdown()`, `on_reload()`, `on_force_quit()` work out of box
+- Enterprise power-ups: Custom handler registration, priority ordering, double-tap detection
+- HTTP helper utilities for Windows fallback scenarios
+- Comprehensive metadata access with `get_signal_metadata()` and `supports_signal()`
+
+**🔧 Enterprise Features**:
+
+- Config reload workflows with restart-based pattern and validation
+- Graceful shutdown with 30-second timeout and cleanup handlers
+- Double-tap SIGINT detection for force quit scenarios
+- Structured logging integration with contextual signal information
+- Telemetry emission for signal events with proper metadata
+
+**🛠️ CLI Integration**:
+
+- `pyfulmen signals info` - Module information and platform details
+- `pyfulmen signals list` - Available signals with platform support matrix
+- `pyfulmen signals windows-fallback` - Windows HTTP endpoint documentation
+- JSON/text output formats for automation and scripting
+
+#### Technical Implementation
+
+**Architecture Patterns**:
+
+- Registry pattern with thread-safe handler management
+- Catalog-driven signal metadata from Crucible SSOT
+- HTTP helper class with configurable endpoints and authentication
+- Asyncio-safe wrapper with fallback to sync execution
+
+**Quality Assurance**:
+
+- **152 Tests**: 143 unit + 9 integration (100% pass rate)
+- **Cross-Platform**: Linux, macOS, Windows compatibility validated
+- **Performance**: <1ms handler registration, <10ms signal dispatch
+- **Reliability**: Comprehensive error handling and graceful degradation
+
+**Documentation & Examples**:
+
+- Complete module documentation with API reference
+- Comprehensive usage examples with 6 real-world scenarios
+- Integration guides for logging, config, and telemetry modules
+- CLI command reference and automation examples
+
+#### Breaking Changes
+
+- None (fully backward compatible with v0.1.10)
+
+#### Migration Notes
+
+**New Module Available**:
+
+```python
+# Basic usage - zero complexity
+from pyfulmen.signals import on_shutdown, on_reload
+
+def cleanup_handler():
+    print("Shutting down gracefully...")
+
+def reload_handler():
+    print("Reloading configuration...")
+
+on_shutdown(cleanup_handler)
+on_reload(reload_handler)
+```
+
+**Enterprise Features**:
+
+```python
+# Advanced usage with HTTP fallback
+from pyfulmen.signals import get_http_helper, build_signal_request
+
+helper = get_http_helper()
+request = build_signal_request("SIGHUP")
+curl_cmd = helper.format_curl_command(request)
+```
+
+#### Quality Gates
+
+- [x] All 152 signal tests passing (143 unit + 9 integration)
+- [x] CLI commands fully functional with proper error handling
+- [x] Cross-platform compatibility verified
+- [x] Documentation complete with examples and integration guides
+- [x] Code quality checks passing (ruff, mypy)
+- [x] Performance benchmarks meeting enterprise requirements
+- [x] Module manifest updated with signal-handling core module
+
 ## [0.1.9] - 2025-11-04
 
 ### Schema Export, Exit Codes & Crucible v0.2.4 Sync
@@ -379,18 +493,21 @@ for event in events:
 #### Technical Implementation
 
 **Progressive Interface Design**:
+
 - Zero-complexity defaults: `get_identity()` works out of the box
 - Enterprise power-ups: Override contexts, explicit paths, custom validation
 - Thread-safe singleton caching with performance optimization
 - Comprehensive error handling with actionable guidance messages
 
 **Crucible Compliance**:
+
 - Full v0.2.4 app identity standard implementation
 - 4 audit fixes applied during development for enterprise compliance
 - Cross-language parity preparation with gofulmen/tsfulmen
 - Schema validation with canonical JSON schema from Crucible SSOT
 
 **Enterprise Features**:
+
 - Process-level caching with thread safety guarantees
 - Test override context manager for isolated testing scenarios
 - Path traversal protection and safe YAML loading

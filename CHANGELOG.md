@@ -9,6 +9,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **Signal Handling Module**: Enterprise-grade cross-platform signal handling with Windows fallbacks
+  - Complete Unix signal support with platform-specific behavior detection
+  - Windows HTTP endpoint fallbacks for unsupported signals (SIGHUP, SIGPIPE, SIGALRM, SIGUSR1, SIGUSR2)
+  - Asyncio integration with safe async/sync handler execution and automatic loop detection
+  - Progressive interface design: zero-complexity defaults with enterprise power-ups
+  - Config reload workflows with restart-based pattern and validation
+  - Graceful shutdown with 30-second timeout and cleanup handlers
+  - Double-tap SIGINT detection for force quit scenarios
+  - HTTP helper utilities for Windows fallback scenarios
+  - CLI integration: `pyfulmen signals info/list/windows-fallback` commands
+  - 152 comprehensive tests (143 unit + 9 integration) with 100% pass rate
+  - Cross-platform compatibility validated (Linux, macOS, Windows)
+  - Complete documentation with usage examples and integration guides
+
 - **AppIdentity Module**: Complete application identity management system with Crucible v0.2.4 compliance
   - Progressive interface with zero-complexity defaults and enterprise power-ups
   - Auto-discovery via environment override and ancestor search for `.fulmen/app.yaml`

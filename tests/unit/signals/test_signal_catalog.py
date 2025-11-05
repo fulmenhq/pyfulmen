@@ -1,16 +1,13 @@
 """Tests for signal catalog loading and metadata management."""
 
-import pytest
-from pathlib import Path
-
 from pyfulmen.signals._catalog import (
-    get_signals_version,
-    get_signal_metadata,
-    list_all_signals,
-    get_signal_by_id,
-    _load_catalog,
     _get_catalog_path,
     _get_schema_path,
+    _load_catalog,
+    get_signal_by_id,
+    get_signal_metadata,
+    get_signals_version,
+    list_all_signals,
 )
 
 
@@ -20,7 +17,7 @@ class TestCatalogLoading:
     def test_load_catalog_success(self):
         """Test successful catalog loading."""
         catalog = _load_catalog()
-        
+
         assert catalog is not None
         assert "signals" in catalog
         assert "behaviors" in catalog
@@ -31,7 +28,7 @@ class TestCatalogLoading:
         """Test catalog contains exactly 8 standard signals."""
         catalog = _load_catalog()
         signals = catalog["signals"]
-        
+
         assert len(signals) == 8
         signal_ids = [s["id"] for s in signals]
         expected_ids = ["term", "int", "hup", "quit", "pipe", "alrm", "usr1", "usr2"]
@@ -40,7 +37,7 @@ class TestCatalogLoading:
     def test_get_signals_version(self):
         """Test version information retrieval."""
         version = get_signals_version()
-        
+
         assert isinstance(version, dict)
         assert "version" in version
         assert "description" in version
@@ -50,13 +47,10 @@ class TestCatalogLoading:
     def test_list_all_signals(self):
         """Test listing all signal names."""
         signals = list_all_signals()
-        
+
         assert isinstance(signals, list)
         assert len(signals) == 8
-        expected_signals = [
-            "SIGTERM", "SIGINT", "SIGHUP", "SIGQUIT",
-            "SIGPIPE", "SIGALRM", "SIGUSR1", "SIGUSR2"
-        ]
+        expected_signals = ["SIGTERM", "SIGINT", "SIGHUP", "SIGQUIT", "SIGPIPE", "SIGALRM", "SIGUSR1", "SIGUSR2"]
         assert signals == expected_signals
 
     def test_catalog_path_exists(self):
@@ -80,7 +74,7 @@ class TestSignalMetadata:
     def test_get_signal_metadata_by_name(self):
         """Test getting metadata by signal name."""
         metadata = get_signal_metadata("SIGTERM")
-        
+
         assert metadata is not None
         assert metadata["name"] == "SIGTERM"
         assert metadata["id"] == "term"
@@ -96,7 +90,7 @@ class TestSignalMetadata:
     def test_get_signal_by_id(self):
         """Test getting metadata by signal ID."""
         metadata = get_signal_by_id("term")
-        
+
         assert metadata is not None
         assert metadata["id"] == "term"
         assert metadata["name"] == "SIGTERM"
@@ -109,7 +103,7 @@ class TestSignalMetadata:
     def test_sigint_double_tap_metadata(self):
         """Test SIGINT has double-tap configuration."""
         metadata = get_signal_metadata("SIGINT")
-        
+
         assert metadata is not None
         assert metadata["default_behavior"] == "graceful_shutdown_with_double_tap"
         assert "double_tap_window_seconds" in metadata
@@ -119,7 +113,7 @@ class TestSignalMetadata:
     def test_sighup_reload_metadata(self):
         """Test SIGHUP has reload configuration."""
         metadata = get_signal_metadata("SIGHUP")
-        
+
         assert metadata is not None
         assert metadata["default_behavior"] == "reload_via_restart"
         assert "validation_required" in metadata
@@ -130,7 +124,7 @@ class TestSignalMetadata:
         """Test Windows fallback metadata structure."""
         sighup_metadata = get_signal_metadata("SIGHUP")
         fallback = sighup_metadata["windows_fallback"]
-        
+
         assert fallback["fallback_behavior"] == "http_admin_endpoint"
         assert "log_level" in fallback
         assert "log_message" in fallback
@@ -143,11 +137,11 @@ class TestSignalMetadata:
         """Test all signals have required metadata fields."""
         signals = list_all_signals()
         required_fields = ["id", "name", "description", "default_behavior"]
-        
+
         for signal_name in signals:
             metadata = get_signal_metadata(signal_name)
             assert metadata is not None, f"Missing metadata for {signal_name}"
-            
+
             for field in required_fields:
                 assert field in metadata, f"Signal {signal_name} missing field {field}"
 
@@ -159,7 +153,7 @@ class TestCatalogValidation:
         """Test catalog passes structural validation."""
         # This is implicitly tested by successful loading in _load_catalog()
         catalog = _load_catalog()
-        
+
         # Verify required top-level sections
         required_sections = ["signals", "behaviors", "os_mappings", "platform_support"]
         for section in required_sections:
@@ -169,12 +163,12 @@ class TestCatalogValidation:
         """Test individual signal structure validation."""
         catalog = _load_catalog()
         signals = catalog["signals"]
-        
+
         for signal in signals:
             # Each signal should have required fields
             required_fields = ["id", "name", "description", "default_behavior"]
             for field in required_fields:
                 assert field in signal, f"Signal missing {field}: {signal}"
-            
+
             # Name should be a valid signal name
             assert signal["name"].startswith("SIG"), f"Invalid signal name: {signal['name']}"
