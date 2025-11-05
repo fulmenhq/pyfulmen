@@ -22,7 +22,11 @@ class AppIdentityNotFoundError(AppIdentityError):
     def __init__(self, searched_paths: list[Path]) -> None:
         self.searched_paths = searched_paths
         paths_str = ", ".join(str(p) for p in searched_paths)
-        super().__init__(f"App identity not found. Searched: {paths_str}")
+        guidance = (
+            "Create a .fulmen/app.yaml file in your project root or set FULMEN_APP_IDENTITY_PATH environment variable. "
+            "See: https://docs.fulmenhq.com/crucible-py/standards/app-identity/"
+        )
+        super().__init__(f"App identity not found. Searched: {paths_str}. {guidance}")
 
 
 class AppIdentityValidationError(AppIdentityError):
@@ -32,7 +36,8 @@ class AppIdentityValidationError(AppIdentityError):
         self.path = path
         self.validation_errors = validation_errors
         errors_str = "; ".join(validation_errors)
-        super().__init__(f"Invalid app identity at {path}: {errors_str}")
+        guidance = "See schema reference: https://docs.fulmenhq.com/crucible-py/standards/app-identity/"
+        super().__init__(f"Invalid app identity at {path}: {errors_str}. {guidance}")
 
 
 class AppIdentityLoadError(AppIdentityError):
@@ -41,4 +46,7 @@ class AppIdentityLoadError(AppIdentityError):
     def __init__(self, path: Path, cause: Exception) -> None:
         self.path = path
         self.cause = cause
-        super().__init__(f"Failed to load app identity from {path}: {cause}")
+        guidance = (
+            "Check file format and permissions. See: https://docs.fulmenhq.com/crucible-py/standards/app-identity/"
+        )
+        super().__init__(f"Failed to load app identity from {path}: {cause}. {guidance}")

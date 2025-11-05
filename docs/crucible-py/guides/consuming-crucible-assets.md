@@ -27,7 +27,7 @@ Every helper library exposes Crucible catalogs via dedicated modules. Examples:
 | ---------------------- | ---------------------------------------------- | ----------------------------- | -------------------------------------- |
 | Exit codes             | `github.com/fulmenhq/gofulmen/pkg/foundry`     | `pyfulmen.foundry.exit_codes` | `@fulmenhq/tsfulmen/foundry/exitCodes` |
 | Signals (planned)      | `github.com/fulmenhq/gofulmen/pkg/signals`     | `pyfulmen.signals`            | `@fulmenhq/tsfulmen/signals`           |
-| App identity (planned) | `github.com/fulmenhq/gofulmen/pkg/appidentity` | `pyfulmen.appidentity`        | `@fulmenhq/tsfulmen/appidentity`       |
+| App identity | `github.com/fulmenhq/gofulmen/pkg/appidentity` | `pyfulmen.appidentity`        | `@fulmenhq/tsfulmen/appidentity`       |
 
 Python consumers can introspect Crucible provenance and metadata without touching the filesystem:
 
@@ -54,6 +54,77 @@ console.log(EXIT_CODES_VERSION); // => e.g. "v1.0.0"
 ```
 
 For Go consumers, always import from the `pkg/...` path exposed by `gofulmen`. Crucible may generate root-level bindings for internal use, but the `pkg` re-exports are the compatibility layer we keep stable for templates and applications.
+
+### Application Identity (v0.1.10+)
+
+Application Identity provides canonical app metadata from `.fulmen/app.yaml` files with discovery, validation, and caching. This enables consistent configuration paths, environment variable prefixes, and telemetry namespaces across the Fulmen ecosystem.
+
+```python
+from pyfulmen.appidentity import get_identity, load_from_path, override_identity_for_testing
+
+# Get current application identity (automatic discovery)
+identity = get_identity()
+print(f"Binary: {identity.binary_name}")
+print(f"Vendor: {identity.vendor}")
+print(f"Environment Prefix: {identity.env_prefix}")
+
+# Load from explicit path
+identity = load_from_path(Path("/path/to/.fulmen/app.yaml"))
+
+# Testing with mock identity
+test_identity = AppIdentity(
+    binary_name="testapp",
+    vendor="testvendor",
+    env_prefix="TEST_",
+    config_name="testapp",
+    description="Test application",
+    _raw_metadata={},
+    _provenance={}
+)
+
+with override_identity_for_testing(test_identity):
+    # All get_identity() calls return test_identity
+    identity = get_identity()
+```
+
+**Integration with Config Module:**
+
+The app identity integrates seamlessly with configuration loading:
+
+```python
+from pyfulmen.appidentity import get_identity
+from pyfulmen.config import load_layered_config
+
+identity = get_identity()
+
+# Config loader automatically uses identity for:
+# - Environment variable prefix (identity.env_prefix)
+# - Configuration file names (identity.config_name)
+config, diagnostics, sources = load_layered_config(
+    category="myapp",
+    version="1.0.0",
+    identity=identity  # Optional - will use get_identity() if not provided
+)
+```
+
+**Discovery Precedence:**
+
+1. Environment variable `FULMEN_APP_IDENTITY_PATH`
+2. Ancestor search for `.fulmen/app.yaml` from current directory
+3. Raise `AppIdentityNotFoundError` if not found
+
+**CLI Usage:**
+
+```bash
+# Show current identity
+pyfulmen appidentity show
+
+# Show identity in JSON format
+pyfulmen appidentity show --format json
+
+# Validate identity file
+pyfulmen appidentity validate .fulmen/app.yaml
+```
 
 TypeScript validation helpers (e.g., `validateDataBySchemaId()` in `@fulmenhq/tsfulmen/schema/validator`) automatically capture provenance and emit telemetry. Prefer those over bespoke AJV instances so ecosystem metrics and migrations stay aligned.
 

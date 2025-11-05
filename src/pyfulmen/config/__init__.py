@@ -12,9 +12,11 @@ Example:
 """
 
 from . import loader, merger, paths
+from .integration import create_loader_with_identity
 
 __all__ = [
     "paths",
     "loader",
     "merger",
+    "create_loader_with_identity",
 ]

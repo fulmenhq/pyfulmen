@@ -3,10 +3,10 @@ title: "PyFulmen Overview"
 description: "Python foundation library for the Fulmen ecosystem"
 author: "PyFulmen Architect"
 date: "2025-10-11"
-last_updated: "2025-11-04"
+last_updated: "2025-11-05"
 status: "active"
 lifecycle_phase: "alpha"
-version: "0.1.9"
+version: "0.1.10"
 tags:
   ["python", "library", "fulmen", "enterprise", "telemetry", "observability"]
 ---
@@ -53,6 +53,7 @@ PyFulmen implements the mandatory core modules defined in the [Module Manifest](
 
 | Module ID                      | Status    | Coverage Target | Specification                                                            | Description                                                                                             |
 | ------------------------------ | --------- | --------------- | ------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------- |
+| **app-identity**              | ✅ Stable | 90%             | [Spec](docs/crucible-py/standards/library/modules/app-identity.md)      | Canonical application metadata with discovery, validation, and caching (v0.1.10+)                        |
 | **crucible-shim**              | ✅ Stable | 90%             | [Spec](docs/crucible-py/standards/library/modules/crucible-shim.md)      | Idiomatic Python access to Crucible schemas, docs, and config defaults via bridge API                   |
 | **docscribe**                  | ✅ Stable | 95%             | [Spec](docs/crucible-py/standards/library/modules/docscribe.md)          | Frontmatter parsing, header extraction, and clean content access for markdown assets (v0.1.4+)          |
 | **config-path-api**            | ✅ Stable | 90%             | [Spec](docs/crucible-py/standards/config/fulmen-config-paths.md)         | Platform-aware config/data/cache paths (XDG-compliant on Linux/macOS, Windows-aware)                    |
@@ -75,6 +76,39 @@ PyFulmen implements the mandatory core modules defined in the [Module Manifest](
 | **cloud-storage** | 📋 Planned | Unified S3/GCS/Azure Blob helpers                                                |
 
 **Legend**: ✅ Stable | 🔄 Active Development | 📋 Planned | ⚠️ Deprecated
+
+### Module Highlights: Application Identity (v0.1.10+)
+
+**Purpose**: Canonical application metadata management with Crucible v0.2.4 compliance
+
+**Core Features**:
+
+- **Progressive Interface**: Zero-complexity defaults with enterprise power-ups
+- **Auto-Discovery**: Environment override and ancestor search for `.fulmen/app.yaml`
+- **Validation**: Schema-compliant validation with detailed error guidance
+- **Caching**: Thread-safe process-level caching with test override support
+- **CLI Tools**: Show and validate commands with JSON/text output
+
+**APIs**:
+
+- Discovery: `get_identity()`, `load_from_path()`, `reload()`
+- Testing: `override_identity_for_testing()` context manager
+- CLI: `pyfulmen appidentity show`, `pyfulmen appidentity validate`
+
+**Integration**:
+
+- Seamless config module integration for env prefixes and file names
+- Backward-compatible APIs with optional identity parameters
+- Cross-language parity preparation with gofulmen/tsfulmen
+
+**Quality Metrics**:
+
+- 64 comprehensive tests with 100% functionality coverage
+- 87.14% total test coverage across all modules
+- Enterprise-grade reliability with performance optimization
+- Complete documentation with examples and troubleshooting
+
+**Dependencies**: yaml (safe loading), jsonschema (validation)
 
 ### Module Highlights: FulHash (v0.1.6+)
 

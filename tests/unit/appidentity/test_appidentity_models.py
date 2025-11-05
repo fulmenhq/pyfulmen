@@ -56,9 +56,9 @@ class TestAppIdentity:
         assert identity.console_scripts == [{"name": "pyfulmen", "entry_point": "pyfulmen.cli:main"}]
 
     def test_env_prefix_validation(self):
-        """Test that env_prefix must be uppercase letters followed by underscore."""
+        """Test that env_prefix must match schema pattern ^[A-Z][A-Z0-9_]*_$."""
         # Test missing underscore
-        with pytest.raises(ValueError, match="must be uppercase letters followed by '_'"):
+        with pytest.raises(ValueError, match="must start with uppercase letter.*end with '_'"):
             AppIdentity(
                 binary_name="test",
                 vendor="vendor",
@@ -68,7 +68,7 @@ class TestAppIdentity:
             )
 
         # Test lowercase letters
-        with pytest.raises(ValueError, match="must be uppercase letters followed by '_'"):
+        with pytest.raises(ValueError, match="must start with uppercase letter.*end with '_'"):
             AppIdentity(
                 binary_name="test",
                 vendor="vendor",
@@ -78,7 +78,7 @@ class TestAppIdentity:
             )
 
         # Test mixed case
-        with pytest.raises(ValueError, match="must be uppercase letters followed by '_'"):
+        with pytest.raises(ValueError, match="must start with uppercase letter.*end with '_'"):
             AppIdentity(
                 binary_name="test",
                 vendor="vendor",
@@ -87,12 +87,12 @@ class TestAppIdentity:
                 description="Test app",
             )
 
-        # Test special characters
-        with pytest.raises(ValueError, match="must be uppercase letters followed by '_'"):
+        # Test special characters (now numbers are allowed per schema)
+        with pytest.raises(ValueError, match="must start with uppercase letter.*end with '_'"):
             AppIdentity(
                 binary_name="test",
                 vendor="vendor",
-                env_prefix="APP123_",  # Numbers not allowed
+                env_prefix="_APP_",  # Starts with underscore
                 config_name="test",
                 description="Test app",
             )

@@ -101,7 +101,7 @@ def override_identity_for_testing(identity: AppIdentity):
 
     try:
         cache._set_test_override(identity)
-        yield
+        yield identity
     finally:
         # Restore previous override state
         if had_override:

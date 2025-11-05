@@ -49,11 +49,13 @@ class AppIdentity:
 
     def __post_init__(self) -> None:
         """Validate fields and set internal data."""
-        # Validate env_prefix pattern: UPPERCASE letters followed by underscore
-        env_prefix_pattern = re.compile(r"^[A-Z]+_$")
+        # Validate env_prefix pattern to match schema: ^[A-Z][A-Z0-9_]*_$
+        env_prefix_pattern = re.compile(r"^[A-Z][A-Z0-9_]*_$")
         if not env_prefix_pattern.match(self.env_prefix):
             raise ValueError(
-                f"Environment prefix '{self.env_prefix}' must be uppercase letters followed by '_' (e.g., 'APP_')"
+                f"Environment prefix '{self.env_prefix}' must start with uppercase letter, "
+                f"contain only uppercase letters, digits, and underscores, and end with '_' "
+                f"(e.g., 'APP_', 'MY_APP_1_')"
             )
 
         # Set internal fields (object.__setattr__ needed for frozen dataclass)
@@ -87,3 +89,13 @@ class AppIdentity:
             "log_level": f"{self.env_prefix}LOG_LEVEL",
             "debug": f"{self.env_prefix}DEBUG",
         }
+
+    @property
+    def provenance(self) -> dict[str, str]:
+        """Get provenance metadata (read-only access to internal _provenance)."""
+        return self._provenance.copy()
+
+    @property
+    def raw_metadata(self) -> dict[str, Any]:
+        """Get raw metadata from identity file (read-only access to internal _raw_metadata)."""
+        return self._raw_metadata.copy()

@@ -25,6 +25,96 @@ PyFulmen is part of the Fulmen ecosystem, providing templates, processes, and to
 - **Three-Layer Config Loading** - Crucible defaults → User overrides → App config
 - **Schema Validation** - Helpers for validating data against Crucible JSON schemas
 - **Version Management** - Utilities for reading and validating repository versions
+- **Application Identity** - Canonical app metadata from `.fulmen/app.yaml` with discovery, validation, and caching (v0.1.10+)
+
+## Application Identity (v0.1.10+)
+
+PyFulmen provides canonical application metadata following the Crucible app identity standard. The `pyfulmen.appidentity` module discovers, validates, and caches application identity from `.fulmen/app.yaml` files.
+
+### Quick Start
+
+```python
+from pyfulmen.appidentity import get_identity
+
+# Get current application identity
+identity = get_identity()
+print(f"Binary: {identity.binary_name}")
+print(f"Vendor: {identity.vendor}")
+print(f"Environment Prefix: {identity.env_prefix}")
+```
+
+### Configuration File
+
+Create a `.fulmen/app.yaml` file in your repository root:
+
+```yaml
+# Required application information
+app:
+  binary_name: "myapp"
+  vendor: "mycompany"
+  env_prefix: "MYAPP_"
+  config_name: "myapp"
+  description: "My awesome application"
+
+# Optional metadata
+metadata:
+  project_url: "https://github.com/mycompany/myapp"
+  support_email: "support@mycompany.com"
+  license: "MIT"
+  repository_category: "application"
+  telemetry_namespace: "myapp.telemetry"
+  
+  # Python-specific metadata
+  python:
+    distribution_name: "myapp"
+    package_name: "myapp_core"
+    console_scripts:
+      - name: "myapp"
+        module: "myapp.cli:main"
+```
+
+### CLI Commands
+
+```bash
+# Show current identity
+pyfulmen appidentity show
+
+# Show identity in JSON format
+pyfulmen appidentity show --format json
+
+# Validate identity file
+pyfulmen appidentity validate .fulmen/app.yaml
+```
+
+### Integration with Config
+
+The app identity integrates seamlessly with the config module:
+
+```python
+from pyfulmen.appidentity import get_identity
+from pyfulmen.config import load_layered_config
+
+identity = get_identity()
+
+# Config loader automatically uses identity for:
+# - Environment variable prefix (identity.env_prefix)
+# - Configuration file names (identity.config_name)
+config, diagnostics, sources = load_layered_config(
+    category="myapp",
+    version="1.0.0",
+    identity=identity  # Optional - will use get_identity() if not provided
+)
+```
+
+### Discovery Precedence
+
+The module follows this precedence order for discovering identity files:
+
+1. **Environment Variable**: `FULMEN_APP_IDENTITY_PATH`
+2. **Ancestor Search**: Look for `.fulmen/app.yaml` in current directory and parent directories
+3. **Error**: Raise `AppIdentityNotFoundError` if no file found
+
+📖 **[Complete Application Identity Documentation](src/pyfulmen/appidentity/README.md)** for detailed API reference, testing utilities, and troubleshooting.
 
 ## Installation
 

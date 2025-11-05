@@ -1,0 +1,67 @@
+# PyFulmen Application Identity Configuration
+# 
+# This file defines canonical application metadata following the Crucible app identity standard.
+# Copy this file to .fulmen/app.yaml and customize for your application.
+#
+# Required fields are in the 'app' section. Optional metadata goes in 'metadata'.
+# See: https://docs.fulmenhq.com/crucible-py/standards/app-identity/
+
+app:
+  # Required: Application binary name (lowercase, alphanumeric, hyphens)
+  binary_name: "pyfulmen"
+  
+  # Required: Vendor/organization name (lowercase, alphanumeric, hyphens)
+  vendor: "fulmenhq"
+  
+  # Required: Environment variable prefix (uppercase, must end with underscore)
+  env_prefix: "PYFULMEN_"
+  
+  # Required: Configuration directory name (lowercase, typically matches binary_name)
+  config_name: "pyfulmen"
+  
+  # Required: Human-readable description
+  description: "Python Fulmen libraries for enterprise-scale development"
+
+metadata:
+  # Optional: Project homepage URL
+  project_url: "https://github.com/fulmenhq/pyfulmen"
+  
+  # Optional: Support contact email
+  support_email: "maintainers@3leaps.net"
+  
+  # Optional: License identifier
+  license: "MIT"
+  
+  # Optional: Repository category (library, application, cli, tool, etc.)
+  repository_category: "library"
+  
+  # Optional: Telemetry namespace (defaults to binary_name if not specified)
+  telemetry_namespace: "pyfulmen.telemetry"
+  
+  # Optional: Unique registry identifier (UUID)
+  # registry_id: "12345678-1234-1234-1234-123456789abc"
+  
+  # Optional: Python-specific metadata
+  python:
+    # Python distribution name for pip install
+    distribution_name: "pyfulmen"
+    
+    # Python package name for imports
+    package_name: "pyfulmen"
+    
+    # Console script definitions
+    console_scripts:
+      - name: "pyfulmen"
+        module: "pyfulmen.cli:main"
+        description: "PyFulmen CLI interface"
+      
+      # Additional console scripts can be added:
+      # - name: "pyfulmen-schema"
+      #   module: "pyfulmen.schema.cli:main"
+      #   description: "PyFulmen schema utilities"
+
+# Additional custom metadata fields can be added here:
+# custom_field: "custom_value"
+# deployment:
+#   environment: "production"
+#   region: "us-west-2"

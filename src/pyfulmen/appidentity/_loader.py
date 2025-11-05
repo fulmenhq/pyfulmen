@@ -47,11 +47,13 @@ def _discover_identity_path() -> Path:
             # Environment variable is set but file doesn't exist - fail immediately
             raise AppIdentityNotFoundError(searched_paths)
 
-    # 2. Ancestor search from current working directory
+    # 2. Ancestor search from current working directory (capped at 20 levels per Crucible v0.2.4)
     cwd = Path.cwd()
     search_dir = cwd
+    max_levels = 20
+    level = 0
 
-    while True:
+    while level < max_levels:
         candidate_path = search_dir / ".fulmen" / "app.yaml"
         searched_paths.append(candidate_path)
 
@@ -63,6 +65,7 @@ def _discover_identity_path() -> Path:
         if parent_dir == search_dir:  # We've reached the root
             break
         search_dir = parent_dir
+        level += 1
 
     # 3. No file found - raise with searched paths
     raise AppIdentityNotFoundError(searched_paths)

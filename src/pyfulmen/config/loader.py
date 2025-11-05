@@ -15,6 +15,7 @@ from . import paths
 from .merger import merge_configs
 
 DEFAULT_APP_NAMESPACE = "fulmen"
+DEFAULT_VENDOR = "fulmenhq"
 
 
 @dataclass(slots=True)
@@ -49,9 +50,9 @@ class ConfigLoader:
         elif app_name and app_name != app:
             raise ValueError("app and app_name arguments refer to different applications")
 
-        self.app = app
-        self.vendor = vendor
-        self.user_config_dir = paths.get_app_config_dir(app, vendor=vendor)
+        self.app = app or DEFAULT_APP_NAMESPACE
+        self.vendor = vendor or DEFAULT_VENDOR
+        self.user_config_dir = paths.get_app_config_dir(self.app, vendor=self.vendor)
 
     def load(self, crucible_path: str, app_config: dict[str, Any] | None = None) -> dict[str, Any]:
         """Return merged configuration data (no metadata)."""
