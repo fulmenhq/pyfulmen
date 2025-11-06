@@ -41,11 +41,12 @@ class Counter:
         self._value = 0.0
         self._lock = threading.Lock()
 
-    def inc(self, delta: float = 1.0) -> None:
+    def inc(self, delta: float = 1.0, tags: dict[str, str] | None = None) -> None:
         """Increment counter by delta.
 
         Args:
             delta: Amount to increment (must be >= 0)
+            tags: Optional tags for this metric event
 
         Raises:
             ValueError: If delta is negative
@@ -64,6 +65,7 @@ class Counter:
                 name=self.name,
                 value=current_value,
                 unit="count",
+                tags=tags,
             )
         )
 
@@ -90,13 +92,14 @@ class Gauge:
         self.name = name
         self.registry = registry
 
-    def set(self, value: float) -> None:
+    def set(self, value: float, tags: dict[str, str] | None = None) -> None:
         """Set gauge to value.
 
         Args:
             value: New gauge value
+            tags: Optional tags for this metric event
         """
-        self.registry._record(MetricEvent(timestamp=datetime.now(UTC), name=self.name, value=value))
+        self.registry._record(MetricEvent(timestamp=datetime.now(UTC), name=self.name, value=value, tags=tags))
 
 
 class Histogram:
@@ -132,11 +135,12 @@ class Histogram:
         self._observations: list[float] = []
         self._lock = threading.Lock()
 
-    def observe(self, value: float) -> None:
+    def observe(self, value: float, tags: dict[str, str] | None = None) -> None:
         """Record observation in histogram.
 
         Args:
             value: Observed value
+            tags: Optional tags for this metric event
         """
         with self._lock:
             self._observations.append(value)
@@ -147,7 +151,8 @@ class Histogram:
                 timestamp=datetime.now(UTC),
                 name=self.name,
                 value=summary,
-                unit="ms" if "ms" in self.name else None,
+                unit="ms" if "ms" in self.name else ("s" if "seconds" in self.name else None),
+                tags=tags,
             )
         )
 

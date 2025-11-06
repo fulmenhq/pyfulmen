@@ -9,6 +9,7 @@ with namespace configuration and taxonomy validation.
 from __future__ import annotations
 
 import threading
+import time
 from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
@@ -28,6 +29,7 @@ except ImportError as e:
 
 from ..appidentity import get_identity
 from ..logging import Logger
+from ._exporter_metrics import ExporterMetrics, RefreshContext
 from ._validate import validate_metric_name
 
 # Create logger for this module
@@ -137,6 +139,9 @@ class PrometheusExporter:
         self._histogram_collectors: dict[str, _HistogramCollector] = {}
         self._lock = threading.Lock()
 
+        # Initialize exporter metrics instrumentation
+        self._exporter_metrics = ExporterMetrics(registry)
+
     def _get_default_namespace(self) -> str:
         """Get default namespace from app identity."""
         try:
@@ -160,50 +165,77 @@ class PrometheusExporter:
             return f"{self._namespace}_{name}"
         return name
 
+    def _classify_refresh_error(self, exc: Exception) -> str:
+        """Classify refresh exception for error_type label.
+
+        Args:
+            exc: Exception that occurred
+
+        Returns:
+            Error type string for metrics
+        """
+        if isinstance(exc, (ValueError, TypeError)):
+            return "validation"
+        elif isinstance(exc, (OSError, IOError, FileNotFoundError)):
+            return "io"
+        elif isinstance(exc, (TimeoutError, ConnectionError)):
+            return "timeout"
+        else:
+            return "other"
+
     def refresh(self) -> None:
         """Refresh Prometheus collectors from registry events.
 
         Drains all events from MetricRegistry and updates Prometheus
         collectors accordingly. Thread-safe.
         """
-        with self._lock:
-            events = self.registry.drain_events()
+        # Track refresh with exporter metrics
+        with RefreshContext(self._exporter_metrics, "export") as ctx:
+            try:
+                with self._lock:
+                    events = self.registry.drain_events()
 
-            # Group events by metric name for processing
-            metric_events: dict[str, list[Any]] = {}
-            for event in events:
-                if event.name not in metric_events:
-                    metric_events[event.name] = []
-                metric_events[event.name].append(event)
+                    # Group events by metric name for processing
+                    metric_events: dict[str, list[Any]] = {}
+                    for event in events:
+                        if event.name not in metric_events:
+                            metric_events[event.name] = []
+                        metric_events[event.name].append(event)
 
-            # Process each metric
-            for metric_name, events_list in metric_events.items():
-                try:
-                    # Validate metric name against taxonomy
-                    validate_metric_name(metric_name)
+                    # Process each metric
+                    for metric_name, events_list in metric_events.items():
+                        try:
+                            # Validate metric name against taxonomy
+                            validate_metric_name(metric_name)
 
-                    # Get the latest event for current value
-                    latest_event = events_list[-1]
-                    prometheus_name = self._format_metric_name(metric_name)
+                            # Get the latest event for current value
+                            latest_event = events_list[-1]
+                            prometheus_name = self._format_metric_name(metric_name)
 
-                    # Handle different metric types
-                    if isinstance(latest_event.value, (int, float)):
-                        if metric_name.endswith("_total") or metric_name.endswith("_count"):
-                            self._handle_counter(prometheus_name, latest_event)
-                        else:
-                            self._handle_gauge(prometheus_name, latest_event)
-                    elif hasattr(latest_event.value, "buckets"):  # HistogramSummary
-                        self._handle_histogram(prometheus_name, latest_event)
+                            # Handle different metric types
+                            if isinstance(latest_event.value, (int, float)):
+                                if metric_name.endswith("_total") or metric_name.endswith("_count"):
+                                    self._handle_counter(prometheus_name, latest_event)
+                                else:
+                                    self._handle_gauge(prometheus_name, latest_event)
+                            elif hasattr(latest_event.value, "buckets"):  # HistogramSummary
+                                self._handle_histogram(prometheus_name, latest_event)
 
-                except Exception as e:
-                    logger.error(
-                        "Failed to process metric event",
-                        context={
-                            "metric_name": metric_name,
-                            "error": str(e),
-                            "telemetry_event": "metric_processing_error",
-                        },
-                    )
+                        except Exception as e:
+                            logger.error(
+                                "Failed to process metric event",
+                                context={
+                                    "metric_name": metric_name,
+                                    "error": str(e),
+                                    "telemetry_event": "metric_processing_error",
+                                },
+                            )
+
+            except Exception as e:
+                # Record refresh error with classification
+                error_type = self._classify_refresh_error(e)
+                ctx.record_error(error_type, str(e))
+                raise
 
     def _handle_counter(self, prometheus_name: str, event: Any) -> None:
         """Handle counter metric events."""
@@ -279,12 +311,36 @@ def create_prometheus_app(exporter: PrometheusExporter) -> Any:
 
     # Create a simple WSGI app that serves metrics
     def prometheus_wsgi_app(environ: dict[str, Any], start_response: Any) -> list[bytes]:
-        if environ.get("PATH_INFO") == "/metrics":
-            handler = MetricsHandler.factory(exporter.get_collector_registry())
-            return handler(environ, start_response)
-        else:
-            start_response("404 Not Found", [("Content-Type", "text/plain")])
-            return [b"Not Found - Use /metrics endpoint"]
+        path = environ.get("PATH_INFO", "")
+        client_ip = environ.get("REMOTE_ADDR", "")
+
+        try:
+            if path == "/metrics":
+                handler = MetricsHandler.factory(exporter.get_collector_registry())
+                response = handler(environ, start_response)
+
+                # Record successful request
+                status = "200"  # MetricsHandler returns 200 on success
+                exporter._exporter_metrics.record_http_request(
+                    status=int(status), path=path, client=client_ip if client_ip else None
+                )
+
+                return response
+            else:
+                start_response("404 Not Found", [("Content-Type", "text/plain")])
+                exporter._exporter_metrics.record_http_request(
+                    status=404, path=path, client=client_ip if client_ip else None
+                )
+                return [b"Not Found - Use /metrics endpoint"]
+
+        except Exception as e:
+            # Record HTTP error
+            status = "500"
+            exporter._exporter_metrics.record_http_error(
+                status=int(status), path=path, client=client_ip if client_ip else None, error_message=str(e)
+            )
+            start_response("500 Internal Server Error", [("Content-Type", "text/plain")])
+            return [b"Internal Server Error"]
 
     return prometheus_wsgi_app
 
@@ -303,8 +359,10 @@ def serve_prometheus_metrics(
         port: Port to listen on
         refresh_interval: Auto-refresh interval in seconds
     """
-    import time
     from wsgiref.simple_server import make_server
+
+    # Record server start
+    exporter._exporter_metrics.record_restart("manual", "Starting Prometheus metrics server")
 
     # Start background refresh thread
     stop_event = threading.Event()
@@ -339,9 +397,14 @@ def serve_prometheus_metrics(
         httpd.serve_forever()
     except KeyboardInterrupt:
         logger.info("Stopping Prometheus metrics server", telemetry_event="metrics_server_stopped")
+        exporter._exporter_metrics.record_restart("manual", "User interrupted server")
         stop_event.set()
         refresh_thread.join(timeout=1.0)
         httpd.shutdown()
+    except Exception as e:
+        logger.error("Server crashed", error=str(e), telemetry_event="metrics_server_crashed")
+        exporter._exporter_metrics.record_restart("error", f"Server crash: {str(e)}")
+        raise
 
 
 def register_metrics_shutdown(exporter: PrometheusExporter) -> None:
@@ -362,4 +425,16 @@ def register_metrics_shutdown(exporter: PrometheusExporter) -> None:
                 "Failed to perform final metrics refresh", error=str(e), telemetry_event="metrics_shutdown_error"
             )
 
-    atexit.register(final_refresh)
+    def shutdown_metrics() -> None:
+        """Flush exporter metrics on shutdown."""
+        try:
+            # Record final refresh with exporter metrics
+            with RefreshContext(exporter._exporter_metrics, "export"):
+                final_refresh()
+            exporter._exporter_metrics.record_restart("manual", "Graceful shutdown")
+        except Exception as e:
+            logger.error(
+                "Failed to flush exporter metrics on shutdown", error=str(e), telemetry_event="metrics_shutdown_error"
+            )
+
+    atexit.register(shutdown_metrics)

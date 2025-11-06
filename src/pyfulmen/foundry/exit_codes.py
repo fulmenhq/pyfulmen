@@ -151,7 +151,7 @@ class ExitCode(IntEnum):
     EXIT_COVERAGE_THRESHOLD_NOT_MET = 96
 
     # Signal-Induced Exits (128-165)
-    # Process terminated by Unix signals (128+N pattern)
+    # Process terminated by Unix signals (128+N pattern per POSIX). Signal codes follow Linux numbering; macOS/FreeBSD differ for SIGUSR1/SIGUSR2. For full signal semantics, see config/library/foundry/signals.yaml. For signal handling patterns, see docs/standards/library/modules/signal-handling.md.
 
     EXIT_SIGNAL_HUP = 129
 
@@ -167,9 +167,9 @@ class ExitCode(IntEnum):
 
     EXIT_SIGNAL_TERM = 143
 
-    EXIT_SIGNAL_USR1 = 159
+    EXIT_SIGNAL_USR1 = 138
 
-    EXIT_SIGNAL_USR2 = 160
+    EXIT_SIGNAL_USR2 = 140
 
 
 class ExitCodeInfo(TypedDict):
@@ -519,24 +519,24 @@ EXIT_CODE_METADATA: dict[int, ExitCodeInfo] = {
     129: {
         "code": 129,
         "name": "EXIT_SIGNAL_HUP",
-        "description": "Hangup signal (SIGHUP)",
-        "context": "Terminal disconnected, config reload requested",
+        "description": "Hangup signal (SIGHUP) - config reload via restart",
+        "context": "Config reload via restart-based pattern (mandatory schema validation).\nProcess exits with 129, supervisor restarts with new config.\nSee signals.yaml for reload behavior definition.",
         "category": "signals",
         "bsd_equivalent": "128 + 1",
     },
     130: {
         "code": 130,
         "name": "EXIT_SIGNAL_INT",
-        "description": "Interrupt signal (SIGINT)",
-        "context": "Ctrl+C pressed, user interrupt",
+        "description": "Interrupt signal (SIGINT) - user interrupt with Ctrl+C double-tap",
+        "context": "Ctrl+C pressed. First tap initiates graceful shutdown, second within 2s forces immediate exit.\nSame exit code (130) for both graceful and force modes.\nSee signals.yaml for double-tap behavior definition.",
         "category": "signals",
         "bsd_equivalent": "128 + 2",
     },
     131: {
         "code": 131,
         "name": "EXIT_SIGNAL_QUIT",
-        "description": "Quit signal (SIGQUIT)",
-        "context": "Ctrl+\\ pressed, core dump requested",
+        "description": "Quit signal (SIGQUIT) - immediate exit",
+        "context": "Ctrl+\\ on Unix, Ctrl+Break on Windows. Immediate termination without cleanup.\nUse for emergency shutdown or debugging (core dumps).",
         "category": "signals",
         "bsd_equivalent": "128 + 3",
     },
@@ -552,8 +552,8 @@ EXIT_CODE_METADATA: dict[int, ExitCodeInfo] = {
     141: {
         "code": 141,
         "name": "EXIT_SIGNAL_PIPE",
-        "description": "Broken pipe (SIGPIPE)",
-        "context": "Writing to closed pipe/socket, reader terminated",
+        "description": "Broken pipe (SIGPIPE) - observe only",
+        "context": "Writing to closed pipe/socket. Fulmen default is observe_only (log + graceful exit).\nApplications may override to ignore for network services.\nSee signals.yaml for SIGPIPE handling guidance.",
         "category": "signals",
         "bsd_equivalent": "128 + 13",
         "python_note": "Raised as BrokenPipeError exception",
@@ -561,8 +561,8 @@ EXIT_CODE_METADATA: dict[int, ExitCodeInfo] = {
     142: {
         "code": 142,
         "name": "EXIT_SIGNAL_ALRM",
-        "description": "Alarm signal (SIGALRM)",
-        "context": "Timer expiration, alarm clock",
+        "description": "Alarm signal (SIGALRM) - watchdog timeout",
+        "context": "Watchdog timer expired. Treat as timeout-induced exit.\nWatchdog pattern out of scope for v1.0.0 module implementations.",
         "category": "signals",
         "bsd_equivalent": "128 + 14",
         "python_note": "Supported by signal module, rarely used in practice",
@@ -570,27 +570,25 @@ EXIT_CODE_METADATA: dict[int, ExitCodeInfo] = {
     143: {
         "code": 143,
         "name": "EXIT_SIGNAL_TERM",
-        "description": "Termination signal (SIGTERM)",
-        "context": "Graceful shutdown requested, normal termination",
+        "description": "Termination signal (SIGTERM) - graceful shutdown",
+        "context": "Graceful shutdown requested by container orchestrator or process supervisor.\nStandard 30-second timeout for cleanup. Applications run cleanup handlers before exit.\nSee signals.yaml for graceful shutdown behavior definition.",
         "category": "signals",
         "bsd_equivalent": "128 + 15",
         "python_note": "Default signal for graceful shutdown",
     },
-    159: {
-        "code": 159,
+    138: {
+        "code": 138,
         "name": "EXIT_SIGNAL_USR1",
-        "description": "User-defined signal 1 (SIGUSR1)",
-        "context": "Application-specific signal handling (e.g., reopen logs, dump stats)",
+        "description": "User-defined signal 1 (SIGUSR1) - custom handler",
+        "context": "Application-specific signal (e.g., reopen logs, dump stats, trigger profiling).\nApplications register custom handlers. Exit code 138 on Linux (128+10).\nPlatform differences: macOS/FreeBSD use signal 30 (exit 158), not 10.",
         "category": "signals",
-        "bsd_equivalent": "128 + 31",
     },
-    160: {
-        "code": 160,
+    140: {
+        "code": 140,
         "name": "EXIT_SIGNAL_USR2",
-        "description": "User-defined signal 2 (SIGUSR2)",
-        "context": "Application-specific signal handling (e.g., toggle debug mode)",
+        "description": "User-defined signal 2 (SIGUSR2) - custom handler",
+        "context": "Application-specific signal (e.g., toggle debug mode, rotate credentials).\nApplications register custom handlers. Exit code 140 on Linux (128+12).\nPlatform differences: macOS/FreeBSD use signal 31 (exit 159), not 12.",
         "category": "signals",
-        "bsd_equivalent": "128 + 32",
     },
 }
 
@@ -682,11 +680,11 @@ _SIMPLIFIED_MAPPINGS: dict[SimplifiedMode, dict[int, int]] = {
         130: 1,  # ERROR
         131: 1,  # ERROR
         137: 1,  # ERROR
+        138: 1,  # ERROR
+        140: 1,  # ERROR
         141: 1,  # ERROR
         142: 1,  # ERROR
         143: 1,  # ERROR
-        159: 1,  # ERROR
-        160: 1,  # ERROR
         64: 2,  # USAGE_ERROR
     },
     SimplifiedMode.SEVERITY: {
@@ -723,11 +721,11 @@ _SIMPLIFIED_MAPPINGS: dict[SimplifiedMode, dict[int, int]] = {
         130: 4,  # SYSTEM_ERROR
         131: 4,  # SYSTEM_ERROR
         137: 4,  # SYSTEM_ERROR
+        138: 4,  # SYSTEM_ERROR
+        140: 4,  # SYSTEM_ERROR
         141: 4,  # SYSTEM_ERROR
         142: 4,  # SYSTEM_ERROR
         143: 4,  # SYSTEM_ERROR
-        159: 4,  # SYSTEM_ERROR
-        160: 4,  # SYSTEM_ERROR
         70: 5,  # SECURITY_ERROR
         71: 5,  # SECURITY_ERROR
         72: 5,  # SECURITY_ERROR

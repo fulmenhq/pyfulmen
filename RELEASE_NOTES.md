@@ -19,8 +19,14 @@ This document tracks release notes and checklists for PyFulmen releases.
 - Complete `pyfulmen.telemetry` module with MetricRegistry, Counter, Gauge, Histogram instruments
 - Thread-safe metrics collection with atomic operations and concurrent access support
 - Prometheus exporter with `/metrics` endpoint and comprehensive metric formatting
+- **Prometheus Exporter Metrics**: Full Crucible v0.2.7 taxonomy compliance with 7 new metrics
+  - `prometheus_exporter_refresh_success_total`, `prometheus_exporter_refresh_errors_total`, `prometheus_exporter_refresh_duration_seconds`
+  - `prometheus_exporter_http_requests_total`, `prometheus_exporter_http_errors_total`
+  - `prometheus_exporter_inflight_operations`, `prometheus_exporter_restart_total`
+  - Dual-emission system with `PYFULMEN_DUAL_EMISSION` environment variable for backward compatibility
+  - RefreshContext for automatic operation tracking with proper error classification
 - Module-level helpers (`counter()`, `gauge()`, `histogram()`) for zero-complexity usage
-- 26 comprehensive tests (17 unit + 9 integration, 100% pass rate)
+- 36 comprehensive tests (26 unit + 10 integration, 100% pass rate)
 
 **🔧 Cross-Module Instrumentation**:
 
@@ -55,10 +61,11 @@ This document tracks release notes and checklists for PyFulmen releases.
 
 **Quality Assurance**:
 
-- **268 Tests**: 259 baseline + 9 new telemetry integration tests (100% pass rate)
+- **278+ Tests**: 259 baseline + 19 new telemetry integration tests (100% pass rate)
 - **Performance**: <1ms typical overhead, <10ms worst-case for complex operations
 - **Thread Safety**: Validated concurrent access patterns
 - **Memory Efficiency**: Optimized event storage and cleanup
+- **Crucible Compliance**: Full v0.2.7 taxonomy compliance with proper metric naming and labels
 
 #### Module Integration Details
 

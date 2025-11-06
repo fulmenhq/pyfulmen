@@ -13,7 +13,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Core telemetry infrastructure with MetricRegistry, Counter, Gauge, Histogram instruments
   - Module-level helpers: `counter()`, `gauge()`, `histogram()`, `get_events()`, `drain_events()`, `clear_metrics()`
   - Prometheus exporter with full prometheus_client integration and Collector inheritance
-  - Comprehensive testing: 268 tests covering thread safety, isolation, and performance
+  - **Prometheus Exporter Metrics**: Complete Crucible v0.2.7 taxonomy compliance with 7 new metrics
+    - `prometheus_exporter_refresh_success_total`, `prometheus_exporter_refresh_errors_total`, `prometheus_exporter_refresh_duration_seconds`
+    - `prometheus_exporter_http_requests_total`, `prometheus_exporter_http_errors_total`
+    - `prometheus_exporter_inflight_operations`, `prometheus_exporter_restart_total`
+    - Dual-emission system with `PYFULMEN_DUAL_EMISSION` environment variable for backward compatibility
+    - RefreshContext for automatic operation tracking with proper error classification
+    - Comprehensive integration tests with 10 test cases covering all metrics and edge cases
+  - Comprehensive testing: 278+ tests covering thread safety, isolation, performance, and exporter metrics
   - Cross-module integration: Foundry MIME detection, Error handling wrap, Fulhash operations
   - Performance optimized: <1ms typical overhead with import hoisting optimization
   - Type safety: Full mypy compatibility with proper metric validation

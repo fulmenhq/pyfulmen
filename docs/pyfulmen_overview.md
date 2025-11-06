@@ -309,6 +309,118 @@ Crucible logging severity enum maps to Python logging levels:
 | FATAL    | 50      | CRITICAL | Unrecoverable failure, program exit expected |
 | NONE     | 60      | -        | Explicitly disable emission                  |
 
+## Prometheus Exporter Metrics (v0.1.12+)
+
+PyFulmen implements **Crucible v0.2.7 taxonomy compliance** with comprehensive Prometheus exporter metrics for monitoring exporter health and performance. These metrics provide visibility into refresh operations, HTTP request handling, and system restarts.
+
+### Core Metrics
+
+**Refresh Operations**:
+- `prometheus_exporter_refresh_success_total{phase}` - Successful refresh operations by phase
+- `prometheus_exporter_refresh_errors_total{phase,error_type}` - Failed refresh operations with error classification
+- `prometheus_exporter_refresh_duration_seconds{phase,result}` - Refresh operation timing histograms
+
+**HTTP Request Handling**:
+- `prometheus_exporter_http_requests_total{status,path,client?}` - HTTP request counts with optional client labeling
+- `prometheus_exporter_http_errors_total{status,path,client?}` - HTTP error tracking for 4xx/5xx responses
+
+**System Health**:
+- `prometheus_exporter_inflight_operations{phase}` - Current in-flight operations gauge by phase
+- `prometheus_exporter_restart_total` - Exporter restart counter
+
+### Dual-Emission System
+
+For backward compatibility during migration, PyFulmen supports dual emission:
+
+```python
+# Enable dual emission (emits both old and new metric names)
+import os
+os.environ['PYFULMEN_DUAL_EMISSION'] = 'true'
+
+from pyfulmen.telemetry import ExporterMetrics
+
+# Creates both legacy and new metrics automatically
+exporter_metrics = ExporterMetrics(registry)
+```
+
+**Environment Variable Control**:
+- `PYFULMEN_DUAL_EMISSION=true` - Emit both old and new metric names
+- `PYFULMEN_DUAL_EMISSION=false` (default) - Emit only new metric names
+
+### RefreshContext for Automatic Tracking
+
+The `RefreshContext` context manager provides automatic operation tracking:
+
+```python
+from pyfulmen.telemetry._exporter_metrics import RefreshContext
+
+# Automatic success/error tracking with proper timing
+with RefreshContext(exporter_metrics, "collect") as ctx:
+    # Your refresh logic here
+    data = collect_metrics()
+    
+    # Optional manual error recording
+    if validation_failed:
+        ctx.record_error("validation", "Data validation failed")
+```
+
+**Error Classification**:
+- `validation` - ValueError and subclasses
+- `timeout` - TimeoutError and subclasses  
+- `io` - FileNotFoundError, PermissionError and subclasses
+- `other` - All other exceptions
+
+### Integration Examples
+
+**Basic Usage**:
+```python
+from pyfulmen.telemetry import ExporterMetrics, MetricRegistry
+
+registry = MetricRegistry()
+exporter_metrics = ExporterMetrics(registry)
+
+# Record successful refresh
+exporter_metrics.record_refresh_success("collect", 0.025)
+
+# Record HTTP request
+exporter_metrics.record_http_request(200, "/metrics", client="prometheus")
+
+# Track in-flight operations
+exporter_metrics.increment_inflight("export")
+# ... do work ...
+exporter_metrics.decrement_inflight("export")
+```
+
+**Advanced Context Manager**:
+```python
+from pyfulmen.telemetry._exporter_metrics import RefreshContext
+
+try:
+    with RefreshContext(exporter_metrics, "convert"):
+        # Automatic timing and error classification
+        result = convert_data(data)
+except Exception as e:
+    # Error automatically recorded with proper classification
+    logger.error(f"Convert failed: {e}")
+    raise
+```
+
+### Testing & Validation
+
+Comprehensive test suite with 10 integration test cases:
+
+- ✅ Exporter metrics initialization and validation
+- ✅ Refresh success/error scenarios with proper label validation  
+- ✅ Inflight gauge tracking across multiple phases
+- ✅ HTTP request/error metrics with optional client labeling
+- ✅ Restart metrics tracking
+- ✅ Context manager error classification (validation/io/timeout/other)
+- ✅ Manual error recording within context managers
+- ✅ Dual-emission system functionality
+- ✅ Label validation and edge cases
+
+**Test Coverage**: 100% for all exporter metrics and error scenarios
+
 ## Docscribe Module APIs (v0.1.4+)
 
 PyFulmen provides enhanced documentation processing with frontmatter parsing, header extraction, and clean content reads through the standalone `docscribe` module. These APIs enable tools to extract structured metadata (YAML headers), generate table of contents, and access clean markdown bodies, supporting runtime doc discovery and integration with rendering tools.
@@ -486,9 +598,10 @@ PyFulmen's dependency structure follows the Fulmen ecosystem model to prevent ci
 - ✅ Telemetry Retrofit Complete (all 8 modules instrumented with 16 metrics, Phases 1.5-8)
 - ✅ Application Identity module (canonical metadata, discovery, validation, caching, 64 tests)
 - ✅ Signal Handling module (cross-platform, Windows fallback, asyncio integration, 143 tests)
-- ✅ Enterprise Telemetry system (MetricRegistry, Prometheus export, cross-module integration, 26 tests)
+- ✅ Enterprise Telemetry system (MetricRegistry, Prometheus export, cross-module integration, 36 tests)
+- ✅ Prometheus Exporter Metrics (Crucible v0.2.7 compliance, 7 new metrics, dual-emission system)
 
-**Test Coverage**: 268 tests passing (259 baseline + 9 new telemetry integration tests), 93% coverage across all modules
+**Test Coverage**: 278+ tests passing (259 baseline + 19 new telemetry integration tests), 93% coverage across all modules
 
 ### Next Release (v0.2.0)
 

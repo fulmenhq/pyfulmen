@@ -25,6 +25,14 @@ Testing (isolated registry):
     >>> events = test_registry.get_events()  # Isolated from default registry
 """
 
+from ._alias import (
+    AliasedMetric,
+    create_aliased_counter,
+    create_aliased_gauge,
+    create_aliased_histogram,
+    is_dual_emission_enabled,
+)
+from ._exporter_metrics import ExporterMetrics, RefreshContext
 from ._registry import (
     MetricRegistry,
     clear_metrics,
@@ -54,4 +62,13 @@ __all__ = [
     "validate_metric_event",
     "validate_metric_events",
     "validate_metric_name",
+    # Exporter instrumentation
+    "ExporterMetrics",
+    "RefreshContext",
+    # Alias system for dual-emission
+    "AliasedMetric",
+    "create_aliased_counter",
+    "create_aliased_gauge",
+    "create_aliased_histogram",
+    "is_dual_emission_enabled",
 ]

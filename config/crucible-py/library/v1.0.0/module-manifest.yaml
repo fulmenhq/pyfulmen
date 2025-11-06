@@ -137,24 +137,6 @@ modules:
         target: 95
       - language: typescript
         target: 95
-  - id: signal-handling
-    tier: core
-    requirement: mandatory
-    description: Cross-platform signal handling with Windows fallback mechanisms, asyncio integration, and enterprise features for graceful shutdown and configuration reload workflows.
-    capabilities:
-      - signal_registration
-      - windows_fallback
-      - asyncio_integration
-      - config_reload
-      - structured_logging
-      - telemetry_emission
-    coverage:
-      - language: go
-        target: 90
-      - language: python
-        target: 95
-      - language: typescript
-        target: 85
   - id: cloud-storage
     tier: extension
     requirement: optional
