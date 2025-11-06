@@ -4,9 +4,11 @@ Error wrapping utilities.
 Provides wrap() function to augment Pathfinder errors with telemetry metadata.
 """
 
+import time
 from datetime import UTC, datetime
 from typing import Any
 
+from ..telemetry import counter, histogram
 from .models import FulmenError, PathfinderError
 
 
@@ -43,6 +45,8 @@ def wrap(
         >>> err.severity_level
         3
     """
+    start_time = time.perf_counter()
+
     # Parse base error
     base = PathfinderError(**base_error) if isinstance(base_error, dict) else base_error
 
@@ -60,6 +64,11 @@ def wrap(
     original_serialized = None
     if original is not None:
         original_serialized = _serialize_exception(original)
+
+    # Record telemetry
+    counter("error_handling_wraps_total").inc()
+    duration_ms = (time.perf_counter() - start_time) * 1000
+    histogram("error_handling_wrap_ms").observe(duration_ms)
 
     # Create extended error
     return FulmenError(

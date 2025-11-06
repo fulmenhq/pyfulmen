@@ -5,10 +5,11 @@ xxh3-128 (default, fast) and sha256 (cryptographic) algorithms.
 """
 
 import hashlib
+import time
 
 import xxhash
 
-from pyfulmen.telemetry import MetricRegistry
+from pyfulmen.telemetry import counter, histogram
 
 from .models import Algorithm, Digest
 
@@ -34,16 +35,25 @@ def hash_bytes(data: bytes, algorithm: Algorithm = Algorithm.XXH3_128) -> Digest
         >>> digest.formatted
         'xxh3-128:531df2844447dd5077db03842cd75395'
     """
+    start_time = time.perf_counter()
+
     if algorithm == Algorithm.XXH3_128:
         hasher = xxhash.xxh3_128(data)
         digest_bytes = hasher.digest()
         hex_digest = hasher.hexdigest()
+        counter("fulhash_operations_total_xxh3_128").inc()
     elif algorithm == Algorithm.SHA256:
         hasher = hashlib.sha256(data)
         digest_bytes = hasher.digest()
         hex_digest = hasher.hexdigest()
+        counter("fulhash_operations_total_sha256").inc()
     else:
         raise ValueError(f"Unsupported algorithm: {algorithm}")
+
+    # Record telemetry
+    counter("fulhash_bytes_hashed_total").inc(len(data))
+    duration_ms = (time.perf_counter() - start_time) * 1000
+    histogram("fulhash_operation_ms").observe(duration_ms)
 
     return Digest(
         algorithm=algorithm,
@@ -81,8 +91,7 @@ def hash_string(
         >>> digest.algorithm
         <Algorithm.XXH3_128: 'xxh3-128'>
     """
-    registry = MetricRegistry()
-    registry.counter("fulhash_hash_string_count").inc()
+    counter("fulhash_hash_string_total").inc()
 
     data = text.encode(encoding)
     return hash_bytes(data, algorithm)

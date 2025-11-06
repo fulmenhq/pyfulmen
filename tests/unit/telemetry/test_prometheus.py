@@ -185,26 +185,33 @@ class TestPrometheusExporter:
 
         from pyfulmen.telemetry.models import HistogramBucket, HistogramSummary, MetricEvent
 
-        registry = self.MetricRegistry()
-        exporter = self.PrometheusExporter(registry)
+        # Mock app identity
+        with patch("pyfulmen.telemetry.prometheus.get_identity") as mock_get_identity:
+            mock_identity = Mock()
+            mock_identity.vendor = "fulmenhq"
+            mock_identity.binary_name = "pyfulmen"
+            mock_get_identity.return_value = mock_identity
 
-        buckets = [
-            HistogramBucket(le=1.0, count=1),
-            HistogramBucket(le=5.0, count=3),
-            HistogramBucket(le=float("inf"), count=5),
-        ]
-        summary = HistogramSummary(count=5, sum=25.0, buckets=buckets)
+            registry = self.MetricRegistry()
+            exporter = self.PrometheusExporter(registry)
 
-        event = MetricEvent(timestamp=datetime.now(UTC), name="test_latency_ms", value=summary)
+            buckets = [
+                HistogramBucket(le=1.0, count=1),
+                HistogramBucket(le=5.0, count=3),
+                HistogramBucket(le=float("inf"), count=5),
+            ]
+            summary = HistogramSummary(count=5, sum=25.0, buckets=buckets)
 
-        prometheus_name = exporter._format_metric_name("test_latency_ms")
-        exporter._handle_histogram(prometheus_name, event)
+            event = MetricEvent(timestamp=datetime.now(UTC), name="test_latency_ms", value=summary)
 
-        # Verify histogram collector was created
-        assert prometheus_name in exporter._histogram_collectors
-        collector = exporter._histogram_collectors[prometheus_name]
-        assert collector._name == "test_latency_ms"
-        assert collector._namespace == "fulmenhq_pyfulmen"
+            prometheus_name = exporter._format_metric_name("test_latency_ms")
+            exporter._handle_histogram(prometheus_name, event)
+
+            # Verify histogram collector was created
+            assert prometheus_name in exporter._histogram_collectors
+            collector = exporter._histogram_collectors[prometheus_name]
+            assert collector._name == "test_latency_ms"
+            assert collector._namespace == "fulmenhq_pyfulmen"
 
     def test_refresh_with_counter_events(self, mock_prometheus_classes):
         """Test refresh processes counter events correctly."""

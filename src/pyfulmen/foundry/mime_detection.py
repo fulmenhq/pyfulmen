@@ -6,8 +6,11 @@ plain text formats with full gofulmen v0.1.1 API parity.
 """
 
 import io
+import time
 from pathlib import Path
 from typing import TYPE_CHECKING
+
+from ..telemetry import counter, histogram
 
 if TYPE_CHECKING:
     from .catalog import MimeType
@@ -224,6 +227,8 @@ def detect_mime_type(data: bytes) -> "MimeType | None":
     if not data:
         return None
 
+    start_time = time.perf_counter()
+
     # Get catalog
     catalog = get_default_catalog()
 
@@ -236,25 +241,43 @@ def detect_mime_type(data: bytes) -> "MimeType | None":
 
     # JSON: starts with { or [
     if _detect_json(trimmed):
+        counter("foundry_mime_detections_total_json").inc()
+        duration_ms = (time.perf_counter() - start_time) * 1000
+        histogram("foundry_mime_detection_ms_json").observe(duration_ms)
         return catalog.get_mime_type("json")
 
     # XML: starts with <?xml
     if _detect_xml(trimmed):
+        counter("foundry_mime_detections_total_xml").inc()
+        duration_ms = (time.perf_counter() - start_time) * 1000
+        histogram("foundry_mime_detection_ms_xml").observe(duration_ms)
         return catalog.get_mime_type("xml")
 
     # YAML: has key: value patterns
     if _detect_yaml(trimmed):
+        counter("foundry_mime_detections_total_yaml").inc()
+        duration_ms = (time.perf_counter() - start_time) * 1000
+        histogram("foundry_mime_detection_ms_yaml").observe(duration_ms)
         return catalog.get_mime_type("yaml")
 
     # CSV: has 2+ commas in first line
     if _detect_csv(data):  # Use original data, not trimmed
+        counter("foundry_mime_detections_total_csv").inc()
+        duration_ms = (time.perf_counter() - start_time) * 1000
+        histogram("foundry_mime_detection_ms_csv").observe(duration_ms)
         return catalog.get_mime_type("csv")
 
     # Plain text: >80% printable
     if _is_text_content(data[: min(len(data), 512)]):
+        counter("foundry_mime_detections_total_plain_text").inc()
+        duration_ms = (time.perf_counter() - start_time) * 1000
+        histogram("foundry_mime_detection_ms_plain_text").observe(duration_ms)
         return catalog.get_mime_type("plain-text")
 
     # Unknown/binary
+    counter("foundry_mime_detections_total_unknown").inc()
+    duration_ms = (time.perf_counter() - start_time) * 1000
+    histogram("foundry_mime_detection_ms_unknown").observe(duration_ms)
     return None
 
 

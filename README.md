@@ -4,7 +4,7 @@
 
 Python Fulmen libraries for enterprise-scale development.
 
-**Lifecycle Phase**: `alpha` | **Version**: 0.1.11 | **Coverage**: 93%
+**Lifecycle Phase**: `alpha` | **Version**: 0.1.12 | **Coverage**: 93%
 
 ## Overview
 
@@ -19,7 +19,7 @@ PyFulmen is part of the Fulmen ecosystem, providing templates, processes, and to
 - **Progressive Logging** - Zero-complexity to enterprise-grade logging with SIMPLE → STRUCTURED → ENTERPRISE profiles
 - **Error Handling** - Pathfinder-compatible errors with telemetry metadata and schema validation (v0.1.6+)
 - **Exit Codes** - Standardized 54-code catalog with simplified modes for monitoring/alerting (v0.1.9+)
-- **Telemetry & Metrics** - Counter/gauge/histogram recording with Crucible taxonomy validation (v0.1.6+)
+- **Enterprise Telemetry** - Comprehensive metrics system with MetricRegistry, Prometheus export, and cross-module instrumentation (v0.1.12+)
 - **FulHash** - Fast, consistent hashing with xxh3-128 (default) and sha256 support, thread-safe streaming (v0.1.6+)
 - **Crucible Shim** - Idiomatic Python access to Crucible schemas, docs, and config defaults
 - **Schema Export** - Export Crucible schemas to local files with provenance metadata (v0.1.9+)
@@ -183,6 +183,82 @@ pyfulmen signals windows-fallback --format markdown
 ```
 
 📖 **[Complete Signal Handling Documentation](src/pyfulmen/signals/README.md)** for detailed API reference, asyncio integration, and enterprise features.
+
+## Enterprise Telemetry (v0.1.12+)
+
+PyFulmen provides comprehensive enterprise telemetry with MetricRegistry, Prometheus export, and cross-module instrumentation. The `pyfulmen.telemetry` module implements ADR-0008 with thread-safe metrics collection and performance optimization.
+
+### Quick Start
+
+```python
+from pyfulmen.telemetry import counter, gauge, histogram, get_global_registry
+
+# Create metrics instantly - zero complexity
+ops_counter = counter("operations_total")
+memory_gauge = gauge("memory_bytes")
+request_duration = histogram("request_duration_ms")
+
+# Use in your code
+ops_counter.inc()
+memory_gauge.set(1024 * 1024)
+request_duration.observe(45.2)
+
+# Retrieve metrics for monitoring
+registry = get_global_registry()
+events = registry.get_events()
+for event in events:
+    print(f"{event.name}: {event.value}")
+```
+
+### Enterprise Features
+
+```python
+from pyfulmen.telemetry import MetricRegistry, PrometheusExporter
+
+# Create custom registry
+registry = MetricRegistry()
+
+# Add metrics with labels
+request_counter = registry.counter("http_requests_total", labels=["method", "status"])
+request_counter.labels(method="GET", status="200").inc()
+
+# Export for Prometheus
+exporter = PrometheusExporter(registry)
+metrics_text = exporter.export()
+print(metrics_text)
+```
+
+### Cross-Module Instrumentation
+
+PyFulmen modules automatically instrument themselves:
+
+```python
+from pyfulmen import foundry, fulhash, error_handling
+
+# These operations are automatically instrumented
+mime_type = foundry.detect_mime_type("example.txt")  # Records timing and algorithm
+file_hash = fulhash.hash_file("example.txt")         # Records bytes processed and timing
+wrapped_error = error_handling.wrap(base_error)      # Records wrap operations
+
+# All metrics are available in the global registry
+registry = get_global_registry()
+events = registry.get_events()
+```
+
+### CLI Commands
+
+```bash
+# Show telemetry system information
+pyfulmen telemetry info
+
+# List available metrics with current values
+pyfulmen telemetry list
+
+# Export metrics in Prometheus format
+pyfulmen telemetry export --format prometheus
+```
+
+📖 **[Complete Telemetry Documentation](src/pyfulmen/telemetry/README.md)** for detailed API reference, Prometheus integration, and instrumentation patterns.
 
 ## Installation
 

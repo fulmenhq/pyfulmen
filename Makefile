@@ -203,7 +203,7 @@ validate-ssot-provenance:
 	@uv run python scripts/validate_ssot_provenance.py
 
 .PHONY: precommit
-precommit: fmt lint
+precommit: fmt lint test
 	@echo "Running goneat pre-commit assessment..."
 	@./bin/goneat assess --hook pre-commit
 	@echo "✓ Pre-commit hooks passed"

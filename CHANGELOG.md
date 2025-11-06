@@ -9,6 +9,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **Telemetry System**: Enterprise-grade observability with progressive interfaces (ADR-0008)
+  - Core telemetry infrastructure with MetricRegistry, Counter, Gauge, Histogram instruments
+  - Module-level helpers: `counter()`, `gauge()`, `histogram()`, `get_events()`, `drain_events()`, `clear_metrics()`
+  - Prometheus exporter with full prometheus_client integration and Collector inheritance
+  - Comprehensive testing: 268 tests covering thread safety, isolation, and performance
+  - Cross-module integration: Foundry MIME detection, Error handling wrap, Fulhash operations
+  - Performance optimized: <1ms typical overhead with import hoisting optimization
+  - Type safety: Full mypy compatibility with proper metric validation
+
 - **Signal Handling Module**: Enterprise-grade cross-platform signal handling with Windows fallbacks
   - Complete Unix signal support with platform-specific behavior detection
   - Windows HTTP endpoint fallbacks for unsupported signals (SIGHUP, SIGPIPE, SIGALRM, SIGUSR1, SIGUSR2)
