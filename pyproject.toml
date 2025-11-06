@@ -44,6 +44,9 @@ dev = [
     "pytest-cov>=4.1.0",
     "ruff>=0.1.0",
 ]
+telemetry = [
+    "prometheus_client>=0.20.0,<0.21",
+]
 
 [build-system]
 requires = ["hatchling"]

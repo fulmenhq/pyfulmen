@@ -115,7 +115,25 @@ def validate_metric_events(events: list[MetricEvent | dict[str, Any]]) -> bool:
     return all(validate_metric_event(event) for event in events)
 
 
+def validate_metric_name(name: str) -> None:
+    """Validate metric name against taxonomy.
+
+    Args:
+        name: Metric name to validate
+
+    Raises:
+        ValueError: If metric name is not in taxonomy
+    """
+    taxonomy = _load_metrics_taxonomy()
+    valid_names = [metric["name"] for metric in taxonomy.get("metrics", [])]
+
+    if name not in valid_names:
+        msg = f"Metric name '{name}' not found in taxonomy. Valid names: {valid_names}"
+        raise ValueError(msg)
+
+
 __all__ = [
     "validate_metric_event",
     "validate_metric_events",
+    "validate_metric_name",
 ]

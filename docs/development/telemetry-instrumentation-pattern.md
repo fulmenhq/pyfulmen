@@ -16,6 +16,40 @@ This document defines the standard pattern for adding telemetry instrumentation 
 
 ### Wrapper Method with Try/Finally
 
+**Option A: Using Module-Level Helpers (Recommended)**
+
+```python
+import time
+from pyfulmen.telemetry import counter, histogram
+
+def public_operation(self, args):
+    """Public API method with telemetry instrumentation.
+
+    Telemetry:
+        - Emits operation_name_ms histogram (operation duration)
+        - Emits operation_name_errors counter (on exceptions)
+    """
+    start_time = time.perf_counter()
+
+    try:
+        return self._public_operation_impl(args)
+    except Exception as err:
+        # Emit error counter
+        counter("operation_name_errors").inc()
+        raise
+    finally:
+        # Always emit duration metric
+        duration_ms = (time.perf_counter() - start_time) * 1000
+        histogram("operation_name_ms").observe(duration_ms)
+
+def _public_operation_impl(self, args):
+    """Internal implementation without telemetry wrapper."""
+    # Original logic here, unchanged
+    pass
+```
+
+**Option B: Using Explicit Registry**
+
 ```python
 import time
 from pyfulmen.telemetry import MetricRegistry
@@ -64,6 +98,11 @@ def _public_operation_impl(self, args):
 **Naming**: `<module>_<operation>_ms`
 
 ```python
+# Using module-level helpers (recommended)
+histogram("pathfinder_find_ms").observe(duration_ms)
+histogram("config_load_ms").observe(duration_ms)
+
+# Using explicit registry
 registry.histogram("pathfinder_find_ms").observe(duration_ms)
 registry.histogram("config_load_ms").observe(duration_ms)
 ```
@@ -81,6 +120,12 @@ registry.histogram("config_load_ms").observe(duration_ms)
 **Naming**: `<module>_<event>_<unit>` or `<module>_<event>s`
 
 ```python
+# Using module-level helpers (recommended)
+counter("pathfinder_validation_errors").inc()
+counter("pathfinder_security_warnings").inc()
+counter("foundry_lookup_count").inc()
+
+# Using explicit registry
 registry.counter("pathfinder_validation_errors").inc()
 registry.counter("pathfinder_security_warnings").inc()
 registry.counter("foundry_lookup_count").inc()
@@ -100,6 +145,11 @@ registry.counter("foundry_lookup_count").inc()
 **Naming**: `<module>_<state>_<unit>`
 
 ```python
+# Using module-level helpers (recommended)
+gauge("cache_size_bytes").set(cache.size)
+gauge("active_connections_count").set(len(connections))
+
+# Using explicit registry
 registry.gauge("cache_size_bytes").set(cache.size)
 registry.gauge("active_connections_count").set(len(connections))
 ```
@@ -126,6 +176,15 @@ Before adding metrics, verify they exist in Crucible taxonomy:
 
 ### Step 3: Add Imports
 
+**Option A: Using Module-Level Helpers (Recommended)**
+
+```python
+import time
+from pyfulmen.telemetry import counter, histogram, gauge
+```
+
+**Option B: Using Explicit Registry**
+
 ```python
 import time
 from pyfulmen.telemetry import MetricRegistry
@@ -140,30 +199,29 @@ from pyfulmen.telemetry import MetricRegistry
 
 ### Step 5: Add Tests
 
-**Smoke Test** (current limitation):
+**Full Test** (using module-level helpers):
+
+```python
+def test_operation_emits_duration_metric(self):
+    """Verify operation emits duration histogram."""
+    from pyfulmen.telemetry import clear_metrics, get_events
+
+    clear_metrics()
+    result = module.operation(args)
+
+    events = get_events()
+    duration_events = [e for e in events if e.name == "operation_ms"]
+    assert len(duration_events) == 1
+    assert duration_events[0].value.count > 0
+```
+
+**Smoke Test** (alternative approach):
 
 ```python
 def test_operation_with_telemetry_enabled(self):
     """Verify operation executes with telemetry without errors."""
     result = module.operation(args)
     assert result is not None  # Verify success
-    # Note: Full metric assertions require module-level helpers (ADR-0008)
-```
-
-**Future Full Test** (when helpers available):
-
-```python
-def test_operation_emits_duration_metric(self):
-    """Verify operation emits duration histogram."""
-    from pyfulmen.telemetry import get_registry, clear_metrics
-
-    clear_metrics()
-    result = module.operation(args)
-
-    events = get_registry().get_events()
-    duration_events = [e for e in events if e.name == "operation_ms"]
-    assert len(duration_events) == 1
-    assert duration_events[0].value.count > 0
 ```
 
 ### Step 6: Update Documentation
@@ -239,6 +297,38 @@ def _find_files_impl(self, query: FindQuery) -> list[PathResult]:
     return results
 ```
 
+### After (v0.1.6 Phase 2 - Module Helpers)
+
+```python
+def find_files(self, query: FindQuery) -> list[PathResult]:
+    """
+    Perform file discovery.
+
+    Telemetry:
+        - Emits pathfinder_find_ms histogram (operation duration)
+    """
+    start_time = time.perf_counter()
+
+    try:
+        return self._find_files_impl(query)
+    finally:
+        duration_ms = (time.perf_counter() - start_time) * 1000
+        histogram("pathfinder_find_ms").observe(duration_ms)
+
+def _find_files_impl(self, query: FindQuery) -> list[PathResult]:
+    """Internal implementation of find_files without telemetry."""
+    # Original logic unchanged - just moved here
+    if self.config.validate_inputs:
+        schema_validator.validate_against_schema(...)
+
+    results: list[PathResult] = []
+    root_path = Path(query.root).resolve()
+
+    # ... discovery logic ...
+
+    return results
+```
+
 ### After (v0.1.6 Phase 1.5 - Complete)
 
 ```python
@@ -295,6 +385,61 @@ def _find_files_impl(self, query: FindQuery, registry: MetricRegistry) -> list[P
     return results
 ```
 
+### After (v0.1.6 Phase 2 - Module Helpers)
+
+```python
+def find_files(self, query: FindQuery) -> list[PathResult]:
+    """
+    Perform file discovery.
+
+    Telemetry:
+        - Emits pathfinder_find_ms histogram (operation duration)
+        - Emits pathfinder_validation_errors counter (on validation failure)
+        - Emits pathfinder_security_warnings counter (on security violation)
+    """
+    start_time = time.perf_counter()
+
+    try:
+        return self._find_files_impl(query)
+    finally:
+        duration_ms = (time.perf_counter() - start_time) * 1000
+        histogram("pathfinder_find_ms").observe(duration_ms)
+
+def _find_files_impl(self, query: FindQuery) -> list[PathResult]:
+    """Internal implementation with module-level error counters."""
+    # Validation with error counter
+    if self.config.validate_inputs:
+        try:
+            schema_validator.validate_against_schema(...)
+        except ValueError:
+            counter("pathfinder_validation_errors").inc()
+            raise
+
+    # Discovery logic with security counter
+    for pattern in query.include:
+        matches = root_path.glob(pattern)
+        for match in matches:
+            try:
+                # Path safety validation
+                try:
+                    validate_path(str(abs_match))
+                except PathTraversalError:
+                    counter("pathfinder_security_warnings").inc()
+                    raise
+
+                # Constraint violation handling
+                if self._violates_constraint(...):
+                    violation = PathTraversalError(...)
+                    counter("pathfinder_security_warnings").inc()
+
+                    if constraint.enforcement_level == EnforcementLevel.STRICT.value:
+                        raise violation
+            except PathTraversalError:
+                raise
+
+    return results
+```
+
 ## Performance Considerations
 
 ### Overhead Measurement
@@ -337,18 +482,9 @@ for item in items:
 
 ## Testing Strategy
 
-### Current Limitations (v0.1.6)
+### Module-Level Helpers Available (v0.1.6 Phase 2)
 
-Each `MetricRegistry()` call creates an independent instance (per ADR-0008 design). This means:
-
-- Telemetry IS emitted correctly
-- Tests CANNOT observe metrics (different instance)
-
-**Workaround**: Smoke tests verify instrumented code executes without errors.
-
-### Future Testing (When Module Helpers Available)
-
-Per ADR-0008, module-level helpers will provide singleton access:
+Module-level helpers provide singleton access to the default registry:
 
 ```python
 from pyfulmen.telemetry import counter, histogram, clear_metrics, get_events
@@ -364,7 +500,21 @@ def test_operation_emits_metric():
     assert any(e.name == "operation_ms" for e in events)
 ```
 
-**Status**: Module helpers not yet implemented (tracked for Phase 1.5)
+**Status**: Module helpers implemented in Phase 2 (ADR-0008)
+
+### Test Isolation
+
+For test isolation, use `clear_metrics()` in test setup:
+
+```python
+import pytest
+from pyfulmen.telemetry import clear_metrics
+
+@pytest.fixture(autouse=True)
+def clear_telemetry():
+    """Clear metrics between tests."""
+    clear_metrics()
+```
 
 ## Common Patterns by Module
 
@@ -373,32 +523,30 @@ def test_operation_emits_metric():
 ```python
 def load_file(self, path: str):
     start = time.perf_counter()
-    registry = MetricRegistry()
 
     try:
         return self._load_file_impl(path)
     except (FileNotFoundError, PermissionError) as err:
-        registry.counter("file_load_errors").inc()
+        counter("file_load_errors").inc()
         raise
     finally:
         duration_ms = (time.perf_counter() - start) * 1000
-        registry.histogram("file_load_ms").observe(duration_ms)
+        histogram("file_load_ms").observe(duration_ms)
 ```
 
 ### Validation Operations (Schema, Config)
 
 ```python
 def validate(self, data: dict):
-    registry = MetricRegistry()
-    registry.counter("validations_total").inc()
+    counter("validations_total").inc()
 
     try:
         result = self._validate_impl(data)
         if not result.is_valid:
-            registry.counter("validation_errors").inc()
+            counter("validation_errors").inc()
         return result
     except Exception:
-        registry.counter("validation_errors").inc()
+        counter("validation_errors").inc()
         raise
 ```
 
@@ -406,12 +554,11 @@ def validate(self, data: dict):
 
 ```python
 def get_pattern(self, name: str):
-    registry = MetricRegistry()
-    registry.counter("lookup_count").inc()
+    counter("lookup_count").inc()
 
     pattern = self._patterns.get(name)
     if pattern is None:
-        registry.counter("lookup_misses").inc()
+        counter("lookup_misses").inc()
     return pattern
 ```
 
@@ -425,14 +572,13 @@ def hash_file(path: Path | str, algorithm: Algorithm = Algorithm.XXH3_128) -> Di
         - Emits fulhash_hash_file_count counter (hash operations)
         - Emits fulhash_errors_count counter (file I/O errors)
     """
-    registry = MetricRegistry()
-    registry.counter("fulhash_hash_file_count").inc()
+    counter("fulhash_hash_file_count").inc()
 
     try:
         # Original hash computation logic
         return _compute_hash(path, algorithm)
     except (FileNotFoundError, PermissionError):
-        registry.counter("fulhash_errors_count").inc()
+        counter("fulhash_errors_count").inc()
         raise
 ```
 
@@ -445,12 +591,12 @@ def hash_file(path: Path | str, algorithm: Algorithm = Algorithm.XXH3_128) -> Di
 When adding telemetry to a module:
 
 - [ ] Review Crucible taxonomy for applicable metrics
-- [ ] Add imports (`time`, `MetricRegistry`)
+- [ ] Add imports (`time`, `counter`/`histogram`/`gauge` or `MetricRegistry`)
 - [ ] Extract logic to `_<method>_impl()` for each public method
 - [ ] Add try/finally wrapper with histogram
 - [ ] Add counter emissions for error paths
 - [ ] Update method docstrings with Telemetry section
-- [ ] Add smoke test for instrumented path
+- [ ] Add full test using `clear_metrics()` and `get_events()` for test isolation
 - [ ] Run full test suite (verify zero regressions)
 - [ ] Update CHANGELOG with telemetry additions
 - [ ] Performance check (< 1% overhead)
@@ -486,20 +632,18 @@ Skip:
 
 ```python
 def complex_operation(self):
-    registry = MetricRegistry()
-
     # Step 1
     start = time.perf_counter()
     self._step1()
-    registry.histogram("step1_ms").observe((time.perf_counter() - start) * 1000)
+    histogram("step1_ms").observe((time.perf_counter() - start) * 1000)
 
     # Step 2
     start = time.perf_counter()
     self._step2()
-    registry.histogram("step2_ms").observe((time.perf_counter() - start) * 1000)
+    histogram("step2_ms").observe((time.perf_counter() - start) * 1000)
 
     # Total
-    registry.histogram("complex_operation_ms").observe(total_duration_ms)
+    histogram("complex_operation_ms").observe(total_duration_ms)
 ```
 
 ### Q: What about nested instrumentation?
@@ -528,5 +672,6 @@ Aggregation tools can correlate if needed.
 
 ## Changelog
 
+- **2025-11-06 v1.2**: Updated for Phase 2 module-level helpers (ADR-0008 implementation)
 - **2025-10-24 v1.1**: Added Phase 8 FulHash performance-sensitive pattern, linked Crucible ADR-0008
 - **2025-10-24 v1.0**: Initial version based on Pathfinder Phase 1 retrofit

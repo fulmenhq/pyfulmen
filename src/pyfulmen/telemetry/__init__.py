@@ -3,30 +3,55 @@ Telemetry module.
 
 Provides metrics instrumentation for FulmenHQ ecosystem applications.
 
-This module implements Phase 1 (Days 3-4) of the v0.1.6 error/telemetry rollout.
+This module implements Phase 2 (module-level helpers) of v0.1.6 telemetry rollout.
 
-Example:
+Simple Usage (default registry):
+    >>> from pyfulmen.telemetry import counter, histogram, gauge
+    >>> counter("requests_total").inc()
+    >>> gauge("memory_usage_bytes").set(1024)
+    >>> histogram("request_duration_ms").observe(123.5)
+
+Advanced Usage (custom registry):
     >>> from pyfulmen.telemetry import MetricRegistry
     >>> registry = MetricRegistry()
     >>> counter = registry.counter("requests_total")
     >>> counter.inc()
-    >>>
-    >>> gauge = registry.gauge("queue_depth")
-    >>> gauge.set(42)
-    >>>
-    >>> hist = registry.histogram("request_duration_ms")
-    >>> hist.observe(123.5)
+
+Testing (isolated registry):
+    >>> from pyfulmen.telemetry import MetricRegistry, clear_metrics
+    >>> test_registry = MetricRegistry()
+    >>> test_counter = test_registry.counter("test_metric")
+    >>> test_counter.inc()
+    >>> events = test_registry.get_events()  # Isolated from default registry
 """
 
-from ._registry import MetricRegistry
-from ._validate import validate_metric_event, validate_metric_events
+from ._registry import (
+    MetricRegistry,
+    clear_metrics,
+    counter,
+    drain_events,
+    gauge,
+    get_events,
+    histogram,
+)
+from ._validate import validate_metric_event, validate_metric_events, validate_metric_name
 from .models import HistogramBucket, HistogramSummary, MetricEvent
 
 __all__ = [
+    # Core classes
     "MetricRegistry",
     "MetricEvent",
     "HistogramSummary",
     "HistogramBucket",
+    # Helper functions (default registry)
+    "counter",
+    "gauge",
+    "histogram",
+    "get_events",
+    "drain_events",
+    "clear_metrics",
+    # Validation functions
     "validate_metric_event",
     "validate_metric_events",
+    "validate_metric_name",
 ]

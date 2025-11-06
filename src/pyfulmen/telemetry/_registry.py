@@ -1,7 +1,7 @@
 """
 Metric registry.
 
-Thread-safe singleton registry for managing metric instruments.
+Thread-safe registry for managing metric instruments.
 """
 
 import threading
@@ -13,7 +13,7 @@ from .models import MetricEvent
 class MetricRegistry:
     """Thread-safe metric registry.
 
-    Singleton registry for creating and tracking metric instruments.
+    Registry for creating and tracking metric instruments.
     All operations are thread-safe via locking.
 
     Example:
@@ -91,6 +91,20 @@ class MetricRegistry:
         with self._lock:
             return list(self._events)
 
+    def drain_events(self) -> list[MetricEvent]:
+        """Get and clear all recorded events.
+
+        This method consumes all events and clears the internal buffer,
+        preventing memory leaks in long-running applications.
+
+        Returns:
+            List of MetricEvent instances that were consumed
+        """
+        with self._lock:
+            events = list(self._events)
+            self._events.clear()
+            return events
+
     def clear(self) -> None:
         """Clear all events and instruments."""
         with self._lock:
@@ -98,3 +112,121 @@ class MetricRegistry:
             self._counters.clear()
             self._gauges.clear()
             self._histograms.clear()
+
+
+# Global default registry singleton for simple use cases
+_default_registry = MetricRegistry()
+
+
+def counter(name: str) -> Counter:
+    """Get or create a counter from the default registry.
+
+    This is a convenience function that uses the global default registry.
+    For testing or advanced use cases, create a MetricRegistry instance directly.
+
+    Args:
+        name: Counter name
+
+    Returns:
+        Counter instrument from default registry
+
+    Example:
+        >>> from pyfulmen.telemetry import counter
+        >>> c = counter("requests_total")
+        >>> c.inc()
+    """
+    return _default_registry.counter(name)
+
+
+def gauge(name: str) -> Gauge:
+    """Get or create a gauge from the default registry.
+
+    This is a convenience function that uses the global default registry.
+    For testing or advanced use cases, create a MetricRegistry instance directly.
+
+    Args:
+        name: Gauge name
+
+    Returns:
+        Gauge instrument from default registry
+
+    Example:
+        >>> from pyfulmen.telemetry import gauge
+        >>> g = gauge("memory_usage_bytes")
+        >>> g.set(1024)
+    """
+    return _default_registry.gauge(name)
+
+
+def histogram(name: str, buckets: list[float] | None = None) -> Histogram:
+    """Get or create a histogram from the default registry.
+
+    This is a convenience function that uses the global default registry.
+    For testing or advanced use cases, create a MetricRegistry instance directly.
+
+    Args:
+        name: Histogram name
+        buckets: Custom bucket boundaries (optional)
+
+    Returns:
+        Histogram instrument from default registry
+
+    Example:
+        >>> from pyfulmen.telemetry import histogram
+        >>> h = histogram("request_duration_ms")
+        >>> h.observe(42.5)
+    """
+    return _default_registry.histogram(name, buckets)
+
+
+def get_events() -> list[MetricEvent]:
+    """Get all events from the default registry.
+
+    This is a convenience function that uses the global default registry.
+    For testing or advanced use cases, create a MetricRegistry instance directly.
+
+    Returns:
+        List of MetricEvent instances from default registry
+
+    Example:
+        >>> from pyfulmen.telemetry import get_events
+        >>> events = get_events()
+        >>> len(events)
+        3
+    """
+    return _default_registry.get_events()
+
+
+def drain_events() -> list[MetricEvent]:
+    """Get and clear all events from the default registry.
+
+    This is a convenience function that uses the global default registry.
+    For testing or advanced use cases, create a MetricRegistry instance directly.
+
+    Returns:
+        List of MetricEvent instances that were consumed from default registry
+
+    Example:
+        >>> from pyfulmen.telemetry import drain_events
+        >>> events = drain_events()
+        >>> len(events)
+        3
+        >>> # Events are now cleared from default registry
+        >>> len(get_events())
+        0
+    """
+    return _default_registry.drain_events()
+
+
+def clear_metrics() -> None:
+    """Clear all events and instruments from the default registry.
+
+    This is a convenience function that uses the global default registry.
+    For testing or advanced use cases, create a MetricRegistry instance directly.
+
+    Example:
+        >>> from pyfulmen.telemetry import clear_metrics
+        >>> clear_metrics()
+        >>> # Default registry is now empty
+    """
+    _default_registry.clear()

@@ -174,3 +174,45 @@ class TestMetricRegistry:
 
         events = registry.get_events()
         assert len(events) == 1000
+
+    def test_drain_events_consumes_events(self) -> None:
+        """Test that drain_events consumes and clears events."""
+        registry = MetricRegistry()
+        counter = registry.counter("drain_test")
+
+        # Record some events
+        counter.inc()
+        counter.inc()
+        counter.inc()
+
+        # Verify events exist
+        events_before = registry.get_events()
+        assert len(events_before) == 3
+
+        # Drain events
+        drained_events = registry.drain_events()
+        assert len(drained_events) == 3
+
+        # Verify events are consumed
+        events_after = registry.get_events()
+        assert len(events_after) == 0
+
+        # Verify drained events have correct structure
+        # Counter records cumulative values: 1.0, 2.0, 3.0
+        expected_values = [1.0, 2.0, 3.0]
+        actual_values = [event.value for event in drained_events]
+        assert actual_values == expected_values
+        for event in drained_events:
+            assert event.name == "drain_test"
+
+    def test_drain_events_with_no_events(self) -> None:
+        """Test drain_events when no events exist."""
+        registry = MetricRegistry()
+
+        # Drain empty registry
+        drained_events = registry.drain_events()
+        assert len(drained_events) == 0
+
+        # Verify still empty
+        events = registry.get_events()
+        assert len(events) == 0
