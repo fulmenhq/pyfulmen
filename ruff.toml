@@ -34,8 +34,8 @@ select = [
 "scripts/demos/*.py" = ["E402"]
 # Module __main__.py files: allow imports not at top (E402) for sys.path manipulation
 "**/__main__.py" = ["E402"]
-# Generated exit_codes.py: allow long lines (E501) for context strings
-"src/pyfulmen/foundry/exit_codes.py" = ["E501"]
+# Generated exit_codes.py: allow long lines (E501) for context strings and UP035 for conditional NotRequired import
+"src/pyfulmen/foundry/exit_codes.py" = ["E501", "UP035"]
 # Test fixture files: ignore all linting (they are data files, not code)
 "tests/fixtures/foundry/mime/*.json" = ["ALL"]
 "tests/fixtures/pathfinder/sample-files/*.txt" = ["ALL"]
