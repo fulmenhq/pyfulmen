@@ -13,13 +13,14 @@ See: https://github.com/fulmenhq/crucible/blob/main/docs/standards/library/found
 """
 
 from enum import Enum, IntEnum
-from typing import Literal, TypedDict
 
 # NotRequired is available in Python 3.11+ or via typing_extensions
 try:
     from typing import NotRequired
 except ImportError:
     from typing import NotRequired  # type: ignore
+
+from typing import Literal, TypedDict
 
 
 class ExitCode(IntEnum):
