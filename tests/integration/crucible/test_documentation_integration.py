@@ -46,14 +46,14 @@ class TestRealDocumentAccess:
 
     def test_newly_synced_doc_with_frontmatter(self):
         """Test the newly synced documentation module standard."""
-        content, metadata = crucible.get_documentation_with_metadata("standards/library/modules/documentation.md")
+        content, metadata = crucible.get_documentation_with_metadata("standards/library/modules/docscribe.md")
         assert isinstance(content, str)
         assert len(content) > 0
 
         # This doc should have frontmatter (we just saw it)
         assert metadata is not None
         assert "title" in metadata
-        assert "Documentation Processing Module" in metadata["title"]
+        assert "Docscribe Module" in metadata["title"]
         assert "status" in metadata
         assert metadata["status"] == "stable"
 
@@ -101,7 +101,7 @@ class TestBackwardCompatibilityIntegration:
         """Legacy read_doc should still include frontmatter."""
         from pyfulmen.crucible import docs
 
-        raw_content = docs.read_doc("standards/library/modules/documentation.md")
+        raw_content = docs.read_doc("standards/library/modules/docscribe.md")
         # Should start with frontmatter
         assert raw_content.startswith("---")
 
@@ -109,8 +109,8 @@ class TestBackwardCompatibilityIntegration:
         """New API should remove frontmatter that legacy API includes."""
         from pyfulmen.crucible import docs
 
-        raw_content = docs.read_doc("standards/library/modules/documentation.md")
-        clean_content = crucible.get_documentation("standards/library/modules/documentation.md")
+        raw_content = docs.read_doc("standards/library/modules/docscribe.md")
+        clean_content = crucible.get_documentation("standards/library/modules/docscribe.md")
 
         # Raw should have frontmatter, clean should not
         assert raw_content.startswith("---")
@@ -128,7 +128,7 @@ class TestPerformance:
 
         start = time.perf_counter()
         for _ in range(100):
-            content, metadata = crucible.get_documentation_with_metadata("standards/library/modules/documentation.md")
+            content, metadata = crucible.get_documentation_with_metadata("standards/library/modules/docscribe.md")
         elapsed = time.perf_counter() - start
 
         # 100 iterations should complete in reasonable time
