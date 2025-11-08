@@ -19,7 +19,7 @@ from typing import Literal, TypedDict
 try:
     from typing import NotRequired
 except ImportError:
-    from typing_extensions import NotRequired  # type: ignore
+    from typing import NotRequired  # type: ignore
 
 
 class ExitCode(IntEnum):

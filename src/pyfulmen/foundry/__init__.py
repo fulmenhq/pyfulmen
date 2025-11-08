@@ -10,6 +10,17 @@ This module provides:
 - Text similarity and normalization utilities (similarity submodule)
 """
 
+from crucible.pyfulmen.foundry.exit_codes import (
+    EXIT_CODE_METADATA,
+    EXIT_CODES_VERSION,
+    ExitCode,
+    SimplifiedMode,
+    get_detailed_codes,
+    get_exit_code_info,
+    get_exit_codes_version,
+    map_to_simplified,
+)
+
 from . import similarity
 from .catalog import (
     Country,
@@ -40,16 +51,6 @@ from .catalog import (
     list_countries,
     list_mime_types,
     validate_country_code,
-)
-from .exit_codes import (
-    EXIT_CODE_METADATA,
-    EXIT_CODES_VERSION,
-    ExitCode,
-    SimplifiedMode,
-    get_detailed_codes,
-    get_exit_code_info,
-    get_exit_codes_version,
-    map_to_simplified,
 )
 from .models import (
     FulmenBaseModel,

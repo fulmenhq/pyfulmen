@@ -2,8 +2,9 @@ version: v1.1.0
 sources:
   - name: crucible
     repo: fulmenhq/crucible
-    ref: main
+    ref: v0.2.8
     sync_path_base: lang/python
+    force_remote: true
     assets:
       - type: doc
         source_path: docs
@@ -28,12 +29,13 @@ sources:
         paths:
           - '**/*'
         subdir: .crucible/metadata
+      # Sync all Crucible Python source assets
       - type: src
         source_path: src/pyfulmen
         paths:
           - '**/*.py'
-        subdir: src/pyfulmen
+        subdir: src/crucible
 strategy:
   on_conflict: overwrite
-  prune_stale: true
+  prune_stale: false
   verify_checksums: false

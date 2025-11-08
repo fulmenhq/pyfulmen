@@ -6,7 +6,7 @@ Ensures PyFulmen exit codes exactly match the Crucible SSOT catalog.
 import json
 from pathlib import Path
 
-from pyfulmen.foundry.exit_codes import (
+from pyfulmen.foundry import (
     ExitCode,
     SimplifiedMode,
     get_exit_code_info,
