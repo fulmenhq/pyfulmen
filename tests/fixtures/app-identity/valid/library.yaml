@@ -5,7 +5,6 @@ app:
   env_prefix: FULMEN_
   config_name: pyfulmen
   description: Python Fulmen libraries
-
 metadata:
   project_url: https://github.com/fulmenhq/pyfulmen
   support_email: dev@3leaps.net

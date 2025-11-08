@@ -316,15 +316,18 @@ PyFulmen implements **Crucible v0.2.7 taxonomy compliance** with comprehensive P
 ### Core Metrics
 
 **Refresh Operations**:
+
 - `prometheus_exporter_refresh_success_total{phase}` - Successful refresh operations by phase
 - `prometheus_exporter_refresh_errors_total{phase,error_type}` - Failed refresh operations with error classification
 - `prometheus_exporter_refresh_duration_seconds{phase,result}` - Refresh operation timing histograms
 
 **HTTP Request Handling**:
+
 - `prometheus_exporter_http_requests_total{status,path,client?}` - HTTP request counts with optional client labeling
 - `prometheus_exporter_http_errors_total{status,path,client?}` - HTTP error tracking for 4xx/5xx responses
 
 **System Health**:
+
 - `prometheus_exporter_inflight_operations{phase}` - Current in-flight operations gauge by phase
 - `prometheus_exporter_restart_total` - Exporter restart counter
 
@@ -344,6 +347,7 @@ exporter_metrics = ExporterMetrics(registry)
 ```
 
 **Environment Variable Control**:
+
 - `PYFULMEN_DUAL_EMISSION=true` - Emit both old and new metric names
 - `PYFULMEN_DUAL_EMISSION=false` (default) - Emit only new metric names
 
@@ -358,21 +362,23 @@ from pyfulmen.telemetry._exporter_metrics import RefreshContext
 with RefreshContext(exporter_metrics, "collect") as ctx:
     # Your refresh logic here
     data = collect_metrics()
-    
+
     # Optional manual error recording
     if validation_failed:
         ctx.record_error("validation", "Data validation failed")
 ```
 
 **Error Classification**:
+
 - `validation` - ValueError and subclasses
-- `timeout` - TimeoutError and subclasses  
+- `timeout` - TimeoutError and subclasses
 - `io` - FileNotFoundError, PermissionError and subclasses
 - `other` - All other exceptions
 
 ### Integration Examples
 
 **Basic Usage**:
+
 ```python
 from pyfulmen.telemetry import ExporterMetrics, MetricRegistry
 
@@ -392,6 +398,7 @@ exporter_metrics.decrement_inflight("export")
 ```
 
 **Advanced Context Manager**:
+
 ```python
 from pyfulmen.telemetry._exporter_metrics import RefreshContext
 
@@ -410,7 +417,7 @@ except Exception as e:
 Comprehensive test suite with 10 integration test cases:
 
 - ✅ Exporter metrics initialization and validation
-- ✅ Refresh success/error scenarios with proper label validation  
+- ✅ Refresh success/error scenarios with proper label validation
 - ✅ Inflight gauge tracking across multiple phases
 - ✅ HTTP request/error metrics with optional client labeling
 - ✅ Restart metrics tracking

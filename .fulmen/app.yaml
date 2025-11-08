@@ -4,7 +4,6 @@ app:
   env_prefix: PYFULMEN_
   config_name: pyfulmen
   description: PyFulmen Python library for enterprise-grade applications
-
 metadata:
   project_url: https://github.com/fulmenhq/pyfulmen
   support_email: support@fulmenhq.com

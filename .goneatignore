@@ -5,3 +5,7 @@ tests/fixtures/**/*.txt
 # Deliberately malformed files used for error testing
 tests/fixtures/errors/invalid_error_missing_code.json
 tests/fixtures/foundry/mime/json-with-utf8-bom.json
+
+# Crucible test fixtures - deliberately malformed for validation testing
+config/crucible-py/library/foundry/fixtures/signals/invalid/malformed.yaml
+config/crucible-py/repository/app-identity/fixtures/invalid/*.yaml

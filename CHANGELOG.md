@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### [0.1.10] - 2025-11-08
 
 ### Fixed
+
 - **Critical Architecture**: Resolved dangerous mixing of custom implementation and Crucible-synced code in same directory
 - **Directory Separation**: Implemented proper separation between `src/pyfulmen/` (custom) and `src/crucible/` (synced) following TSFulmen patterns
 - **Sync Configuration**: Fixed `.goneat/ssot-consumer.yaml` to sync Crucible assets to correct location without conflicts
@@ -20,11 +21,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Linting**: Added ruff.toml ignores for Crucible-generated files in `src/crucible/`
 
 ### Changed
+
 - **Sync Strategy**: Changed from mixed directory to clean separation pattern
 - **Crucible Pin**: Maintained v0.2.8 pin with proper remote configuration
 - **Build Process**: All build commands (`clean`, `bootstrap`, `build`, `prepush`) now work correctly
 
 ### Security
+
 - **Force Remote**: Prevents inadvertent local folder usage that could cause reproducibility issues
 - **Asset Isolation**: Crucible-generated code isolated from custom implementation
 

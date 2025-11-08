@@ -2,6 +2,6 @@
 app:
   binary_name: testapp
   vendor: testvendor
-  env_prefix: invalid_  # Should be uppercase
+  env_prefix: invalid_ # Should be uppercase
   config_name: testapp
   description: Test application

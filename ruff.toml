@@ -37,6 +37,7 @@ select = [
 # Generated exit_codes.py: allow long lines (E501) for context strings and UP035 for conditional NotRequired import
 "src/pyfulmen/foundry/exit_codes.py" = ["E501", "UP035"]
 "src/crucible/pyfulmen/foundry/exit_codes.py" = ["E501", "UP035"]
+"src/crucible/foundry/exit_codes.py" = ["E501", "UP035"]
 # Test fixture files: ignore all linting (they are data files, not code)
 "tests/fixtures/foundry/mime/*.json" = ["ALL"]
 "tests/fixtures/pathfinder/sample-files/*.txt" = ["ALL"]

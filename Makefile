@@ -98,7 +98,7 @@ fmt: bin/goneat
 	@echo "Formatting code..."
 	@uv run ruff format src/ tests/ scripts/ --exclude tests/fixtures/
 	@echo "Formatting docs and config..."
-	@bash -c './bin/goneat format --types yaml,json,markdown --folders . --staged-only 2>&1 | grep -v -E "(fixtures/invalid/malformed-yaml.yaml|encountered the following formatting errors)" || (echo "Formatting completed with expected error on malformed test fixture" && exit 0)'
+	@bash -c './bin/goneat format --types yaml,json,markdown --folders . --finalize-eof 2>&1 | grep -v -E "(fixtures/invalid/malformed-yaml.yaml|encountered the following formatting errors)" || (echo "Formatting completed with expected error on malformed test fixture" && exit 0)'
 	@echo "✓ All files formatted"
 
 .PHONY: lint

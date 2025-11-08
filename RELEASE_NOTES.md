@@ -17,7 +17,7 @@ This document tracks release notes and checklists for PyFulmen releases.
 **🔧 Critical Architecture Fix**:
 
 - **Directory Separation**: Proper separation between `src/pyfulmen/` (custom implementation) and `src/crucible/` (synced assets)
-- **Sync Configuration**: Fixed `.goneat/ssot-consumer.yaml` to sync Crucible Python assets to `src/crucible/pyfulmen/` 
+- **Sync Configuration**: Fixed `.goneat/ssot-consumer.yaml` to sync Crucible Python assets to `src/crucible/pyfulmen/`
 - **Import Path Updates**: Updated PyFulmen foundry module to import `exit_codes.py` from correct Crucible location
 - **TSFulmen Pattern Compliance**: Now follows same directory structure as TSFulmen and gofulmen
 
@@ -38,6 +38,7 @@ This document tracks release notes and checklists for PyFulmen releases.
 #### Technical Details
 
 **Sync Configuration Changes**:
+
 ```yaml
 # Before: Mixed custom + synced in same directory (dangerous)
 src/pyfulmen/foundry/  # Custom implementation + synced exit_codes.py
@@ -48,6 +49,7 @@ src/crucible/pyfulmen/     # Crucible-synced assets only
 ```
 
 **Import Path Changes**:
+
 ```python
 # PyFulmen now imports from Crucible assets
 from crucible.pyfulmen.foundry.exit_codes import ExitCode
@@ -64,7 +66,8 @@ from crucible.pyfulmen.foundry.exit_codes import ExitCode
 
 **For Users**: No breaking changes - all PyFulmen APIs remain identical
 
-**For Developers**: 
+**For Developers**:
+
 - Crucible assets now in `src/crucible/` (read-only)
 - Custom code in `src/pyfulmen/` (safe from sync)
 - Use `make sync` to update Crucible assets
