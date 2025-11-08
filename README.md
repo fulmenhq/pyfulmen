@@ -1,10 +1,10 @@
 # pyfulmen
 
-** Curated Libraries for Scale**
+**Curated Libraries for Scale**
 
 Python Fulmen libraries for enterprise-scale development.
 
-**Lifecycle Phase**: `alpha` | **Version**: 0.1.10 | **Coverage**: 93%
+**Lifecycle Phase**: `alpha` | **Version**: 0.1.11 | **Coverage**: 93%
 
 ## Overview
 
@@ -19,7 +19,7 @@ PyFulmen is part of the Fulmen ecosystem, providing templates, processes, and to
 - **Progressive Logging** - Zero-complexity to enterprise-grade logging with SIMPLE → STRUCTURED → ENTERPRISE profiles
 - **Error Handling** - Pathfinder-compatible errors with telemetry metadata and schema validation (v0.1.6+)
 - **Exit Codes** - Standardized 54-code catalog with simplified modes for monitoring/alerting (v0.1.9+)
-- **Enterprise Telemetry** - Comprehensive metrics system with MetricRegistry, Prometheus export, and cross-module instrumentation (v0.1.12+)
+- **Enterprise Telemetry** - Comprehensive metrics system with MetricRegistry, Prometheus export, and cross-module instrumentation
 - **FulHash** - Fast, consistent hashing with xxh3-128 (default) and sha256 support, thread-safe streaming (v0.1.6+)
 - **Crucible Shim** - Idiomatic Python access to Crucible schemas, docs, and config defaults
 - **Schema Export** - Export Crucible schemas to local files with provenance metadata (v0.1.9+)
@@ -184,7 +184,7 @@ pyfulmen signals windows-fallback --format markdown
 
 📖 **[Complete Signal Handling Documentation](src/pyfulmen/signals/README.md)** for detailed API reference, asyncio integration, and enterprise features.
 
-## Enterprise Telemetry (v0.1.12+)
+## Enterprise Telemetry
 
 PyFulmen provides comprehensive enterprise telemetry with MetricRegistry, Prometheus export, and cross-module instrumentation. The `pyfulmen.telemetry` module implements ADR-0008 with thread-safe metrics collection and performance optimization.
 
@@ -278,9 +278,9 @@ make build
 
 # Install in another project
 cd /path/to/your/project
-pip install /path/to/pyfulmen/dist/pyfulmen-0.1.10-py3-none-any.whl
+pip install /path/to/pyfulmen/dist/pyfulmen-0.1.11-py3-none-any.whl
 # Or with uv
-uv add /path/to/pyfulmen/dist/pyfulmen-0.1.10-py3-none-any.whl
+uv add /path/to/pyfulmen/dist/pyfulmen-0.1.11-py3-none-any.whl
 ```
 
 ### Editable Install (for library development)
@@ -711,15 +711,15 @@ path = schema.export_schema(
 from pyfulmen import version
 
 # Read version from VERSION file
-ver = version.read_version()  # "0.1.9"
+ver = version.read_version()  # "0.1.11"
 
 # Get detailed version info
 info = version.get_version_info()
-# {'version': '0.1.9', 'source': 'VERSION', 'valid': True}
+# {'version': '0.1.11', 'source': 'VERSION', 'valid': True}
 
 # Validate version sync across files
 sync = version.validate_version_sync()
-# {'synced': True, 'version_file': '0.1.9', ...}
+# {'synced': True, 'version_file': '0.1.11', ...}
 ```
 
 ## Development
@@ -727,7 +727,6 @@ sync = version.validate_version_sync()
 This repository uses:
 
 - **uv** for Python package management (fast, modern alternative to pip/virtualenv)
-- **goneat** for version management and SSOT sync (successor to FulDX)
 - **Crucible** for standards and schemas
 
 ### Prerequisites
@@ -759,12 +758,10 @@ make bootstrap
 
 # This command:
 # - Creates .venv/ virtual environment (if not exists)
-# - Installs goneat CLI tool
 # - Installs all Python dependencies via uv
 # - Syncs Crucible assets
 
 # 3. Verify setup
-make tools  # Check that goneat and other tools are available
 make test   # Run test suite (should see 1674 tests passing)
 
 # 4. Development cycle
@@ -869,7 +866,7 @@ cd pyfulmen
 make bootstrap
 
 # 3. Verify setup
-make test  # Should see 1674 tests passing
+make test  # Should see tests passing
 ```
 
 The `.venv/` virtual environment is created automatically by `make bootstrap` (via `uv sync`).
@@ -878,7 +875,7 @@ The `.venv/` virtual environment is created automatically by `make bootstrap` (v
 
 We provide opinionated `.vscode/settings.json` configuration to eliminate false positive linter errors and configure the development environment optimally. This is a **convenience only** - the actual quality gates are enforced via:
 
-- `make test` - Test suite (currently 1674 tests, 93% coverage)
+- `make test` - Test suite (93% coverage)
 - `make lint` - Ruff linting
 - `make fmt` - Code formatting
 - `make check-all` - All quality checks
@@ -904,7 +901,7 @@ The `.vscode/` configuration:
 make bootstrap
 
 # 2. Sync Crucible assets (when schemas/docs update)
-make sync-crucible
+make sync
 
 # 3. Development cycle
 make fmt              # Format code
@@ -913,8 +910,7 @@ make test             # Run tests
 make check-all        # Run all checks (lint + test)
 
 # 4. Before commit
-make precommit        # Runs fmt + lint
-make prepush          # Runs check-all
+make check-all        # Runs all quality checks
 ```
 
 ### Quality Gates
@@ -960,8 +956,8 @@ Contributions are welcome! Please follow these steps:
 1. Fork the repository.
 2. Create a feature branch (`git checkout -b feature/AmazingFeature`).
 3. Ensure all quality gates pass (`make check-all`).
-4. Commit your changes (`git commit -m 'Add some AmazingFeature'`).
-5. Push to the branch (`git push origin feature/AmazingFeature`).
+4. Commit your changes.
+5. Push to the branch.
 6. Open a Pull Request.
 
 PyFulmen follows the [Fulmen Helper Library Standard](docs/crucible-py/architecture/fulmen-helper-library-standard.md).
@@ -976,12 +972,6 @@ This project adheres to the Contributor Covenant Code of Conduct. By participati
 
 AI-assisted contributions should be attributed in commits:
 
-```
-feat: add schema validation utilities
-
-Co-authored-by: Agent Name <noreply@3leaps.net>
-```
-
 For more details, see [MAINTAINERS.md](MAINTAINERS.md) and [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ## Licensing
@@ -990,12 +980,11 @@ For more details, see [MAINTAINERS.md](MAINTAINERS.md) and [CONTRIBUTING.md](CON
 
 **Trademarks**: "Fulmen" and "3 Leaps" are trademarks of 3 Leaps, LLC. While code is open source, please use distinct names for derivative works to prevent confusion.
 
-### OSS Policies (Organization-wide)
+### OSS Policies
 
-- Authoritative policies repository: https://github.com/3leaps/oss-policies/
-- Code of Conduct: https://github.com/3leaps/oss-policies/blob/main/CODE_OF_CONDUCT.md
-- Security Policy: https://github.com/3leaps/oss-policies/blob/main/SECURITY.md
-- Contributing Guide: https://github.com/3leaps/oss-policies/blob/main/CONTRIBUTING.md
+- Code of Conduct: [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md)
+- Security Policy: [SECURITY.md](SECURITY.md)
+- Contributing Guide: [CONTRIBUTING.md](CONTRIBUTING.md)
 
 ## Status
 
