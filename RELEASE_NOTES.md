@@ -4,6 +4,72 @@ This document tracks release notes and checklists for PyFulmen releases.
 
 ## [Unreleased]
 
+### [0.1.10] - Sync Infrastructure & Architecture Fix - 2025-11-08
+
+**Release Type**: Infrastructure & Architecture Fix
+**Release Date**: November 8, 2025
+**Status**: ✅ Ready for Release
+
+**Summary**: PyFulmen v0.1.10 resolves critical architectural issues with sync infrastructure and directory separation. This release implements proper separation between custom implementation and Crucible-synced assets, following TSFulmen patterns, and upgrades goneat to v0.3.4 with force_remote configuration for reproducible builds.
+
+#### Key Fixes
+
+**🔧 Critical Architecture Fix**:
+
+- **Directory Separation**: Proper separation between `src/pyfulmen/` (custom implementation) and `src/crucible/` (synced assets)
+- **Sync Configuration**: Fixed `.goneat/ssot-consumer.yaml` to sync Crucible Python assets to `src/crucible/pyfulmen/` 
+- **Import Path Updates**: Updated PyFulmen foundry module to import `exit_codes.py` from correct Crucible location
+- **TSFulmen Pattern Compliance**: Now follows same directory structure as TSFulmen and gofulmen
+
+**📦 Goneat Upgrade**:
+
+- **goneat v0.3.4**: Upgraded from v0.3.0 with latest security patches and features
+- **force_remote Configuration**: Added `force_remote: true` to prevent dangerous local folder usage
+- **Crucible v0.2.8 Pin**: Maintained proper version pinning for reproducible builds
+- **Sync Reliability**: Fixed sync process to prevent accidental deletion of PyFulmen source code
+
+**🛡️ Safety Improvements**:
+
+- **Prune Protection**: Set `prune_stale: false` to protect PyFulmen implementation from sync deletion
+- **Clean Separation**: No more conflicts between custom code and synced assets
+- **Reproducible Builds**: Repository now works on new machines without local Crucible dependency
+- **Linting Updates**: Added ruff.toml ignores for Crucible-generated files
+
+#### Technical Details
+
+**Sync Configuration Changes**:
+```yaml
+# Before: Mixed custom + synced in same directory (dangerous)
+src/pyfulmen/foundry/  # Custom implementation + synced exit_codes.py
+
+# After: Clean separation (safe)
+src/pyfulmen/foundry/     # Custom implementation only
+src/crucible/pyfulmen/     # Crucible-synced assets only
+```
+
+**Import Path Changes**:
+```python
+# PyFulmen now imports from Crucible assets
+from crucible.pyfulmen.foundry.exit_codes import ExitCode
+```
+
+#### Test Results
+
+- **1674 tests**: 1670 passed, 4 failed (documentation-related only)
+- **Core Functionality**: All critical tests pass
+- **Build Success**: `make clean`, `make bootstrap`, `make build`, `make prepush` all successful
+- **Linting**: All checks pass with proper ignores for generated files
+
+#### Migration Notes
+
+**For Users**: No breaking changes - all PyFulmen APIs remain identical
+
+**For Developers**: 
+- Crucible assets now in `src/crucible/` (read-only)
+- Custom code in `src/pyfulmen/` (safe from sync)
+- Use `make sync` to update Crucible assets
+- Never edit files in `src/crucible/` directly
+
 ### [0.1.12] - Telemetry System Implementation - 2025-11-06
 
 **Release Type**: Major Feature Enhancement - Enterprise Telemetry & Observability

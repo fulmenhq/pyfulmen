@@ -7,6 +7,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### [0.1.10] - 2025-11-08
+
+### Fixed
+- **Critical Architecture**: Resolved dangerous mixing of custom implementation and Crucible-synced code in same directory
+- **Directory Separation**: Implemented proper separation between `src/pyfulmen/` (custom) and `src/crucible/` (synced) following TSFulmen patterns
+- **Sync Configuration**: Fixed `.goneat/ssot-consumer.yaml` to sync Crucible assets to correct location without conflicts
+- **Import Paths**: Updated PyFulmen foundry module to import `exit_codes.py` from `src/crucible/pyfulmen/foundry/`
+- **Goneat Upgrade**: Upgraded to v0.3.4 with `force_remote: true` configuration for reproducible builds
+- **Prune Protection**: Set `prune_stale: false` to prevent sync from deleting PyFulmen source code
+- **Reproducible Builds**: Repository now works on new machines without requiring local Crucible checkout
+- **Linting**: Added ruff.toml ignores for Crucible-generated files in `src/crucible/`
+
+### Changed
+- **Sync Strategy**: Changed from mixed directory to clean separation pattern
+- **Crucible Pin**: Maintained v0.2.8 pin with proper remote configuration
+- **Build Process**: All build commands (`clean`, `bootstrap`, `build`, `prepush`) now work correctly
+
+### Security
+- **Force Remote**: Prevents inadvertent local folder usage that could cause reproducibility issues
+- **Asset Isolation**: Crucible-generated code isolated from custom implementation
+
 ### Added
 
 - **Telemetry System**: Enterprise-grade observability with progressive interfaces (ADR-0008)

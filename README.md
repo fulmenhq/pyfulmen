@@ -28,7 +28,7 @@ PyFulmen is part of the Fulmen ecosystem, providing templates, processes, and to
 - **Schema Validation** - Helpers for validating data against Crucible JSON schemas
 - **Version Management** - Utilities for reading and validating repository versions
 - **Application Identity** - Canonical app metadata from `.fulmen/app.yaml` with discovery, validation, and caching (v0.1.10+)
-- **Signal Handling** - Cross-platform signal handling with Windows fallbacks, asyncio integration, and enterprise features (v0.1.11+)
+- **Signal Handling** - Cross-platform signal handling with Windows fallbacks, asyncio integration, and enterprise features (v0.1.10+)
 
 ## Application Identity (v0.1.10+)
 
@@ -119,7 +119,7 @@ The module follows this precedence order for discovering identity files:
 
 📖 **[Complete Application Identity Documentation](src/pyfulmen/appidentity/README.md)** for detailed API reference, testing utilities, and troubleshooting.
 
-## Signal Handling (v0.1.11+)
+## Signal Handling (v0.1.10+)
 
 PyFulmen provides enterprise-grade signal handling with cross-platform support, Windows HTTP fallbacks, and asyncio integration. The `pyfulmen.signals` module implements the Crucible signal-handling standard with progressive interface design.
 
