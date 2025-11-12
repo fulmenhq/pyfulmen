@@ -2,7 +2,7 @@ version: v1.1.0
 sources:
   - name: crucible
     repo: fulmenhq/crucible
-    ref: v0.2.8
+    ref: v0.2.10
     sync_path_base: lang/python
     force_remote: true
     assets:
