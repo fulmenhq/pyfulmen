@@ -1,11 +1,12 @@
-"""
-Crucible-synced assets for PyFulmen.
+__version__ = "0.2.11"
 
-This package contains read-only assets synced from the Crucible repository:
-- Python source code (pyfulmen modules)
-- Configuration files
-- Schema definitions
-- Documentation
+from crucible.schemas import get_schema, list_schemas
+from crucible.terminal import get_terminal_config, load_terminal_catalog
 
-All files in this package are generated and should not be edited manually.
-"""
+__all__ = [
+    "__version__",
+    "get_schema",
+    "list_schemas",
+    "get_terminal_config",
+    "load_terminal_catalog",
+]

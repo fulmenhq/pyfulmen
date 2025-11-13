@@ -2,7 +2,7 @@ version: v1.1.0
 sources:
   - name: crucible
     repo: fulmenhq/crucible
-    ref: v0.2.10
+    ref: v0.2.11
     sync_path_base: lang/python
     force_remote: true
     assets:
@@ -31,7 +31,7 @@ sources:
         subdir: .crucible/metadata
       # Sync all Crucible Python source assets
       - type: src
-        source_path: src/pyfulmen
+        source_path: src/crucible
         paths:
           - '**/*.py'
         subdir: src/crucible

@@ -418,6 +418,45 @@ fmt.Printf("Format: %s, Entries: %d, Compression: %.1fx\n",
 - **Go**: `io.Reader`/`io.Writer`, `defer` cleanup, channel-based iteration
 - **TypeScript**: Async iterators, `ReadableStream`/`WritableStream`
 
+### Forward Compatibility Confirmation
+
+**Schema Compatibility**: Current schemas are designed to support streaming without breaking changes
+
+**No schema migrations required** when adding streaming in v0.2.11:
+
+1. **Operation schemas remain unchanged**: Streaming variants use same option/result schemas
+   - `CreateOptions` works for both `create()` and `create_stream()`
+   - `ExtractResult` works for both `extract()` and `extract_stream()`
+
+2. **New method names**: Streaming uses distinct names (`*_stream`)
+   - No conflicts with existing methods
+   - Both APIs can coexist in same module
+
+3. **Resource cleanup**: Schemas don't dictate cleanup patterns
+   - Python: Add context manager protocol to stream objects
+   - Go: Add `Close()` method to stream types
+   - TypeScript: Add `finally()` to promise chains
+
+4. **Validation unchanged**: Same schemas validate both modes
+   - Block API: Full object validation
+   - Stream API: Per-entry validation
+
+**Example (forward-compatible implementation)**:
+
+```python
+# v1.0.0 (block API)
+result = fulpack.extract("archive.tar.gz", "/dest", options)
+
+# v2.0.0 (streaming API added, no schema changes)
+with fulpack.extract_stream("archive.tar.gz", "/dest", options) as stream:
+    for entry in stream:
+        # Process entry with same ArchiveEntry schema
+        pass
+# Returns same ExtractResult schema
+```
+
+**Conclusion**: Current v1.0.0 schemas are streaming-ready. No breaking changes needed for v0.2.11 streaming implementation.
+
 See feature brief for detailed streaming API specification.
 
 ---
@@ -491,6 +530,74 @@ All implementations MUST pass security tests for:
 
 **Performance target**: <1s for TOC read, regardless of archive size
 
+### Edge Case Handling (Cross-Language Determinism)
+
+**CRITICAL**: All implementations MUST handle these edge cases identically to ensure Pathfinder returns the same results across Go/Python/TypeScript:
+
+#### 1. Symlinks in Archives
+
+**Behavior**: `scan()` MUST include symlink entries in results with `type: "symlink"`
+
+- Include `symlink_target` field with original target path (not resolved)
+- DO NOT follow symlinks during scan (no recursive resolution)
+- DO NOT validate symlink targets during scan (validation happens in `verify()` or `extract()`)
+- Pathfinder applies glob to symlink paths, not targets
+
+**Rationale**: Symlink validation is security-critical but separate from discovery. `scan()` provides raw TOC; `verify()`/`extract()` enforce security.
+
+**Example**:
+
+```yaml
+# Archive contains: docs/link.md -> ../secret.txt
+# scan() returns:
+- path: "docs/link.md"
+  type: "symlink"
+  symlink_target: "../secret.txt" # Original target, not resolved
+  size: 0
+```
+
+#### 2. Invalid UTF-8 Paths
+
+**Behavior**: `scan()` MUST handle invalid UTF-8 in entry paths deterministically
+
+- **Preferred**: Normalize to UTF-8 using replacement character (U+FFFD)
+- **Alternative**: Base64-encode invalid paths with prefix `base64:` (for exact preservation)
+- **Document choice**: Each language documents its approach in implementation notes
+- **Cross-language tests**: Fixtures MUST include invalid UTF-8 paths to verify consistency
+
+**Rationale**: Archives may contain non-UTF-8 paths (legacy encodings, binary names). Implementations must handle gracefully without crashing.
+
+**Example (replacement character approach)**:
+
+```yaml
+# Archive contains: data/file_\xFF\xFE.txt (invalid UTF-8)
+# scan() returns:
+- path: "data/file_��.txt" # U+FFFD replacement characters
+  type: "file"
+```
+
+#### 3. Absolute Paths
+
+**Behavior**: `scan()` MUST normalize absolute paths to relative
+
+- Strip leading `/` or drive letters (Windows: `C:/`)
+- Emit warning in scan results
+- Include in results (don't skip) so Pathfinder can match
+- `extract()` and `verify()` MUST reject absolute paths (security)
+
+**Rationale**: `scan()` is discovery; `extract()` is security enforcement. Separation of concerns.
+
+#### 4. Path Traversal Attempts
+
+**Behavior**: `scan()` MUST include `../` paths in results
+
+- DO NOT normalize or reject during scan
+- Include in results so Pathfinder can discover them
+- `verify()` MUST flag as security warnings
+- `extract()` MUST reject with error
+
+**Rationale**: Security tests need to verify that archives with malicious paths are detected and rejected.
+
 ### Example Integration
 
 ```python
@@ -542,6 +649,78 @@ All implementations MUST:
 - Distinguish between validation errors (invalid input) and runtime errors (I/O failures)
 - Return structured error envelopes with exit codes
 
+#### Canonical Error Envelope
+
+All fulpack errors MUST use this envelope structure (compatible with Foundry error schemas):
+
+```typescript
+interface FulpackError {
+  code: string; // Canonical error code (see below)
+  message: string; // Human-readable message
+  path?: string; // Entry path that caused error (if applicable)
+  archive?: string; // Archive file path
+  operation: string; // Operation name (create, extract, scan, verify, info)
+  details?: {
+    // Optional context
+    entry_index?: number;
+    compression_ratio?: number;
+    actual_size?: number;
+    max_size?: number;
+  };
+}
+```
+
+#### Canonical Error Codes
+
+**Validation Errors** (invalid input):
+
+- `INVALID_ARCHIVE_FORMAT` - Archive format not recognized
+- `INVALID_PATH` - Entry path contains invalid characters
+- `INVALID_OPTIONS` - Invalid options passed to operation
+
+**Security Errors** (protection triggered):
+
+- `PATH_TRAVERSAL` - Entry path attempts directory traversal (`../`)
+- `ABSOLUTE_PATH` - Entry path is absolute (`/etc/passwd`)
+- `SYMLINK_ESCAPE` - Symlink target outside archive/destination bounds
+- `DECOMPRESSION_BOMB` - Archive exceeds size/entry limits
+- `CHECKSUM_MISMATCH` - Entry checksum verification failed
+
+**Runtime Errors** (I/O failures):
+
+- `ARCHIVE_NOT_FOUND` - Archive file does not exist
+- `ARCHIVE_CORRUPT` - Archive structure is invalid/corrupted
+- `EXTRACTION_FAILED` - Failed to write extracted file
+- `PERMISSION_DENIED` - Insufficient permissions to read/write
+- `DISK_FULL` - Insufficient disk space for extraction
+
+**Example Usage**:
+
+```python
+# Decompression bomb detection
+raise FulpackError(
+    code="DECOMPRESSION_BOMB",
+    message="Archive exceeds maximum size limit",
+    archive="malicious.tar.gz",
+    operation="extract",
+    details={
+        "actual_size": 10737418240,  # 10GB
+        "max_size": 1073741824,      # 1GB limit
+        "compression_ratio": 1000
+    }
+)
+
+# Checksum mismatch
+raise FulpackError(
+    code="CHECKSUM_MISMATCH",
+    message="Entry checksum verification failed",
+    archive="data.tar.gz",
+    path="data/corrupted.csv",
+    operation="extract",
+    details={"entry_index": 42}
+)
+```
+
 ### Testing Requirements
 
 All implementations MUST provide:
@@ -576,6 +755,53 @@ All implementations MUST provide:
    - Contains absolute paths (`/etc/passwd`)
    - Contains symlink escapes
    - MUST be rejected by extract/scan operations
+
+### Fixture Governance
+
+**Adding New Fixtures**:
+
+1. **Naming Convention**: `{category}-{description}.{format}`
+   - Categories: `basic`, `nested`, `pathological`, `utf8`, `symlink`, `large`, `corrupt`
+   - Examples: `pathological-traversal.tar.gz`, `utf8-invalid-paths.zip`, `large-10k-entries.tar.gz`
+
+2. **Approval Process**:
+   - Create fixture locally and test in your library
+   - Document fixture purpose and expected behavior in PR description
+   - Add fixture to `config/library/fulpack/fixtures/`
+   - Add test cases to validate fixture behavior
+   - Request review from Schema Cartographer before merging to Crucible
+
+3. **Documentation**: Each fixture should have an accompanying `.txt` or `.md` file describing:
+   - Purpose (what it tests)
+   - Expected behavior (pass/fail conditions)
+   - Contents summary (number of files, structure)
+   - Special characteristics (invalid UTF-8, symlinks, etc.)
+
+4. **Size Limits**:
+   - Basic fixtures: <10KB
+   - Pathological fixtures: <50KB
+   - Large fixtures (if needed): <1MB, must justify in PR
+
+5. **Cross-Language Parity**:
+   - New fixtures MUST work identically across all language implementations
+   - Include fixture in parity test suites
+   - Document any language-specific behavior (e.g., UTF-8 handling differences)
+
+**Example fixture documentation** (`pathological-traversal.tar.gz.txt`):
+
+```
+Fixture: pathological-traversal.tar.gz
+Purpose: Test path traversal protection
+Expected: extract() and verify() MUST reject this archive
+Contents:
+  - safe.txt (normal file)
+  - ../../../etc/passwd (traversal attempt)
+  - /root/.ssh/id_rsa (absolute path)
+Behavior:
+  - scan() MUST list all entries (including malicious paths)
+  - verify() MUST return valid=false with PATH_TRAVERSAL errors
+  - extract() MUST fail with PATH_TRAVERSAL error
+```
 
 ---
 
