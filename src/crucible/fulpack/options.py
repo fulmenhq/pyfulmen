@@ -27,7 +27,10 @@ class CreateOptions(TypedDict, total=False):
 
     exclude_patterns: list[str]  # Glob patterns for files to exclude (e.g., ['**/__pycache__', '**/.git'])
 
-    checksum_algorithm: Literal["sha256", "sha512", "sha1", "md5"]  # Checksum algorithm for entry verification
+    checksum_algorithm: Literal[
+        "xxh3-128", "sha256", "sha512", "sha1", "md5"
+    ]  # Checksum algorithm for entry verification (xxh3-128 and sha256 are standard via fulhash module,
+    # others may require optional extensions)
 
     preserve_permissions: bool  # Preserve Unix file permissions in archive
 

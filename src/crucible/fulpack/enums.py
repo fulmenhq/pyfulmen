@@ -19,6 +19,8 @@ class ArchiveFormat(str, Enum):
     Generated from: schemas/taxonomy/library/fulpack/archive-formats/v1.0.0/formats.yaml
     """
 
+    TAR = "tar"
+
     TAR_GZ = "tar.gz"
 
     ZIP = "zip"

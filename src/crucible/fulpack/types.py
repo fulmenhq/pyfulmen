@@ -21,7 +21,7 @@ class ArchiveInfo:
     Generated from: schemas/library/fulpack/v1.0.0/archive-info.schema.json
     """
 
-    format: Literal["tar.gz", "zip", "gzip"]  # Archive format from archive-formats taxonomy
+    format: Literal["tar", "tar.gz", "zip", "gzip"]  # Archive format from archive-formats taxonomy
 
     entry_count: int  # Total number of entries in the archive
 
@@ -35,8 +35,9 @@ class ArchiveInfo:
 
     has_checksums: bool | None = None  # Whether the archive contains checksums
 
-    checksum_algorithm: Literal["sha256", "sha512", "sha1", "md5"] | None = (
-        None  # Checksum algorithm used (if has_checksums is true)
+    checksum_algorithm: Literal["xxh3-128", "sha256", "sha512", "sha1", "md5"] | None = (
+        None  # Checksum algorithm used from fulhash module (xxh3-128 and sha256 are standard,
+        # others may require optional extensions)
     )
 
     created: str | None = None  # Archive creation timestamp (ISO 8601 format)
@@ -73,7 +74,7 @@ class ArchiveManifest:
     Generated from: schemas/library/fulpack/v1.0.0/archive-manifest.schema.json
     """
 
-    format: Literal["tar.gz", "zip", "gzip"]  # Archive format from archive-formats taxonomy
+    format: Literal["tar", "tar.gz", "zip", "gzip"]  # Archive format from archive-formats taxonomy
 
     version: str  # Manifest schema version (semantic versioning)
 
