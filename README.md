@@ -709,6 +709,11 @@ csv_files = [e for e in entries if e.path.endswith(".csv")]
 
 - **Canonical API** - Consistent operations across formats
 - **Security by Default** - Path traversal protection, bomb detection, symlink validation
+- **Format Support**:
+  - `tar` (Uncompressed)
+  - `tar.gz` / `tgz` (Common)
+  - `zip` (Common)
+  - `gzip` (Single file compression)
 - **Pluggable Architecture** - extensible format handlers
 
 ### Other Features

@@ -36,8 +36,7 @@ class ArchiveInfo:
     has_checksums: bool | None = None  # Whether the archive contains checksums
 
     checksum_algorithm: Literal["xxh3-128", "sha256", "sha512", "sha1", "md5"] | None = (
-        None  # Checksum algorithm used from fulhash module (xxh3-128 and sha256 are standard,
-        # others may require optional extensions)
+        None  # Checksum algorithm used from fulhash module (xxh3-128 and sha256 are standard, others may require optional extensions)
     )
 
     created: str | None = None  # Archive creation timestamp (ISO 8601 format)
