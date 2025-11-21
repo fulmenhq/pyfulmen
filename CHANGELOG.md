@@ -5,6 +5,22 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.1.11] - 2025-11-19
+
+### Added
+
+- **Fulpack Archive Module**: Enterprise-grade archive operations with security-by-default
+  - **Canonical API**: Unified `create`, `extract`, `scan`, `verify`, `info` operations for tar.gz, zip, gzip
+  - **Security Guardrails**: Mandatory path traversal protection (Zip Slip), decompression bomb detection (Zip Bomb), symlink validation
+  - **Format Support**: 
+    - `tar.gz` / `tgz` (Common)
+    - `zip` (Common)
+    - `gzip` (Single file compression)
+  - **Extensible Architecture**: Pluggable format registry for future extensions (7z, brotli, etc.)
+  - **Pathfinder Integration**: Archive-aware file discovery (future integration point)
+  - **Comprehensive Testing**: 50 unit tests with 84% coverage, including security attack scenarios
+  - **Crucible Compliance**: Validated against v0.2.13 programmatic fixtures
+
 ## [Unreleased]
 
 ### [0.1.10] - 2025-11-08

@@ -126,11 +126,19 @@ _FORMAT_HANDLERS: dict[ArchiveFormat, FormatHandler] = {}
 
 def _register_builtin_handlers() -> None:
     """Register stdlib-based format handlers."""
+    from .gzip import GzipHandler
     from .tar import TarHandler
+    from .zip import ZipHandler
 
     # Register TAR and TAR.GZ handlers
     _FORMAT_HANDLERS[ArchiveFormat.TAR] = TarHandler(ArchiveFormat.TAR)
     _FORMAT_HANDLERS[ArchiveFormat.TAR_GZ] = TarHandler(ArchiveFormat.TAR_GZ)
+
+    # Register ZIP handler
+    _FORMAT_HANDLERS[ArchiveFormat.ZIP] = ZipHandler(ArchiveFormat.ZIP)
+
+    # Register GZIP handler
+    _FORMAT_HANDLERS[ArchiveFormat.GZIP] = GzipHandler(ArchiveFormat.GZIP)
 
 
 # Auto-register built-in handlers on module import

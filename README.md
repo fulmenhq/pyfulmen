@@ -29,6 +29,7 @@ PyFulmen is part of the Fulmen ecosystem, providing templates, processes, and to
 - **Version Management** - Utilities for reading and validating repository versions
 - **Application Identity** - Canonical app metadata from `.fulmen/app.yaml` with discovery, validation, and caching (v0.1.10+)
 - **Signal Handling** - Cross-platform signal handling with Windows fallbacks, asyncio integration, and enterprise features (v0.1.10+)
+- **Fulpack** - Enterprise-grade archive operations with security-by-default (v0.1.11+)
 
 ## Application Identity (v0.1.10+)
 
@@ -677,6 +678,38 @@ sys.exit(error.exit_code)
 - **Simplified Modes** - Basic (0/1) and Severity (0-3) for monitoring
 - **Rich Metadata** - Description, context, category, retry hints
 - **BSD Compatibility** - Maps to standard sysexits.h codes where applicable
+
+### Fulpack - Archive Operations (v0.1.11+)
+
+Common-tier module for safe, enterprise-grade archive handling (`tar.gz`, `zip`, `gzip`).
+
+```python
+from pyfulmen import fulpack
+from pyfulmen.fulpack import ArchiveFormat
+
+# Create archive
+info = fulpack.create(
+    source=["src/", "docs/"],
+    output="release.tar.gz",
+    format=ArchiveFormat.TAR_GZ
+)
+
+# Extract with security checks (traversal protection, bombs, etc.)
+result = fulpack.extract(
+    archive="release.tar.gz",
+    destination="/tmp/extracted"
+)
+
+# Scan without extraction
+entries = fulpack.scan("release.tar.gz")
+csv_files = [e for e in entries if e.path.endswith(".csv")]
+```
+
+**Key Features**:
+
+- **Canonical API** - Consistent operations across formats
+- **Security by Default** - Path traversal protection, bomb detection, symlink validation
+- **Pluggable Architecture** - extensible format handlers
 
 ### Other Features
 
