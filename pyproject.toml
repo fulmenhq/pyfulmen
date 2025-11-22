@@ -28,6 +28,7 @@ dependencies = [
     "wcwidth>=0.2.0",
     "xxhash>=3.5.0",
     "rapidfuzz>=3.14.1",
+    "google-crc32c>=1.7.1",
 ]
 
 [project.urls]

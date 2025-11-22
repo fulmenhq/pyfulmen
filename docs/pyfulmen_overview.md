@@ -62,8 +62,9 @@ PyFulmen implements the mandatory core modules defined in the [Module Manifest](
 | **observability-logging**      | ✅ Stable | 95%             | [Spec](docs/crucible-py/standards/observability/logging.md)              | Progressive logging with SIMPLE/STRUCTURED/ENTERPRISE profiles, policy enforcement                            |
 | **error-handling-propagation** | ✅ Stable | 95%             | [Spec](docs/crucible-py/standards/error-handling/)                       | Pathfinder error wrapper with telemetry metadata, severity mapping, schema validation (v0.1.6+)               |
 | **telemetry-metrics**          | ✅ Stable | 85%             | [Spec](docs/crucible-py/standards/observability/metrics/)                | Counter/gauge/histogram with Crucible taxonomy validation, logging integration (v0.1.6+)                      |
-| **fulhash**                    | ✅ Stable | 95%             | [Spec](docs/crucible-py/standards/library/modules/fulhash.md)            | Fast, consistent hashing with xxh3-128/sha256, thread-safe streaming, cross-language fixtures (v0.1.6+)       |
+| **fulhash**                    | ✅ Stable | 95%             | [Spec](docs/crucible-py/standards/library/modules/fulhash.md)            | Fast, consistent hashing with xxh3-128/sha256/crc32, thread-safe streaming, cross-language fixtures (v0.1.6+) |
 | **signal-handling**            | ✅ Stable | 95%             | [Spec](docs/crucible-py/standards/library/modules/signal-handling.md)    | Cross-platform signal handling with Windows fallback, asyncio integration, and enterprise features (v0.1.11+) |
+| **fulpack**                    | ✅ Stable | 84%             | [Spec](docs/crucible-py/standards/library/modules/fulpack.md)            | Enterprise-grade archive operations with security-by-default (v0.1.11+)                                       |
 | **goneat-bootstrap**           | ✅ Stable | 90%             | [Spec](docs/crucible-py/guides/bootstrap-goneat.md)                      | Goneat tool installation and SSOT sync automation                                                             |
 | **ssot-sync**                  | ✅ Stable | 90%             | -                                                                        | Automated sync of Crucible assets via goneat                                                                  |
 | **foundry-patterns**           | ✅ Stable | 90%             | [Spec](docs/crucible-py/standards/library/foundry/interfaces.md)         | Pattern catalogs, MIME detection, HTTP status helpers                                                         |
@@ -194,11 +195,15 @@ PyFulmen implements the mandatory core modules defined in the [Module Manifest](
 
 - xxh3-128 (default): Fast non-cryptographic hashing (5-10x faster than SHA-256)
 - sha256: Cryptographic hashing for security-sensitive use cases
+- crc32: Standard CRC32 for legacy/archive compatibility (v0.1.11+)
+- crc32c: Hardware-accelerated CRC32C for cloud storage/networking (v0.1.11+)
 
 **APIs**:
 
 - Block hashing: `hash_bytes()`, `hash_string()`, `hash_file()`, `hash()` dispatcher
 - Streaming: `stream()` creates independent `StreamHasher` instances
+- Verification: `verify()` helper for integrity checks
+- Multi-Hash: `multi_hash()` for single-pass multiple digest computation
 - Metadata: `format_checksum()`, `parse_checksum()`, `validate_checksum_string()`, `compare_digests()`
 
 **Thread Safety**: Independent instances by design (no singletons), validated with 14 concurrency tests

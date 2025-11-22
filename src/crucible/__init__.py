@@ -1,4 +1,4 @@
-__version__ = "0.2.19"
+__version__ = "0.2.20"
 
 from crucible.schemas import get_schema, list_schemas
 from crucible.terminal import get_terminal_config, load_terminal_catalog

@@ -6,16 +6,19 @@ checksum strings according to the checksum-string.schema.json specification.
 
 import hmac
 import re
+from pathlib import Path
 
 from .models import Algorithm, Digest
 
 # Checksum string pattern from checksum-string.schema.json
-CHECKSUM_PATTERN = re.compile(r"^(xxh3-128:[0-9a-f]{32}|sha256:[0-9a-f]{64})$")
+CHECKSUM_PATTERN = re.compile(r"^(xxh3-128:[0-9a-f]{32}|sha256:[0-9a-f]{64}|crc32:[0-9a-f]{8}|crc32c:[0-9a-f]{8})$")
 
 # Algorithm to expected hex length mapping
 ALGORITHM_HEX_LENGTHS = {
     "xxh3-128": 32,
     "sha256": 64,
+    "crc32": 8,
+    "crc32c": 8,
 }
 
 
@@ -176,9 +179,91 @@ def compare_digests(a: Digest, b: Digest) -> bool:
     return hmac.compare_digest(a.hex, b.hex)
 
 
+def verify(source: str | Path | bytes, expected_digest: str) -> bool:
+    """Verify data against an expected checksum.
+
+    Computes hash of source and compares with expected digest.
+
+    Args:
+        source: Data to verify (string, bytes, or file path)
+        expected_digest: Expected checksum string ("algorithm:hex")
+
+    Returns:
+        True if hash matches, False otherwise
+
+    Raises:
+        ValueError: If checksum format is invalid or algorithm unsupported
+        OSError: If file read fails
+
+    Examples:
+        >>> from pyfulmen.fulhash import verify
+        >>> verify(b"Hello", "xxh3-128:...")  # doctest: +SKIP
+    """
+    from ._hash import hash_bytes, hash_string
+    from ._stream import stream
+
+    algo_str, expected_hex = parse_checksum(expected_digest)
+    algorithm = Algorithm(algo_str)
+
+    # Compute actual digest
+    if isinstance(source, bytes):
+        digest = hash_bytes(source, algorithm)
+    elif isinstance(source, str):
+        digest = hash_string(source, algorithm)
+    elif isinstance(source, Path):
+        if not source.exists():
+            raise FileNotFoundError(f"File not found: {source}")
+        hasher = stream(algorithm)
+        with open(source, "rb") as f:
+            while chunk := f.read(65536):
+                hasher.update(chunk)
+        digest = hasher.digest()
+    else:
+        raise TypeError(f"Unsupported source type: {type(source)}")
+
+    return hmac.compare_digest(digest.hex, expected_hex)
+
+
+def multi_hash(source: str | Path | bytes, algorithms: list[Algorithm]) -> dict[Algorithm, Digest]:
+    """Compute multiple digests in a single pass.
+
+    Optimized for streaming data once to multiple hashers.
+
+    Args:
+        source: Data to hash (bytes, string, or Path)
+        algorithms: List of algorithms to compute
+
+    Returns:
+        Dictionary mapping Algorithm to Digest
+    """
+    from ._stream import stream
+
+    hashers = [stream(algo) for algo in algorithms]
+
+    if isinstance(source, bytes):
+        for h in hashers:
+            h.update(source)
+    elif isinstance(source, str):
+        # Treat as text
+        data = source.encode("utf-8")
+        for h in hashers:
+            h.update(data)
+    elif isinstance(source, Path):
+        with open(source, "rb") as f:
+            while chunk := f.read(65536):
+                for h in hashers:
+                    h.update(chunk)
+    else:
+        raise TypeError(f"Unsupported source type: {type(source)}")
+
+    return {h.algorithm: h.digest() for h in hashers}
+
+
 __all__ = [
     "format_checksum",
     "parse_checksum",
     "validate_checksum_string",
     "compare_digests",
+    "verify",
+    "multi_hash",
 ]

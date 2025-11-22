@@ -28,8 +28,10 @@ from ._hash import hash_bytes, hash_string
 from ._helpers import (
     compare_digests,
     format_checksum,
+    multi_hash,
     parse_checksum,
     validate_checksum_string,
+    verify,
 )
 from ._stream import StreamHasher, stream
 from .models import Algorithm, Digest
@@ -47,6 +49,8 @@ __all__ = [
     "parse_checksum",
     "validate_checksum_string",
     "compare_digests",
+    "verify",
+    "multi_hash",
 ]
 
 __version__ = "0.1.6"

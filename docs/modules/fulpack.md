@@ -6,15 +6,15 @@ Fulpack provides secure, enterprise-grade archive operations for the PyFulmen li
 
 - **Canonical API**: Consistent `create`, `extract`, `scan`, `verify`, `info` operations across all formats.
 - **Security by Default**:
-    - **Path Traversal Protection**: Prevents extraction outside the target directory (Zip Slip).
-    - **Decompression Bomb Guard**: Detects and blocks massive expansion attacks (Zip Bombs).
-    - **Checksum Verification**: Validates integrity where supported.
-    - **Symlink Safety**: Validates symlink targets to prevent escapes.
+  - **Path Traversal Protection**: Prevents extraction outside the target directory (Zip Slip).
+  - **Decompression Bomb Guard**: Detects and blocks massive expansion attacks (Zip Bombs).
+  - **Checksum Verification**: Validates integrity where supported.
+  - **Symlink Safety**: Validates symlink targets to prevent escapes.
 - **Format Support**:
-    - `tar.gz` / `tgz` (Common)
-    - `zip` (Common)
-    - `gzip` / `gz` (Single file)
-    - Extensible architecture for future formats (7z, etc.)
+  - `tar.gz` / `tgz` (Common)
+  - `zip` (Common)
+  - `gzip` / `gz` (Single file)
+  - Extensible architecture for future formats (7z, etc.)
 - **Pathfinder Integration**: Unified file discovery inside archives (via `scan`).
 
 ## Usage
@@ -97,6 +97,7 @@ def create(
 ```
 
 **Options**:
+
 - `compression_level` (int): 0-9 (default 6 for tar/zip, 9 for gzip).
 - `checksum_algorithm` (str): "sha256" (default), "sha512", "md5", etc.
 - `patterns` (dict): include/exclude glob patterns (not yet implemented in v0.1.11).
@@ -114,6 +115,7 @@ def extract(
 ```
 
 **Options**:
+
 - `max_size` (int): Max uncompressed size for a single entry (default 1GB).
 - `max_entries` (int): Max number of entries to extract (default 10,000).
 - `overwrite` (bool): Whether to overwrite existing files (default False - NOT IMPLEMENTED yet, currently overwrites).
@@ -169,9 +171,9 @@ register_format(ArchiveFormat.CUSTOM, MyCustomHandler())
 
 ## Supported Formats
 
-| Format | Extension | Handler | Notes |
-|--------|-----------|---------|-------|
-| TAR | `.tar` | `TarHandler` | Uncompressed tarball |
-| TAR.GZ | `.tar.gz`, `.tgz` | `TarHandler` | Gzip-compressed tarball |
-| ZIP | `.zip` | `ZipHandler` | Standard ZIP (deflate) |
-| GZIP | `.gz`, `.gzip` | `GzipHandler` | Single file compression |
+| Format | Extension         | Handler       | Notes                   |
+| ------ | ----------------- | ------------- | ----------------------- |
+| TAR    | `.tar`            | `TarHandler`  | Uncompressed tarball    |
+| TAR.GZ | `.tar.gz`, `.tgz` | `TarHandler`  | Gzip-compressed tarball |
+| ZIP    | `.zip`            | `ZipHandler`  | Standard ZIP (deflate)  |
+| GZIP   | `.gz`, `.gzip`    | `GzipHandler` | Single file compression |

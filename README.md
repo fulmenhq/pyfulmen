@@ -20,7 +20,7 @@ PyFulmen is part of the Fulmen ecosystem, providing templates, processes, and to
 - **Error Handling** - Pathfinder-compatible errors with telemetry metadata and schema validation (v0.1.6+)
 - **Exit Codes** - Standardized 54-code catalog with simplified modes for monitoring/alerting (v0.1.9+)
 - **Enterprise Telemetry** - Comprehensive metrics system with MetricRegistry, Prometheus export, and cross-module instrumentation
-- **FulHash** - Fast, consistent hashing with xxh3-128 (default) and sha256 support, thread-safe streaming (v0.1.6+)
+- **FulHash** - Fast, consistent hashing with xxh3-128 (default) and sha256 support, CRC32/CRC32C support, thread-safe streaming (v0.1.6+)
 - **Crucible Shim** - Idiomatic Python access to Crucible schemas, docs, and config defaults
 - **Schema Export** - Export Crucible schemas to local files with provenance metadata (v0.1.9+)
 - **Config Path API** - XDG-compliant, platform-aware configuration paths
@@ -563,6 +563,15 @@ digest = fulhash.hash(b"bytes")           # Detects bytes
 digest = fulhash.hash("string")           # Detects string
 digest = fulhash.hash(Path("file.txt"))   # Detects Path
 
+# Verification
+is_valid = fulhash.verify("file.txt", "xxh3-128:abc123...")
+
+# Multi-hash computation
+digests = fulhash.multi_hash(
+    "file.txt",
+    [fulhash.Algorithm.SHA256, fulhash.Algorithm.CRC32C]
+)
+
 # Metadata helpers
 checksum = fulhash.format_checksum("xxh3-128", "abc123...")  # "xxh3-128:abc123..."
 algorithm, hex_value = fulhash.parse_checksum(checksum)
@@ -573,6 +582,7 @@ match = fulhash.compare_digests(digest1, digest2)  # Constant-time comparison
 **Key Features:**
 
 - **Two Algorithms** - xxh3-128 (default, 5-10x faster) and sha256 (cryptographic)
+- **Legacy/Cloud Support** - CRC32 (ZIP/GZIP) and CRC32C (Cloud/HW accelerated)
 - **Thread-Safe** - All APIs safe for concurrent use (independent instances, no singletons)
 - **Streaming Support** - Memory-efficient hashing of large files (64KB chunks)
 - **Schema Compliance** - Validates against Crucible digest and checksum-string schemas

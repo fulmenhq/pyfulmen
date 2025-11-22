@@ -18,10 +18,14 @@ class Algorithm(str, Enum):
     Attributes:
         XXH3_128: Fast non-cryptographic 128-bit hash (default)
         SHA256: Cryptographic 256-bit hash
+        CRC32: 32-bit Cyclic Redundancy Check (legacy compatibility)
+        CRC32C: 32-bit CRC (Castagnoli) (HW accelerated)
     """
 
     XXH3_128 = "xxh3-128"
     SHA256 = "sha256"
+    CRC32 = "crc32"
+    CRC32C = "crc32c"
 
 
 class Digest(BaseModel):
@@ -93,10 +97,14 @@ class Digest(BaseModel):
         if algorithm is None:
             return v
 
-        expected_length = {
-            Algorithm.XXH3_128: 32,
-            Algorithm.SHA256: 64,
-        }[algorithm]
+        if algorithm == Algorithm.XXH3_128:
+            expected_length = 32
+        elif algorithm == Algorithm.SHA256:
+            expected_length = 64
+        elif algorithm == Algorithm.CRC32 or algorithm == Algorithm.CRC32C:
+            expected_length = 8
+        else:
+            return v
 
         if len(v) != expected_length:
             raise ValueError(f"{algorithm.value} requires {expected_length} hex characters, got {len(v)}")
@@ -119,10 +127,14 @@ class Digest(BaseModel):
         if algorithm is None:
             return v
 
-        expected_length = {
-            Algorithm.XXH3_128: 16,
-            Algorithm.SHA256: 32,
-        }[algorithm]
+        if algorithm == Algorithm.XXH3_128:
+            expected_length = 16
+        elif algorithm == Algorithm.SHA256:
+            expected_length = 32
+        elif algorithm == Algorithm.CRC32 or algorithm == Algorithm.CRC32C:
+            expected_length = 4
+        else:
+            return v
 
         if len(v) != expected_length:
             raise ValueError(f"{algorithm.value} requires {expected_length} bytes, got {len(v)}")
@@ -137,7 +149,7 @@ class Digest(BaseModel):
         Returns checksum in format: algorithm:hex
 
         Conforms to checksum-string.schema.json pattern:
-        ^(xxh3-128:[0-9a-f]{32}|sha256:[0-9a-f]{64})$
+        ^(xxh3-128:[0-9a-f]{32}|sha256:[0-9a-f]{64}|crc32:[0-9a-f]{8}|crc32c:[0-9a-f]{8})$
         """
         return f"{self.algorithm.value}:{self.hex}"
 

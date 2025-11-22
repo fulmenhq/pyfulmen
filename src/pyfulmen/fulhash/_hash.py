@@ -6,7 +6,9 @@ xxh3-128 (default, fast) and sha256 (cryptographic) algorithms.
 
 import hashlib
 import time
+import zlib
 
+import google_crc32c
 import xxhash
 
 from pyfulmen.telemetry import counter, histogram
@@ -47,6 +49,16 @@ def hash_bytes(data: bytes, algorithm: Algorithm = Algorithm.XXH3_128) -> Digest
         digest_bytes = hasher.digest()
         hex_digest = hasher.hexdigest()
         counter("fulhash_operations_total_sha256").inc()
+    elif algorithm == Algorithm.CRC32:
+        value = zlib.crc32(data) & 0xFFFFFFFF
+        digest_bytes = value.to_bytes(4, byteorder="big")
+        hex_digest = f"{value:08x}"
+        counter("fulhash_operations_total_crc32").inc()
+    elif algorithm == Algorithm.CRC32C:
+        value = google_crc32c.value(data) & 0xFFFFFFFF
+        digest_bytes = value.to_bytes(4, byteorder="big")
+        hex_digest = f"{value:08x}"
+        counter("fulhash_operations_total_crc32c").inc()
     else:
         raise ValueError(f"Unsupported algorithm: {algorithm}")
 

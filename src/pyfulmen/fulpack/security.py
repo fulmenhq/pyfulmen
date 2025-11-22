@@ -15,6 +15,9 @@ import logging
 import os
 from pathlib import Path
 
+from pyfulmen import fulhash
+from pyfulmen.fulhash import Algorithm as HashAlgo
+
 from .exceptions import (
     DecompressionBombError,
     PathTraversalError,
@@ -270,10 +273,12 @@ def compute_checksum(file_path: str, algorithm: str = "sha256") -> str:
     """Compute checksum for a file.
 
     Uses streaming to handle large files efficiently.
+    Delegates to fulhash for supported algorithms (sha256, xxh3-128, crc32, crc32c).
+    Falls back to hashlib for legacy algorithms (md5, sha1, sha512).
 
     Args:
         file_path: Path to file
-        algorithm: Hash algorithm (sha256, sha512, sha1, md5)
+        algorithm: Hash algorithm (sha256, sha512, sha1, md5, crc32, xxh3-128)
 
     Returns:
         Hex-encoded checksum string
@@ -286,13 +291,24 @@ def compute_checksum(file_path: str, algorithm: str = "sha256") -> str:
         >>> compute_checksum("file.txt", "sha256")
         'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855'
     """
-    # Validate algorithm
-    supported = {"sha256", "sha512", "sha1", "md5"}
-    if algorithm not in supported:
-        raise ValueError(f"Unsupported hash algorithm '{algorithm}'. Supported: {sorted(supported)}")
+    # Check for fulhash support
+    try:
+        algo_enum = HashAlgo(algorithm.lower())
+        digest = fulhash.hash_file(file_path, algo_enum)
+        return digest.hex
+    except ValueError:
+        # Not supported by fulhash, fall back to hashlib
+        pass
+
+    # Validate algorithm for hashlib
+    supported = {"sha512", "sha1", "md5"}
+    if algorithm.lower() not in supported:
+        raise ValueError(
+            f"Unsupported hash algorithm '{algorithm}'. Supported: {sorted(supported)} + fulhash algorithms"
+        )
 
     # Create hasher
-    hasher = hashlib.new(algorithm)
+    hasher = hashlib.new(algorithm.lower())
 
     # Stream file in chunks
     with open(file_path, "rb") as f:

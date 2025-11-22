@@ -12,7 +12,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Fulpack Archive Module**: Enterprise-grade archive operations with security-by-default
   - **Canonical API**: Unified `create`, `extract`, `scan`, `verify`, `info` operations for tar.gz, zip, gzip
   - **Security Guardrails**: Mandatory path traversal protection (Zip Slip), decompression bomb detection (Zip Bomb), symlink validation
-  - **Format Support**: 
+  - **Format Support**:
+    - `tar` (Uncompressed)
     - `tar.gz` / `tgz` (Common)
     - `zip` (Common)
     - `gzip` (Single file compression)
@@ -20,6 +21,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - **Pathfinder Integration**: Archive-aware file discovery (future integration point)
   - **Comprehensive Testing**: 50 unit tests with 84% coverage, including security attack scenarios
   - **Crucible Compliance**: Validated against v0.2.13 programmatic fixtures
+
+- **FulHash Module Updates**: Added CRC32 support and verification helpers
+  - **CRC32/CRC32C**: New algorithms supported via zlib (legacy) and google-crc32c (HW accelerated)
+  - **Verification**: `verify(source, expected_digest)` helper
+  - **MultiHash**: `multi_hash(source, algorithms)` for single-pass multiple digest computation
+  - **Integration**: Fulpack now uses FulHash for file-level checksums
+
+### Changed
+
+- **Crucible Sync (v0.2.19 -> v0.2.20)**: Updated infrastructure with latest ecosystem standards
+  - New DevSecOps secrets management standards and schemas
+  - Updated logging observability schema
+  - Updated generated types and options for Fulpack module
 
 ## [Unreleased]
 

@@ -5,13 +5,31 @@ using xxh3-128 (default, fast) and sha256 (cryptographic) algorithms.
 """
 
 import hashlib
+import zlib
 from typing import Self
 
+import google_crc32c
 import xxhash
 
 from pyfulmen.telemetry import MetricRegistry
 
 from .models import Algorithm, Digest
+
+
+class CRC32Hasher:
+    """Stateful wrapper for zlib.crc32."""
+
+    def __init__(self) -> None:
+        self._crc = 0
+
+    def update(self, data: bytes) -> None:
+        self._crc = zlib.crc32(data, self._crc)
+
+    def digest(self) -> bytes:
+        return (self._crc & 0xFFFFFFFF).to_bytes(4, byteorder="big")
+
+    def hexdigest(self) -> str:
+        return f"{self._crc & 0xFFFFFFFF:08x}"
 
 
 class StreamHasher:
@@ -54,6 +72,10 @@ class StreamHasher:
             self._hasher = xxhash.xxh3_128()
         elif self._algorithm == Algorithm.SHA256:
             self._hasher = hashlib.sha256()
+        elif self._algorithm == Algorithm.CRC32:
+            self._hasher = CRC32Hasher()
+        elif self._algorithm == Algorithm.CRC32C:
+            self._hasher = google_crc32c.Checksum()
         else:
             raise ValueError(f"Unsupported algorithm: {self._algorithm}")
 

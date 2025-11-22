@@ -285,3 +285,20 @@ class TestChecksums:
             assert verify_checksum(path, checksum.lower(), "sha256") is True
         finally:
             Path(path).unlink()
+
+    def test_compute_checksum_fulhash_algorithms(self):
+        """Test compute_checksum delegates to fulhash for xxh3-128 and crc32."""
+        with tempfile.NamedTemporaryFile(mode="w", delete=False) as f:
+            f.write("123456789")
+            path = f.name
+
+        try:
+            # CRC32
+            crc = compute_checksum(path, "crc32")
+            assert crc == "cbf43926"
+
+            # XXH3-128
+            xxh = compute_checksum(path, "xxh3-128")
+            assert len(xxh) == 32
+        finally:
+            Path(path).unlink()
