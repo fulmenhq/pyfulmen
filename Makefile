@@ -229,13 +229,13 @@ prepublish:
 .PHONY: release-publish-test
 release-publish-test: prepublish
 	@test -n "$$PYPI_TEST_TOKEN" || (echo "❌ Set PYPI_TEST_TOKEN before publishing" && exit 1)
-	@uv run twine upload --repository-url https://test.pypi.org/legacy/ -u __token__ -p $$PYPI_TEST_TOKEN dist/*
+	@uv run twine upload --repository-url https://test.pypi.org/legacy/ -u __token__ -p $$PYPI_TEST_TOKEN dist/*.whl dist/*.tar.gz
 	@echo "✓ Uploaded artifacts to TestPyPI"
 
 .PHONY: release-publish-prod
 release-publish-prod: prepublish
 	@test -n "$$PYPI_TOKEN" || (echo "❌ Set PYPI_TOKEN before publishing" && exit 1)
-	@uv run twine upload --repository-url https://upload.pypi.org/legacy/ -u __token__ -p $$PYPI_TOKEN dist/*
+	@uv run twine upload --repository-url https://upload.pypi.org/legacy/ -u __token__ -p $$PYPI_TOKEN dist/*.whl dist/*.tar.gz
 	@echo "✓ Uploaded artifacts to PyPI"
 
 .PHONY: prepush
