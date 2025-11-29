@@ -18,42 +18,26 @@ import yaml
 _catalog_cache: Mapping[str, Any] | None = None
 
 
-def _get_catalog_path() -> Path:
-    """Get the path to the synchronized signal catalog.
+def _locate_project_root() -> Path:
+    """Locate the project root where crucible assets live."""
+    current_dir = Path(__file__).resolve()
+    for candidate in current_dir.parents:
+        if (candidate / "config" / "crucible-py").exists():
+            return candidate
+    # Fallback to original relative traversal if heuristic fails
+    return current_dir.parent.parent.parent
 
-    Returns:
-        Path to signals.yaml file in the crucible-py config directory.
-    """
-    # Navigate from this file to the catalog
-    current_dir = Path(__file__).parent
-    catalog_path = (
-        current_dir.parent.parent.parent  # src/pyfulmen/signals -> project root
-        / "config"
-        / "crucible-py"
-        / "library"
-        / "foundry"
-        / "signals.yaml"
-    )
-    return catalog_path
+
+def _get_catalog_path() -> Path:
+    """Get the path to the synchronized signal catalog."""
+    root = _locate_project_root()
+    return root / "config" / "crucible-py" / "library" / "foundry" / "signals.yaml"
 
 
 def _get_schema_path() -> Path:
-    """Get the path to the signal catalog JSON schema.
-
-    Returns:
-        Path to signals.schema.json file in the crucible-py schemas directory.
-    """
-    current_dir = Path(__file__).parent
-    schema_path = (
-        current_dir.parent.parent.parent  # src/pyfulmen/signals -> project root
-        / "schemas"
-        / "crucible-py"
-        / "library"
-        / "foundry"
-        / "v1.0.0"
-        / "signals.schema.json"
-    )
-    return schema_path
+    """Get the path to the signal catalog JSON schema."""
+    root = _locate_project_root()
+    return root / "schemas" / "crucible-py" / "library" / "foundry" / "v1.0.0" / "signals.schema.json"
 
 
 def _validate_catalog(catalog_data: Mapping[str, Any]) -> None:

@@ -5,6 +5,8 @@
 
 # Read lifecycle phase for coverage gates
 LIFECYCLE := $(shell cat LIFECYCLE_PHASE 2>/dev/null || echo experimental)
+PREPUBLISH_SENTINEL := .artifacts/prepublish.json
+CURRENT_VERSION := $(shell cat VERSION 2>/dev/null || echo "0.0.0")
 
 # Coverage thresholds by lifecycle phase
 # experimental: 0%, alpha: 30%, beta: 60%, rc: 70%, ga: 75%, lts: 80%
@@ -179,6 +181,9 @@ build-all: build
 release-check: check-all
 	@echo "Running release checklist..."
 	@test -f VERSION || (echo "❌ VERSION file missing" && exit 1)
+	@if [ -n "$$(git status --porcelain)" ]; then echo "❌ Working tree dirty - commit or stash changes"; exit 1; fi
+	@if [ ! -f $(PREPUBLISH_SENTINEL) ]; then echo "❌ Run 'make prepublish' before release-check"; exit 1; fi
+	@uv run python scripts/prepublish_sentinel.py verify --sentinel $(PREPUBLISH_SENTINEL)
 	@echo "✓ Release checks passed"
 
 .PHONY: release-prepare
@@ -190,6 +195,48 @@ release-build: build
 	@echo "Generating checksums..."
 	@cd dist && sha256sum * > SHA256SUMS.txt
 	@echo "✓ Release artifacts ready in dist/"
+
+.PHONY: verify-dist
+verify-dist:
+	@uv run python scripts/verify_dist_contents.py
+
+.PHONY: verify-local-install
+verify-local-install:
+	@uv run python scripts/verify_local_install.py --installer uv
+
+.PHONY: verify-local-install-pip
+verify-local-install-pip:
+	@uv run python scripts/verify_local_install.py --installer pip
+
+.PHONY: verify-published-package
+verify-published-package:
+	@uv run python scripts/verify_published_package.py $(if $(VERIFY_PUBLISH_VERSION),--version $(VERIFY_PUBLISH_VERSION),) $(if $(VERIFY_INDEX_URL),--index-url $(VERIFY_INDEX_URL),)
+
+.PHONY: release-verify
+release-verify: release-build verify-dist verify-local-install verify-local-install-pip
+	@echo "✓ Release verification suite passed"
+
+.PHONY: prepublish
+# Assumes `make prepush` has already succeeded; enforces clean repo and packaging gates
+prepublish:
+	@if [ -n "$$(git status --porcelain)" ]; then echo "❌ Working tree must be clean before prepublish"; exit 1; fi
+	@$(MAKE) release-verify
+	@uv run twine check dist/*.whl dist/*.tar.gz
+	@uv run python scripts/prepublish_sentinel.py write --sentinel $(PREPUBLISH_SENTINEL) --version $(CURRENT_VERSION)
+	@echo "✓ Prepublish checks completed"
+
+
+.PHONY: release-publish-test
+release-publish-test: prepublish
+	@test -n "$$PYPI_TEST_TOKEN" || (echo "❌ Set PYPI_TEST_TOKEN before publishing" && exit 1)
+	@uv run twine upload --repository-url https://test.pypi.org/legacy/ -u __token__ -p $$PYPI_TEST_TOKEN dist/*
+	@echo "✓ Uploaded artifacts to TestPyPI"
+
+.PHONY: release-publish-prod
+release-publish-prod: prepublish
+	@test -n "$$PYPI_TOKEN" || (echo "❌ Set PYPI_TOKEN before publishing" && exit 1)
+	@uv run twine upload --repository-url https://upload.pypi.org/legacy/ -u __token__ -p $$PYPI_TOKEN dist/*
+	@echo "✓ Uploaded artifacts to PyPI"
 
 .PHONY: prepush
 prepush: check-all validate-ssot-provenance

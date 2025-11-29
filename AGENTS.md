@@ -133,6 +133,8 @@ These rules must NEVER be violated:
 
 6. **NEVER manually edit synced Crucible assets**: Files in `docs/crucible-py/`, `schemas/crucible-py/`, `config/crucible-py/`, and `.crucible/metadata/` are synced from the Crucible SSOT repository via `make sync` (which runs `goneat ssot sync`). These files ARE committed to PyFulmen as an "offline copy" or "pinned version" - similar to vendoring dependencies. **NEVER** manually edit, format, revert, or modify these files. They are controlled entirely by the sync process and any manual changes will be overwritten on the next sync. When you see untracked or modified files in these paths after `make sync`, stage and commit them normally - this is expected and correct behavior.
 
+7. **NEVER perform repo-wide resets without maintainer approval**: Do not run destructive commands like `git restore --source=HEAD`, `git checkout -- .`, `git reset --hard`, or similar operations that discard work unless @3leapsdave explicitly approves. If work needs to be abandoned, document the rationale in `.plans/` and coordinate with the maintainer instead of wiping changes unilaterally.
+
 If you encounter a situation where you believe a gitignored file should be committed, STOP and consult with @3leapsdave before taking any action.
 
 ### Development Philosophy

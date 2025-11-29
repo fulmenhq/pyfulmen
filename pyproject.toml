@@ -1,6 +1,6 @@
 [project]
 name = "pyfulmen"
-version = "0.1.11"
+version = "0.1.12"
 description = "Python Fulmen libraries"
 authors = [
     {name = "3 Leaps Team", email = "dev@3leaps.net"}
@@ -44,6 +44,7 @@ dev = [
     "pytest-asyncio>=0.21.0",
     "pytest-cov>=4.1.0",
     "ruff>=0.1.0",
+    "twine>=5.0.0",
 ]
 telemetry = [
     "prometheus_client>=0.20.0,<0.21",
@@ -58,6 +59,8 @@ packages = ["src/pyfulmen"]
 
 [tool.hatch.build.targets.wheel.force-include]
 "src/pyfulmen/py.typed" = "pyfulmen/py.typed"
+"config" = "config"
+"schemas" = "schemas"
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
@@ -71,6 +74,7 @@ dev = [
     "mypy>=1.18.2",
     "pytest-asyncio>=1.2.0",
     "types-pyyaml>=6.0.12.20250915",
+    "twine>=5.0.0",
 ]
 
 # Ruff configuration is in ruff.toml (see ADR-0004 for rationale)
