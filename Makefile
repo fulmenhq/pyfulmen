@@ -97,10 +97,10 @@ sync-ssot: sync-crucible
 
 .PHONY: fmt
 fmt: bin/goneat
-	@echo "Formatting code..."
+	@echo "Formatting code (ruff)..."
 	@uv run ruff format src/ tests/ scripts/ --exclude tests/fixtures/
-	@echo "Formatting docs and config..."
-	@bash -c './bin/goneat format --types yaml,json,markdown --folders . --finalize-eof 2>&1 | grep -v -E "(fixtures/invalid/malformed-yaml.yaml|encountered the following formatting errors)" || (echo "Formatting completed with expected error on malformed test fixture" && exit 0)'
+	@echo "Formatting docs and config (goneat)..."
+	@bash -c './bin/goneat format --types yaml,json,markdown --folders . --finalize-eof --quiet 2>&1 | grep -v -E "(fixtures/invalid/malformed-yaml.yaml|encountered the following formatting errors)" || true'
 	@echo "✓ All files formatted"
 
 .PHONY: lint
