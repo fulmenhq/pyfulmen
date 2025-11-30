@@ -135,6 +135,10 @@ These rules must NEVER be violated:
 
 7. **NEVER perform repo-wide resets without maintainer approval**: Do not run destructive commands like `git restore --source=HEAD`, `git checkout -- .`, `git reset --hard`, or similar operations that discard work unless @3leapsdave explicitly approves. If work needs to be abandoned, document the rationale in `.plans/` and coordinate with the maintainer instead of wiping changes unilaterally.
 
+8. **NEVER execute git push, reset, merge, or rebase without explicit maintainer authorization**: Operations that rewrite history or update remote branches must be explicitly authorized by a maintainer (@3leapsdave) in the prompt. Always propose the action and wait for confirmation.
+
+9. **NEVER commit with broken quality gates**: Before creating any commit, you MUST verify that `make precommit` (or `make lint` + `make test`) passes cleanly. Do not commit broken code unless explicitly authorized for a specific debugging scenario. Ensure no unstaged files remain unless they are intentional.
+
 If you encounter a situation where you believe a gitignored file should be committed, STOP and consult with @3leapsdave before taking any action.
 
 ### Development Philosophy
