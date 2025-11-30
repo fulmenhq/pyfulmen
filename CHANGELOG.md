@@ -5,6 +5,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.1.14] - 2025-11-29
+
+### Fixed
+
+- **Wheel Packaging**: Added missing `src/crucible` package to wheel distribution.
+  This fixes `ModuleNotFoundError: No module named 'crucible'` when importing
+  `pyfulmen` or using `pyfulmen.crucible` bridge APIs.
+- **Import Safety**: Verified availability of generated assets (exit codes, schemas,
+  config defaults) in distribution packages.
+
 ## [0.1.13] - 2025-11-29
 
 ### Added

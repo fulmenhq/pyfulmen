@@ -4,6 +4,18 @@ This document tracks release notes and checklists for PyFulmen releases.
 
 ## [Unreleased]
 
+### [0.1.14] - Packaging Fix for Crucible Assets - 2025-11-29
+
+**Release Type**: Critical Packaging Fix
+**Summary**: Resolves a `ModuleNotFoundError` by including the `src/crucible` package in the wheel distribution. This ensures that synced assets (schemas, configs, exit codes) are available to downstream consumers.
+
+#### Highlights
+
+- Fixed exclusion of `src/crucible` in `tool.hatch.build.targets.wheel.packages`.
+- Added regression test `tests/integration/crucible/test_consumer_usage.py`.
+
+**Status**: ✅ Ready for Release
+
 ### [0.1.13] - PyPI Distribution Workflow - 2025-11-29
 
 **Release Type**: Operational Hardened Release Pipeline

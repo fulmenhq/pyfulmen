@@ -1,6 +1,6 @@
 [project]
 name = "pyfulmen"
-version = "0.1.13"
+version = "0.1.14"
 description = "Python Fulmen libraries"
 authors = [
     {name = "3 Leaps Team", email = "dev@3leaps.net"}
@@ -55,7 +55,7 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [tool.hatch.build.targets.wheel]
-packages = ["src/pyfulmen"]
+packages = ["src/pyfulmen", "src/crucible"]
 
 [tool.hatch.build.targets.wheel.force-include]
 "src/pyfulmen/py.typed" = "pyfulmen/py.typed"
