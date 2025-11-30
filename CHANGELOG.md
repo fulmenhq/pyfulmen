@@ -5,6 +5,28 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.1.13] - 2025-11-29
+
+### Added
+
+- **PyPI publishing workflow** with `prepublish`, `release-verify`, and automated
+  scripts to validate distribution contents, local installs (uv + pip), and
+  published artifacts. Includes `.artifacts/prepublish.json` sentinel tracking
+  and detailed publishing guide/checklist updates.
+
+### Fixed
+
+- Bundled Crucible config + schema assets inside wheels and added runtime
+  discovery logic so PyFulmen imports work when installed from PyPI.
+- `release-publish-test` / `release-publish-prod` now upload only wheels and
+  source distributions, preventing checksum files from causing
+  `InvalidDistribution` failures on PyPI.
+
+### Documentation
+
+- Added `docs/publishing.md`, refreshed `RELEASE_CHECKLIST.md`, and published
+  release notes outlining the PyPI workflow and verification steps.
+
 ## [0.1.11] - 2025-11-19
 
 ### Added

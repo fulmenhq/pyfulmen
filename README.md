@@ -4,7 +4,8 @@
 
 Python Fulmen libraries for enterprise-scale development.
 
-**Lifecycle Phase**: `alpha` | **Version**: 0.1.11 | **Coverage**: 93%
+**Lifecycle Phase**: `alpha` | **Version**: 0.1.13 | **Coverage**: 93%
+**Install**: `uv pip install pyfulmen` (or `pip install pyfulmen`)
 
 ## Overview
 

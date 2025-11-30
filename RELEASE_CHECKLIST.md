@@ -9,7 +9,7 @@ high-level order of operations for each release.
    - Commit changes
 2. **Run quality gates** – `make prepush`
 3. **Build + verify artifacts** – `make release-verify`
-4. **Twine metadata check** – `uv run twine check dist/*`
+4. **Twine metadata check** – `uv run twine check dist/*.whl dist/*.tar.gz`
 5. **Consolidated gate** – `make prepublish` (records `.artifacts/prepublish.json`)
 6. **Final release sanity** – `make release-check` (requires clean tree + sentinel)
 7. **Tag + push** – `git tag -a vX.Y.Z …`, `git push origin main`, `git push origin vX.Y.Z`

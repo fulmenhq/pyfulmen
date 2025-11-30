@@ -76,7 +76,8 @@ make prepublish
 ```
 
 `prepublish` enforces a clean working tree, runs the full `release-verify`
-workflow, executes `uv run twine check dist/*`, and records a JSON sentinel at
+workflow, executes `uv run twine check dist/*.whl dist/*.tar.gz`, and records a
+JSON sentinel at
 `.artifacts/prepublish.json`. It no longer re-runs `make prepush`, so treat
 the earlier quality gates as a prerequisite. `release-check` will refuse to
 continue unless this sentinel exists and matches the current version.
@@ -127,7 +128,7 @@ Verify the published package from the registry:
 
 ```bash
 make verify-published-package                     # uses version in VERSION
-VERIFY_PUBLISH_VERSION=0.1.12 make verify-published-package
+VERIFY_PUBLISH_VERSION=0.1.13 make verify-published-package
 ```
 
 `verify_published_package.py` installs through `uv pip install --index-url …`

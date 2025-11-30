@@ -4,6 +4,32 @@ This document tracks release notes and checklists for PyFulmen releases.
 
 ## [Unreleased]
 
+### [0.1.13] - PyPI Distribution Workflow - 2025-11-29
+
+**Release Type**: Operational Hardened Release Pipeline
+
+**Summary**: Ships the end-to-end PyPI publishing workflow so PyFulmen
+artifacts can be built, verified, and promoted with repeatable automation.
+Includes `make prepublish` gating, distribution validation scripts, TestPyPI /
+PyPI publish targets, and documentation to walk release drivers through the
+process.
+
+#### Highlights
+
+- `make prepublish` now builds sdists/wheels, runs uv + pip install smoke tests,
+  and records a sentinel consumed by `make release-check`.
+- Helper scripts (`verify_dist_contents.py`, `verify_local_install.py`,
+  `verify_published_package.py`, `prepublish_sentinel.py`) catch issues before a
+  tag is created or artifacts are uploaded.
+- Publishing guide + checklist detail the workflow, required env vars, and
+  verification steps for TestPyPI/PyPI.
+- Packaging fixes bundle Crucible config/schemas and ensure runtime catalog
+  discovery works when importing from a clean environment.
+- Twine uploads now target only wheels and sdists, preventing
+  `SHA256SUMS.txt` from breaking PyPI uploads.
+
+**Status**: ✅ Released (PyPI `pyfulmen==0.1.13`)
+
 ### [0.1.11] - Fulpack Archive Module & Crucible Sync - 2025-11-19
 
 **Release Type**: Major Feature Enhancement - Archive Operations & Infrastructure
