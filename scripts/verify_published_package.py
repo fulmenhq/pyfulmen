@@ -37,7 +37,16 @@ def _install(
     target: Path,
 ) -> None:
     spec = f"{package}=={version}"
-    cmd = ["uv", "pip", "install", "--quiet", "--target", str(target), spec]
+    cmd = [
+        "uv",
+        "pip",
+        "install",
+        "--quiet",
+        "--refresh",
+        "--target",
+        str(target),
+        spec,
+    ]
     if index_url:
         cmd.extend(["--index-url", index_url])
     if extra_index_url:
