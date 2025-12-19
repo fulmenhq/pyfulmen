@@ -50,3 +50,19 @@ class AppIdentityLoadError(AppIdentityError):
             "Check file format and permissions. See: https://docs.fulmenhq.com/crucible-py/standards/app-identity/"
         )
         super().__init__(f"Failed to load app identity from {path}: {cause}. {guidance}")
+
+
+class EmbeddedIdentityAlreadyRegisteredError(AppIdentityError):
+    """Raised when attempting to register embedded identity more than once.
+
+    Embedded identity uses first-wins semantics - only the first registration
+    is accepted. Subsequent attempts raise this exception to prevent hidden
+    overrides in complex import chains.
+    """
+
+    def __init__(self) -> None:
+        super().__init__(
+            "Embedded identity already registered. "
+            "Only one package may register embedded identity per process. "
+            "Use clear_embedded_identity() in tests to reset state."
+        )

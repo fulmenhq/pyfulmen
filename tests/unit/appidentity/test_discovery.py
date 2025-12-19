@@ -61,19 +61,31 @@ class TestDiscovery:
                 assert result.parent.name == app_file.parent.name
 
     def test_discovery_not_found(self):
-        """Test discovery when no file found."""
+        """Test discovery when no file found returns None (for embedded fallback check)."""
+        from pyfulmen.appidentity import clear_embedded_identity
+
+        # Ensure no embedded identity is registered
+        clear_embedded_identity()
+
         with tempfile.TemporaryDirectory() as tmpdir:
             # Start from empty directory
             empty_dir = Path(tmpdir)
 
             with patch("pathlib.Path.cwd", return_value=empty_dir):
-                with pytest.raises(AppIdentityNotFoundError) as exc_info:
-                    _discover_identity_path()
+                # _discover_identity_path now returns None when not found
+                # (instead of raising, to allow embedded fallback check)
+                result = _discover_identity_path()
+                assert result is None
 
-                # Should have searched current directory .fulmen/app.yaml
+                # load() should raise the error with searched paths
+                with pytest.raises(AppIdentityNotFoundError) as exc_info:
+                    load()
+
+                # Should have searched paths plus embedded identity note
                 searched = exc_info.value.searched_paths
                 assert len(searched) >= 1
-                assert any(path.name == "app.yaml" for path in searched)
+                # Last path should indicate embedded identity was checked
+                assert "embedded" in str(searched[-1]).lower()
 
     def test_discovery_env_override_nonexistent(self):
         """Test environment override with nonexistent file."""

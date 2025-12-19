@@ -19,33 +19,30 @@ from .errors import AppIdentityLoadError, AppIdentityNotFoundError
 from .models import AppIdentity
 
 
-def _discover_identity_path() -> Path:
+def _discover_identity_path() -> Path | None:
     """
     Discover identity file path following precedence rules.
 
     Precedence:
     1. Environment variable FULMEN_APP_IDENTITY_PATH
     2. Ancestor search from Path.cwd() for .fulmen/app.yaml
-    3. Raise AppIdentityNotFoundError with searched paths
+    3. Return None (caller should check embedded identity fallback)
 
     Returns:
-        Path to the identity file
+        Path to the identity file, or None if filesystem discovery fails
 
     Raises:
-        AppIdentityNotFoundError: If no identity file found
+        AppIdentityNotFoundError: If env var is set but file doesn't exist
     """
-    searched_paths = []
-
     # 1. Environment variable override (highest precedence)
     env_path = os.environ.get("FULMEN_APP_IDENTITY_PATH")
     if env_path:
         env_path_obj = Path(env_path).resolve()
-        searched_paths.append(env_path_obj)
         if env_path_obj.is_file():
             return env_path_obj
         else:
             # Environment variable is set but file doesn't exist - fail immediately
-            raise AppIdentityNotFoundError(searched_paths)
+            raise AppIdentityNotFoundError([env_path_obj])
 
     # 2. Ancestor search from current working directory (capped at 20 levels per Crucible v0.2.4)
     cwd = Path.cwd()
@@ -55,7 +52,6 @@ def _discover_identity_path() -> Path:
 
     while level < max_levels:
         candidate_path = search_dir / ".fulmen" / "app.yaml"
-        searched_paths.append(candidate_path)
 
         if candidate_path.is_file():
             return candidate_path
@@ -67,8 +63,8 @@ def _discover_identity_path() -> Path:
         search_dir = parent_dir
         level += 1
 
-    # 3. No file found - raise with searched paths
-    raise AppIdentityNotFoundError(searched_paths)
+    # 3. No file found via filesystem - return None for embedded fallback check
+    return None
 
 
 def _load_identity_from_path(path: Path) -> dict[str, Any]:
@@ -200,16 +196,72 @@ def load() -> AppIdentity:
     """
     Load identity using discovery algorithm.
 
+    Discovery precedence:
+    1. Environment variable FULMEN_APP_IDENTITY_PATH
+    2. Filesystem discovery (CWD ancestor search for .fulmen/app.yaml)
+    3. Embedded identity fallback (registered via register_embedded_identity_yaml)
+    4. Raise AppIdentityNotFoundError
+
     Returns:
         AppIdentity instance
 
     Raises:
-        AppIdentityNotFoundError: If no identity file found
+        AppIdentityNotFoundError: If no identity found via any method
         AppIdentityLoadError: If file cannot be loaded
         AppIdentityValidationError: If file fails validation
     """
-    # Discover file path
+    # Import here to avoid circular dependency
+    from ._embedded import get_embedded_identity
+
+    # Try filesystem discovery first (steps 1-2)
     identity_path = _discover_identity_path()
 
-    # Load and return
-    return load_from_path(identity_path)
+    if identity_path is not None:
+        # Found on filesystem - load and return
+        return load_from_path(identity_path)
+
+    # Step 3: Check embedded identity fallback
+    embedded = get_embedded_identity()
+    if embedded is not None:
+        return embedded
+
+    # Step 4: No identity found anywhere
+    # Build list of searched paths for error message
+    searched_paths = _get_searched_paths()
+    raise AppIdentityNotFoundError(searched_paths)
+
+
+def _get_searched_paths() -> list[Path]:
+    """
+    Get list of paths that were searched during filesystem discovery.
+
+    Used for error reporting when identity is not found.
+    """
+    searched = []
+
+    # Check env var path
+    env_path = os.environ.get("FULMEN_APP_IDENTITY_PATH")
+    if env_path:
+        searched.append(Path(env_path).resolve())
+        return searched  # If env var set, only that path was checked
+
+    # Ancestor search paths
+    cwd = Path.cwd()
+    search_dir = cwd
+    max_levels = 20
+    level = 0
+
+    while level < max_levels:
+        candidate_path = search_dir / ".fulmen" / "app.yaml"
+        searched.append(candidate_path)
+
+        parent_dir = search_dir.parent
+        if parent_dir == search_dir:
+            break
+        search_dir = parent_dir
+        level += 1
+
+    # Add note about embedded identity
+    searched.append(Path("<embedded-identity-not-registered>"))
+
+    return searched
