@@ -1,12 +1,17 @@
 # Fulmen Library Makefile
 # Repository: pyfulmen
-# Bootstrapped with: Goneat
+# Bootstrapped with: sfetch → goneat trust pyramid
 # Compliant with: FulmenHQ Makefile Standard
 
 # Read lifecycle phase for coverage gates
 LIFECYCLE := $(shell cat LIFECYCLE_PHASE 2>/dev/null || echo experimental)
 PREPUBLISH_SENTINEL := .artifacts/prepublish.json
 CURRENT_VERSION := $(shell cat VERSION 2>/dev/null || echo "0.0.0")
+
+# External tooling (bootstrap via sfetch trust pyramid)
+BINDIR ?= ./bin
+GONEAT_VERSION ?= v0.3.4
+SFETCH_INSTALL_URL ?= https://github.com/3leaps/sfetch/releases/latest/download/install-sfetch.sh
 
 # Coverage thresholds by lifecycle phase
 # experimental: 0%, alpha: 30%, beta: 60%, rc: 70%, ga: 75%, lts: 80%
@@ -55,19 +60,39 @@ help:
 	@echo "  make sync              - Sync SSOT artifacts (Crucible schemas and docs)"
 	@echo "  make sync-crucible     - Alias for sync (deprecated, use sync)"
 
-# Bootstrap tools and Python environment
+# Bootstrap tools and Python environment (sfetch → goneat trust pyramid)
 .PHONY: bootstrap
 bootstrap:
 	@echo "Bootstrapping tools and Python environment..."
-	@uv run python scripts/bootstrap.py
+	@mkdir -p "$(BINDIR)"
+	@if ! command -v sfetch >/dev/null 2>&1 && [ ! -x "$(BINDIR)/sfetch" ]; then \
+		echo "→ Installing sfetch (trust pyramid bootstrap)..."; \
+		if command -v curl >/dev/null 2>&1; then \
+			curl -sSfL "$(SFETCH_INSTALL_URL)" | bash -s -- --dir "$(BINDIR)" --yes; \
+		elif command -v wget >/dev/null 2>&1; then \
+			wget -qO- "$(SFETCH_INSTALL_URL)" | bash -s -- --dir "$(BINDIR)" --yes; \
+		else \
+			echo "❌ curl or wget is required to bootstrap sfetch"; \
+			exit 1; \
+		fi; \
+	else \
+		echo "→ sfetch already installed"; \
+	fi
+	@SFETCH_BIN="$$(command -v sfetch 2>/dev/null || echo "$(BINDIR)/sfetch")"; \
+	if [ ! -x "$(BINDIR)/goneat" ]; then \
+		echo "→ Installing goneat $(GONEAT_VERSION) via sfetch..."; \
+		"$$SFETCH_BIN" -repo fulmenhq/goneat -tag "$(GONEAT_VERSION)" -dest-dir "$(BINDIR)"; \
+	else \
+		echo "→ goneat already installed"; \
+	fi
 	@uv sync --all-extras
-	@echo "✓ Bootstrap complete"
+	@echo "✓ Bootstrap complete. Ensure $(BINDIR) is in PATH or use ./bin/goneat"
 
 .PHONY: bootstrap-force
 bootstrap-force:
 	@echo "Force reinstalling tools..."
-	@uv run python scripts/bootstrap.py --force
-	@uv sync --all-extras
+	@rm -f "$(BINDIR)/goneat" "$(BINDIR)/sfetch"
+	@$(MAKE) bootstrap FORCE=1
 	@echo "✓ Bootstrap complete"
 
 # Ensure bin/goneat exists for targets that need it
@@ -76,11 +101,26 @@ bin/goneat:
 	@exit 1
 
 .PHONY: tools
-tools: bin/goneat
+tools:
 	@echo "Verifying external tools..."
-	@bin/goneat version > /dev/null && echo "✓ Goneat: $$(bin/goneat version)" || (echo "❌ Goneat not functional" && exit 1)
+	@SFETCH_BIN="$$(command -v sfetch 2>/dev/null || true)"; \
+	if [ -z "$$SFETCH_BIN" ] && [ -x "$(BINDIR)/sfetch" ]; then SFETCH_BIN="$(BINDIR)/sfetch"; fi; \
+	if [ -n "$$SFETCH_BIN" ]; then \
+		echo "✓ sfetch: $$("$$SFETCH_BIN" -version 2>&1 | head -n1)"; \
+	else \
+		echo "❌ sfetch not found. Run 'make bootstrap' first."; \
+		exit 1; \
+	fi
+	@if command -v goneat >/dev/null 2>&1; then \
+		echo "✓ goneat: $$(goneat version 2>&1 | head -n1)"; \
+	elif [ -x "$(BINDIR)/goneat" ]; then \
+		echo "✓ goneat: $$("$(BINDIR)/goneat" version 2>&1 | head -n1)"; \
+	else \
+		echo "❌ goneat not found. Run 'make bootstrap' first."; \
+		exit 1; \
+	fi
 	@uv --version > /dev/null && echo "✓ uv: $$(uv --version)" || (echo "❌ uv not found" && exit 1)
-	@echo "✓ All required tools present"
+	@echo "✓ All tools verified"
 
 # SSOT sync target (required by FulmenHQ Makefile Standard)
 .PHONY: sync

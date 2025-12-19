@@ -123,6 +123,7 @@ ADRs are **immutable** once accepted. Instead of editing:
 | [ADR-0009](ADR-0009-fulhash-independent-stream-instances.md)     | FulHash Independent Stream Instances          | 2025-10-23 | Accepted |
 
 | [ADR-0010](ADR-0010-pathfinder-checksum-performance-acceptable-delta.md) | Pathfinder Checksum Performance Acceptable Delta | 2025-10-24 | Accepted |
+| [ADR-0011](ADR-0011-appidentity-embedding-pattern.md) | App Identity Embedding Pattern for Python | 2025-12-18 | Accepted |
 
 ### Ecosystem ADRs (Reference)
 
