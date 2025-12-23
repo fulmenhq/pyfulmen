@@ -32,6 +32,35 @@ PyFulmen is part of the Fulmen ecosystem, providing templates, processes, and to
 - **Signal Handling** - Cross-platform signal handling with Windows fallbacks, asyncio integration, and enterprise features (v0.1.10+)
 - **Fulpack** - Enterprise-grade archive operations with security-by-default (v0.1.11+)
 
+## Crucible Assets (Quick Start)
+
+PyFulmen includes all Crucible assets (schemas, docs, config defaults) bundled directly in the wheel. You do **not** need to manually sync the Crucible repository.
+
+```python
+from pyfulmen import crucible
+
+# 1. List available asset categories
+print(crucible.list_categories())
+# Output: ['docs', 'schemas', 'config']
+
+# 2. Find a specific schema (e.g., logging)
+schema, metadata = crucible.find_schema('observability/logging/v1.0.0/logger-config')
+print(f"Loaded schema version: {metadata.version}")
+
+# 3. Get configuration defaults
+config, meta = crucible.find_config('terminal/v1.0.0/terminal-overrides-defaults')
+```
+
+📖 **[Read the complete Consumption Guide](docs/crucible-py/guides/consuming-crucible-assets.md)** for detailed instructions on library-first consumption.
+
+**What's Bundled?**
+The following Crucible assets are shipped inside the `pyfulmen` package:
+
+- `schemas/` - JSON schemas for validation
+- `config/` - Default configuration files
+- `docs/` - Documentation and standards
+- `.crucible/metadata/` - Versioning and sync metadata
+
 ## Application Identity (v0.1.10+)
 
 PyFulmen provides canonical application metadata following the Crucible app identity standard. The `pyfulmen.appidentity` module discovers, validates, and caches application identity from `.fulmen/app.yaml` files.

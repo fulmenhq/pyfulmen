@@ -5,6 +5,60 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+_No unreleased changes._
+
+## [0.1.15] - 2025-12-19
+
+### Added
+
+- **Embedded Identity Fallback for Distributed Packages**: Python wheels and installed CLIs can now determine their identity without requiring `.fulmen/app.yaml` on disk
+  - `register_embedded_identity_yaml(data: bytes)` - First-wins registration for embedded identity
+  - `get_embedded_identity()` - Retrieve registered embedded identity
+  - `clear_embedded_identity()` - Reset for testing
+  - `is_embedded_identity_registered()` - Check registration state
+  - `EmbeddedIdentityAlreadyRegisteredError` - Raised on duplicate registration
+  - Updated discovery precedence: explicit path → env var → filesystem → **embedded fallback** → error
+  - Enables `pip install mypackage && cd /tmp && mypackage version` to work
+  - 16 new tests covering registration, validation, fallback, and thread safety
+
+- **ADR-0011: App Identity Embedding Pattern for Python**: Documented Python-specific embedding approach
+  - Build-time inclusion via `pyproject.toml` `force-include` (no repo mirror required unlike Go)
+  - Downstream consumer guidance for percheron and other packages
+  - Comparison with Go's `//go:embed` pattern
+
+### Changed
+
+- **Pre-commit Hooks**: Switched from `make precommit` (caused timeout loops) to `goneat assess` command
+  - Uses `--categories format,lint --fail-on critical` for fast validation (~1s)
+  - Matches fulmen-secrets hook configuration pattern
+
+- **Bootstrap Infrastructure**: Updated to use sfetch trust pyramid
+  - `make bootstrap` now uses sfetch to install goneat (not self-referential tools.yaml)
+  - Removed goneat from `.goneat/tools.yaml` (trust anchor is sfetch)
+  - Added `SFETCH_INSTALL_URL` and `GONEAT_VERSION` Makefile variables
+
+### Fixed
+
+- **Pre-commit Hook Timeouts**: Resolved infinite loop when hooks ran `make precommit` which triggered tests
+
+### Infrastructure
+
+- **Crucible Sync (v0.2.20 → v0.2.26)**: Updated to latest Crucible standards
+  - Updated `app-identity.md` standard with embedded identity fallback requirements
+  - New `enact` module standards and schemas
+  - Updated repository category standards (missive, spec-host)
+  - New publishing standards
+  - Updated taxonomy (metrics, languages, repository-categories)
+  - ADR-0013: Rust sync pattern validation
+
+### Documentation
+
+- Feature brief: `.plans/active/v0.1.15/appidentity-embedded-fallback-feature-brief.md`
+- ADR-0011: `docs/development/adr/ADR-0011-appidentity-embedding-pattern.md`
+- Updated ADR index with ADR-0011
+
 ## [0.1.14] - 2025-11-29
 
 ### Fixed
@@ -67,9 +121,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Updated logging observability schema
   - Updated generated types and options for Fulpack module
 
-## [Unreleased]
-
-### [0.1.10] - 2025-11-08
+## [0.1.10] - 2025-11-08
 
 ### Fixed
 
