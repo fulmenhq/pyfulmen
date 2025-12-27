@@ -17,8 +17,8 @@ class TestAncestorSearchGuard:
 
     def test_ancestor_search_stops_at_max_levels(self, monkeypatch, tmp_path):
         """Test that ancestor search stops after 20 levels."""
-        from pyfulmen.appidentity._loader import _discover_identity_path, load
         from pyfulmen.appidentity import clear_embedded_identity
+        from pyfulmen.appidentity._loader import _discover_identity_path, load
 
         # Ensure no embedded identity is registered
         clear_embedded_identity()

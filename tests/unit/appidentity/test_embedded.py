@@ -6,7 +6,6 @@ for distributed Python packages (wheels, installed CLIs).
 """
 
 import threading
-from unittest.mock import patch
 
 import pytest
 import yaml
@@ -24,7 +23,6 @@ from pyfulmen.appidentity.errors import (
     AppIdentityValidationError,
     EmbeddedIdentityAlreadyRegisteredError,
 )
-
 
 # Valid app.yaml content for testing
 VALID_APP_YAML = """
