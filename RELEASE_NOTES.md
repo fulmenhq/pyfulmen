@@ -6,6 +6,46 @@ This document tracks release notes for recent PyFulmen releases.
 
 ---
 
+## [0.2.0] - Crucible v0.3.2 Integration & CI/CD Modernization - 2026-01-05
+
+**Release Type**: Minor - Role-Based Model & Dependency Protection
+**Status**: Ready for Release
+
+**Summary**: PyFulmen v0.2.0 aligns with Crucible v0.3.2's role-based agentic model, modernizes the bootstrap and CI/CD infrastructure to match gofulmen/rsfulmen patterns, and adds dependency protection (license compliance and supply chain security).
+
+### Highlights
+
+**Role-Based Agentic Model**:
+
+- Migrated from identity scheme to Crucible v0.3.2 role catalog
+- AGENTS.md and MAINTAINERS.md updated with role-based model
+- Commit attribution now includes `Role:` trailer (devlead, devrev, infoarch, secrev)
+
+**License Audit & Dependency Protection**:
+
+- `make license-audit` checks for forbidden licenses (GPL, LGPL, AGPL, MPL, CDDL)
+- `.goneat/dependencies.yaml` with cooling policy for supply chain security
+- Integrated into `make check-all` dependency chain
+
+**Bootstrap Modernization**:
+
+- New `scripts/make-bootstrap.sh` for sfetch -> goneat trust pyramid
+- BINDIR defaults to `$HOME/.local/bin` (aligned with gofulmen/rsfulmen)
+- Uses `goneat doctor tools --scope foundation`
+- Updated to goneat v0.4.1
+
+**Crucible Sync (v0.2.26 -> v0.3.2)**:
+
+- New agentic role configs (devlead, devrev, entarch, cicd, dataeng, infoarch, secrev)
+- Agentic-interface-adoption guide
+- Updated ai-agents and agentic-attribution standards
+
+### Breaking Changes
+
+- None (fully backward compatible)
+
+---
+
 ## [0.1.15] - Embedded Identity Fallback - 2025-12-19
 
 **Release Type**: Feature Enhancement - Distributed Package Support
@@ -85,32 +125,4 @@ except Exception:
 
 ---
 
-## [0.1.13] - PyPI Distribution Workflow - 2025-11-29
-
-**Release Type**: Operational Hardened Release Pipeline
-**Status**: ✅ Released (PyPI `pyfulmen==0.1.13`)
-
-**Summary**: Ships the end-to-end PyPI publishing workflow so PyFulmen artifacts can be built, verified, and promoted with repeatable automation. Includes `make prepublish` gating, distribution validation scripts, TestPyPI/PyPI publish targets, and documentation.
-
-### Highlights
-
-- `make prepublish` builds sdists/wheels, runs install smoke tests, records sentinel
-- Helper scripts for distribution verification (`verify_dist_contents.py`, etc.)
-- Publishing guide + checklist for TestPyPI/PyPI workflow
-- Packaging fixes bundle Crucible config/schemas for runtime discovery
-- Twine uploads target only wheels and sdists (no checksum files)
-
-### Quality Gates
-
-- [x] Distribution validation scripts
-- [x] Local install verification (uv + pip)
-- [x] Published package verification
-- [x] Documentation complete
-
-### Breaking Changes
-
-- None
-
----
-
-_For releases prior to v0.1.13, see [CHANGELOG.md](./CHANGELOG.md)._
+_For releases prior to v0.1.14, see [CHANGELOG.md](./CHANGELOG.md)._

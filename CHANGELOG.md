@@ -9,6 +9,53 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 _No unreleased changes._
 
+## [0.2.0] - 2026-01-05
+
+### Added
+
+- **License Audit Target**: `make license-audit` checks dependencies for forbidden licenses (GPL, LGPL, AGPL, MPL, CDDL)
+  - Uses pip-licenses for CSV inventory generation
+  - Integrated into `check-all` dependency chain
+
+- **Dependency Protection Config**: `.goneat/dependencies.yaml` for Python license compliance
+  - Forbidden/allowed license lists
+  - Package cooling policy (7-day min age, supply chain protection)
+  - Serde-class exemptions for pydantic, pyyaml
+
+- **Foundation Tools Scope**: `.goneat/tools.yaml` expanded with Python-specific tools
+  - uv, ruff, actionlint, ripgrep, jq, yq, yamlfmt
+
+### Changed
+
+- **Role-Based Agentic Model**: Migrated from identity scheme to Crucible v0.3.2 role catalog
+  - AGENTS.md rewritten with role-based model (devlead, devrev, infoarch, secrev)
+  - MAINTAINERS.md updated with role catalog references
+  - Attribution format now includes `Role:` trailer
+
+- **Bootstrap Modernization**: Aligned with gofulmen/rsfulmen patterns
+  - New `scripts/make-bootstrap.sh` for clean sfetch → goneat trust pyramid
+  - BINDIR defaults to `$HOME/.local/bin` (not `./bin`)
+  - Updated goneat to v0.4.1
+  - Bootstrap now calls `goneat doctor tools --scope foundation`
+
+- **Hook Configuration**: `.goneat/hooks.yaml` updated
+  - Pre-push now includes `dependencies` category
+  - Uses `--hook-manifest` flag for explicit config
+
+- **Makefile Improvements**: GONEAT_RESOLVE pattern replaces hardcoded `./bin/goneat`
+  - All goneat-dependent targets now resolve from BINDIR or PATH
+  - Added `##` comments for help generation
+
+### Infrastructure
+
+- **Crucible Sync (v0.2.26 → v0.3.2)**: Major standards update
+  - New agentic role configs (devlead, devrev, entarch, cicd, dataeng, infoarch, secrev)
+  - Agentic-interface-adoption guide
+  - Upstream schemas (3leaps/agentic, ailink)
+  - Updated ai-agents and agentic-attribution standards
+  - Exit codes and signals config updates
+  - App identity schema updates
+
 ## [0.1.15] - 2025-12-19
 
 ### Added
