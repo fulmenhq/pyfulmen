@@ -8,9 +8,10 @@ LIFECYCLE := $(shell cat LIFECYCLE_PHASE 2>/dev/null || echo experimental)
 PREPUBLISH_SENTINEL := .artifacts/prepublish.json
 CURRENT_VERSION := $(shell cat VERSION 2>/dev/null || echo "0.0.0")
 
-# External tooling (bootstrap via sfetch trust pyramid)
-BINDIR ?= ./bin
-GONEAT_VERSION ?= v0.3.4
+# Tool installation (user-space bin dir; overridable with BINDIR=...)
+# Defaults to $HOME/.local/bin on macOS/Linux
+BINDIR ?= $(HOME)/.local/bin
+GONEAT_VERSION ?= v0.4.1
 SFETCH_INSTALL_URL ?= https://github.com/3leaps/sfetch/releases/latest/download/install-sfetch.sh
 
 # Coverage thresholds by lifecycle phase
@@ -62,86 +63,56 @@ help:
 
 # Bootstrap tools and Python environment (sfetch → goneat trust pyramid)
 .PHONY: bootstrap
-bootstrap:
-	@echo "Bootstrapping tools and Python environment..."
-	@mkdir -p "$(BINDIR)"
-	@if ! command -v sfetch >/dev/null 2>&1 && [ ! -x "$(BINDIR)/sfetch" ]; then \
-		echo "→ Installing sfetch (trust pyramid bootstrap)..."; \
-		if command -v curl >/dev/null 2>&1; then \
-			curl -sSfL "$(SFETCH_INSTALL_URL)" | bash -s -- --dir "$(BINDIR)" --yes; \
-		elif command -v wget >/dev/null 2>&1; then \
-			wget -qO- "$(SFETCH_INSTALL_URL)" | bash -s -- --dir "$(BINDIR)" --yes; \
-		else \
-			echo "❌ curl or wget is required to bootstrap sfetch"; \
-			exit 1; \
-		fi; \
-	else \
-		echo "→ sfetch already installed"; \
-	fi
-	@SFETCH_BIN="$$(command -v sfetch 2>/dev/null || echo "$(BINDIR)/sfetch")"; \
-	if [ ! -x "$(BINDIR)/goneat" ]; then \
-		echo "→ Installing goneat $(GONEAT_VERSION) via sfetch..."; \
-		"$$SFETCH_BIN" -repo fulmenhq/goneat -tag "$(GONEAT_VERSION)" -dest-dir "$(BINDIR)"; \
-	else \
-		echo "→ goneat already installed"; \
-	fi
-	@uv sync --all-extras
-	@echo "✓ Bootstrap complete. Ensure $(BINDIR) is in PATH or use ./bin/goneat"
+bootstrap: ## Install external tools (sfetch, goneat + foundation tools)
+	@echo "Installing external tools..."
+	@BINDIR="$(BINDIR)" GONEAT_VERSION="$(GONEAT_VERSION)" SFETCH_INSTALL_URL="$(SFETCH_INSTALL_URL)" ./scripts/make-bootstrap.sh
 
 .PHONY: bootstrap-force
-bootstrap-force:
-	@echo "Force reinstalling tools..."
-	@rm -f "$(BINDIR)/goneat" "$(BINDIR)/sfetch"
+bootstrap-force: ## Force reinstall external tools
 	@$(MAKE) bootstrap FORCE=1
-	@echo "✓ Bootstrap complete"
 
-# Ensure bin/goneat exists for targets that need it
-bin/goneat:
-	@echo "⚠️  Goneat not found. Run 'make bootstrap' first."
-	@exit 1
+# Goneat resolution (finds goneat in BINDIR or PATH)
+GONEAT_RESOLVE = \
+	GONEAT=""; \
+	if [ -x "$(BINDIR)/goneat" ]; then GONEAT="$(BINDIR)/goneat"; fi; \
+	if [ -z "$$GONEAT" ]; then GONEAT="$$(command -v goneat 2>/dev/null || true)"; fi; \
+	if [ -z "$$GONEAT" ]; then echo "goneat not found. Run 'make bootstrap' first."; exit 1; fi
+
+# Sfetch resolution (finds sfetch in BINDIR or PATH)
+SFETCH_RESOLVE = \
+	SFETCH=""; \
+	if [ -x "$(BINDIR)/sfetch" ]; then SFETCH="$(BINDIR)/sfetch"; fi; \
+	if [ -z "$$SFETCH" ]; then SFETCH="$$(command -v sfetch 2>/dev/null || true)"; fi
 
 .PHONY: tools
-tools:
+tools: ## Verify external tools are available
 	@echo "Verifying external tools..."
-	@SFETCH_BIN="$$(command -v sfetch 2>/dev/null || true)"; \
-	if [ -z "$$SFETCH_BIN" ] && [ -x "$(BINDIR)/sfetch" ]; then SFETCH_BIN="$(BINDIR)/sfetch"; fi; \
-	if [ -n "$$SFETCH_BIN" ]; then \
-		echo "✓ sfetch: $$("$$SFETCH_BIN" -version 2>&1 | head -n1)"; \
-	else \
-		echo "❌ sfetch not found. Run 'make bootstrap' first."; \
-		exit 1; \
-	fi
-	@if command -v goneat >/dev/null 2>&1; then \
-		echo "✓ goneat: $$(goneat version 2>&1 | head -n1)"; \
-	elif [ -x "$(BINDIR)/goneat" ]; then \
-		echo "✓ goneat: $$("$(BINDIR)/goneat" version 2>&1 | head -n1)"; \
-	else \
-		echo "❌ goneat not found. Run 'make bootstrap' first."; \
-		exit 1; \
-	fi
-	@uv --version > /dev/null && echo "✓ uv: $$(uv --version)" || (echo "❌ uv not found" && exit 1)
-	@echo "✓ All tools verified"
+	@$(SFETCH_RESOLVE); if [ -n "$$SFETCH" ]; then echo "sfetch: $$("$$SFETCH" -version 2>&1 | head -n1)"; else echo "sfetch not found (optional for day-to-day)"; fi
+	@$(GONEAT_RESOLVE); echo "goneat: $$($$GONEAT --version 2>&1 | head -n1 || true)"
+	@uv --version > /dev/null && echo "uv: $$(uv --version)" || (echo "uv not found" && exit 1)
+	@uv run ruff --version > /dev/null && echo "ruff: $$(uv run ruff --version)" || echo "ruff not available"
+	@echo "All required tools verified"
 
 # SSOT sync target (required by FulmenHQ Makefile Standard)
 .PHONY: sync
 sync: sync-crucible
 
 .PHONY: sync-crucible
-sync-crucible: bin/goneat
+sync-crucible: ## Sync assets from Crucible SSOT
 	@echo "Syncing Crucible assets..."
-	@bin/goneat ssot sync
-	@echo "✓ Crucible synced to .crucible/"
+	@$(GONEAT_RESOLVE); $$GONEAT ssot sync
+	@echo "Crucible synced to .crucible/"
 
 .PHONY: sync-ssot
 sync-ssot: sync-crucible
 
 .PHONY: fmt
-fmt: bin/goneat
+fmt: ## Format code with ruff and goneat
 	@echo "Formatting code (ruff)..."
 	@uv run ruff format src/ tests/ scripts/ --exclude tests/fixtures/
 	@echo "Formatting docs and config (goneat)..."
-	@bash -c './bin/goneat format --types yaml,json,markdown --folders . --finalize-eof --quiet 2>&1 | grep -v -E "(fixtures/invalid/malformed-yaml.yaml|encountered the following formatting errors)" || true'
-	@echo "✓ All files formatted"
+	@$(GONEAT_RESOLVE); bash -c '$$GONEAT format --types yaml,json,markdown --folders . --finalize-eof --quiet 2>&1 | grep -v -E "(fixtures/invalid/malformed-yaml.yaml|encountered the following formatting errors)" || true'
+	@echo "All files formatted"
 
 .PHONY: lint
 lint:
@@ -164,48 +135,48 @@ lifecycle:
 	@echo "Required test coverage: $(COVERAGE_MIN)%"
 
 .PHONY: check-all
-check-all: fmt lint test
-	@echo "✓ All checks passed"
+check-all: fmt lint test license-audit ## Run all quality checks (fmt, lint, test, license)
+	@echo "All quality checks passed"
 
 .PHONY: version
 version:
 	@cat VERSION
 
 .PHONY: version-set
-version-set: bin/goneat
-	@test -n "$(VERSION)" || (echo "❌ VERSION not set. Use: make version-set VERSION=x.y.z" && exit 1)
-	@bin/goneat version set $(VERSION)
+version-set: ## Set version to specific value (usage: make version-set VERSION=x.y.z)
+	@test -n "$(VERSION)" || (echo "VERSION not set. Use: make version-set VERSION=x.y.z" && exit 1)
+	@$(GONEAT_RESOLVE); $$GONEAT version set $(VERSION)
 	@$(MAKE) version-propagate
-	@echo "✓ Version set to $(VERSION) and propagated"
+	@echo "Version set to $(VERSION) and propagated"
 
 .PHONY: version-propagate
-version-propagate: bin/goneat
-	@bin/goneat version propagate
-	@echo "✓ Version propagated to package managers"
+version-propagate: ## Sync VERSION to package managers
+	@$(GONEAT_RESOLVE); $$GONEAT version propagate
+	@echo "Version propagated to package managers"
 
 .PHONY: version-bump-major
-version-bump-major: bin/goneat
-	@bin/goneat version bump major
+version-bump-major: ## Bump major version
+	@$(GONEAT_RESOLVE); $$GONEAT version bump major
 	@$(MAKE) version-propagate
-	@echo "✓ Version bumped (major) and propagated"
+	@echo "Version bumped (major) and propagated"
 
 .PHONY: version-bump-minor
-version-bump-minor: bin/goneat
-	@bin/goneat version bump minor
+version-bump-minor: ## Bump minor version
+	@$(GONEAT_RESOLVE); $$GONEAT version bump minor
 	@$(MAKE) version-propagate
-	@echo "✓ Version bumped (minor) and propagated"
+	@echo "Version bumped (minor) and propagated"
 
 .PHONY: version-bump-patch
-version-bump-patch: bin/goneat
-	@bin/goneat version bump patch
+version-bump-patch: ## Bump patch version
+	@$(GONEAT_RESOLVE); $$GONEAT version bump patch
 	@$(MAKE) version-propagate
-	@echo "✓ Version bumped (patch) and propagated"
+	@echo "Version bumped (patch) and propagated"
 
 .PHONY: version-bump-calver
-version-bump-calver: bin/goneat
-	@bin/goneat version bump calver
+version-bump-calver: ## Bump to CalVer
+	@$(GONEAT_RESOLVE); $$GONEAT version bump calver
 	@$(MAKE) version-propagate
-	@echo "✓ Version bumped (calver) and propagated"
+	@echo "Version bumped (calver) and propagated"
 
 .PHONY: build
 build:
@@ -279,21 +250,37 @@ release-publish-prod: prepublish
 	@echo "✓ Uploaded artifacts to PyPI"
 
 .PHONY: prepush
-prepush: check-all validate-ssot-provenance
+prepush: check-all validate-ssot-provenance ## Run pre-push hooks (comprehensive)
 	@echo "Running goneat pre-push assessment..."
-	@./bin/goneat assess --hook pre-push
-	@echo "✓ Pre-push checks passed"
+	@$(GONEAT_RESOLVE); $$GONEAT assess --hook pre-push --hook-manifest .goneat/hooks.yaml
+	@echo "Pre-push checks passed"
 
 .PHONY: validate-ssot-provenance
-validate-ssot-provenance:
+validate-ssot-provenance: ## Verify SSOT provenance files
 	@echo "Validating SSOT provenance..."
 	@uv run python scripts/validate_ssot_provenance.py
 
 .PHONY: precommit
-precommit: fmt lint test
+precommit: fmt lint test ## Run pre-commit hooks (fast, critical issues)
 	@echo "Running goneat pre-commit assessment..."
-	@./bin/goneat assess --hook pre-commit
-	@echo "✓ Pre-commit hooks passed"
+	@$(GONEAT_RESOLVE); $$GONEAT assess --hook pre-commit --hook-manifest .goneat/hooks.yaml
+	@echo "Pre-commit hooks passed"
+
+# License compliance
+.PHONY: license-audit
+license-audit: ## Audit dependencies for forbidden licenses
+	@echo "Auditing dependency licenses..."
+	@mkdir -p dist/reports
+	@uv run pip-licenses --format=csv --output-file=dist/reports/license-inventory.csv 2>/dev/null || \
+		(uv pip install pip-licenses && uv run pip-licenses --format=csv --output-file=dist/reports/license-inventory.csv)
+	@forbidden='GPL|LGPL|AGPL|MPL|CDDL'; \
+	if grep -E "$$forbidden" dist/reports/license-inventory.csv >/dev/null 2>&1; then \
+		echo "Forbidden license detected. See dist/reports/license-inventory.csv"; \
+		grep -E "$$forbidden" dist/reports/license-inventory.csv; \
+		exit 1; \
+	else \
+		echo "No forbidden licenses detected"; \
+	fi
 
 .PHONY: clean
 clean:
