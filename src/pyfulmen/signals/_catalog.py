@@ -1,8 +1,7 @@
 """Signal catalog loading and metadata management.
 
 Loads and caches the synchronized Crucible signal catalog with validation
-against the JSON schema. Provides metadata lookup functions for the
-8 standard Fulmen signals.
+against the JSON schema. Provides metadata lookup functions for Fulmen signals.
 """
 
 from __future__ import annotations
@@ -65,9 +64,9 @@ def _validate_catalog(catalog_data: Mapping[str, Any]) -> None:
 
     # Validate signals structure
     signals = catalog_data["signals"]
-    if not isinstance(signals, list) or len(signals) != 8:
+    if not isinstance(signals, list) or len(signals) < 1:
         signal_count = len(signals) if isinstance(signals, list) else "non-list"
-        raise ValueError(f"Catalog must have exactly 8 signals, found {signal_count}")
+        raise ValueError(f"Catalog must have at least 1 signal, found {signal_count}")
 
     required_signal_fields = ["id", "name", "description", "default_behavior"]
     for signal in signals:

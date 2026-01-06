@@ -6,7 +6,7 @@ Tests end-to-end functionality, error handling, and cross-module integration.
 
 import pytest
 
-from pyfulmen.foundry.similarity import (
+from pyfulmen.similarity import (
     apply_normalization_preset,
     distance,
     normalize,

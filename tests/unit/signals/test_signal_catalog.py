@@ -24,14 +24,14 @@ class TestCatalogLoading:
         assert "os_mappings" in catalog
         assert "platform_support" in catalog
 
-    def test_catalog_has_eight_signals(self):
-        """Test catalog contains exactly 8 standard signals."""
+    def test_catalog_has_nine_signals(self):
+        """Test catalog contains exactly 9 standard signals (including SIGKILL)."""
         catalog = _load_catalog()
         signals = catalog["signals"]
 
-        assert len(signals) == 8
+        assert len(signals) == 9
         signal_ids = [s["id"] for s in signals]
-        expected_ids = ["term", "int", "hup", "quit", "pipe", "alrm", "usr1", "usr2"]
+        expected_ids = ["term", "int", "hup", "quit", "pipe", "alrm", "usr1", "usr2", "kill"]
         assert signal_ids == expected_ids
 
     def test_get_signals_version(self):
@@ -49,8 +49,18 @@ class TestCatalogLoading:
         signals = list_all_signals()
 
         assert isinstance(signals, list)
-        assert len(signals) == 8
-        expected_signals = ["SIGTERM", "SIGINT", "SIGHUP", "SIGQUIT", "SIGPIPE", "SIGALRM", "SIGUSR1", "SIGUSR2"]
+        assert len(signals) == 9
+        expected_signals = [
+            "SIGTERM",
+            "SIGINT",
+            "SIGHUP",
+            "SIGQUIT",
+            "SIGPIPE",
+            "SIGALRM",
+            "SIGUSR1",
+            "SIGUSR2",
+            "SIGKILL",
+        ]
         assert signals == expected_signals
 
     def test_catalog_path_exists(self):

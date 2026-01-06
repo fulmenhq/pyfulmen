@@ -19,13 +19,17 @@ classifiers = [
     "Typing :: Typed",
 ]
 
+# Core dependencies (light modules - serde-class and stdlib wrappers)
+# Heavy dependencies (native extensions) are in optional extras per module registry
 dependencies = [
-    "jsonschema>=4.25.1",
     "click>=8.1.0",
     "pydantic>=2.12.0",
     "pyyaml>=6.0.3",
     "uuid6>=2025.0.1",
     "wcwidth>=0.2.0",
+    # Heavy deps kept in base for backward compatibility in v0.2.0
+    # Will be moved to extras in v0.3.0 per module registry weight classification
+    "jsonschema>=4.25.1",
     "xxhash>=3.5.0",
     "rapidfuzz>=3.14.1",
     "google-crc32c>=1.7.1",
@@ -45,9 +49,27 @@ dev = [
     "pytest-cov>=4.1.0",
     "ruff>=0.1.0",
     "twine>=5.0.0",
+    "pip-licenses>=5.0.0",
+]
+# Module extras per Crucible v0.4.0 module registry (platform-modules v1.1.0)
+# These are currently included in base deps for v0.2.0 backward compatibility
+# but documented here for future extraction in v0.3.0
+similarity = [
+    "rapidfuzz>=3.14.1",
+]
+schema = [
+    "jsonschema>=4.25.1",
+]
+hashing = [
+    "xxhash>=3.5.0",
+    "google-crc32c>=1.7.1",
 ]
 telemetry = [
     "prometheus_client>=0.20.0,<0.21",
+]
+# Full install includes all optional modules
+full = [
+    "pyfulmen[similarity,schema,hashing,telemetry]",
 ]
 
 [build-system]

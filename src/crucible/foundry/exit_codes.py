@@ -150,6 +150,17 @@ class ExitCode(IntEnum):
 
     EXIT_COVERAGE_THRESHOLD_NOT_MET = 96
 
+    # Shell & Process Control (124-127)
+    # Exit codes from shell conventions and process control utilities (timeout, exec)
+
+    EXIT_TIMEOUT = 124
+
+    EXIT_TIMEOUT_INTERNAL = 125
+
+    EXIT_CANNOT_EXECUTE = 126
+
+    EXIT_NOT_FOUND = 127
+
     # Signal-Induced Exits (128-165)
     # Process terminated by Unix signals (128+N pattern per POSIX). Signal codes follow Linux numbering; macOS/FreeBSD differ for SIGUSR1/SIGUSR2. For full signal semantics, see config/library/foundry/signals.yaml. For signal handling patterns, see docs/standards/library/modules/signal-handling.md.
 
@@ -516,6 +527,36 @@ EXIT_CODE_METADATA: dict[int, ExitCodeInfo] = {
         "context": "Code coverage validation, quality gate failure",
         "category": "testing",
     },
+    124: {
+        "code": 124,
+        "name": "EXIT_TIMEOUT",
+        "description": "Command timed out before completion",
+        "context": "GNU timeout or similar utility terminated command after deadline",
+        "category": "shell",
+    },
+    125: {
+        "code": 125,
+        "name": "EXIT_TIMEOUT_INTERNAL",
+        "description": "Timeout utility itself failed",
+        "context": "Error in timeout tool before or during command execution (not command failure)",
+        "category": "shell",
+    },
+    126: {
+        "code": 126,
+        "name": "EXIT_CANNOT_EXECUTE",
+        "description": "Command found but could not be executed",
+        "context": "Permission denied, not executable, exec format error",
+        "category": "shell",
+        "bsd_equivalent": "EX_NOPERM (partial)",
+    },
+    127: {
+        "code": 127,
+        "name": "EXIT_NOT_FOUND",
+        "description": "Command not found",
+        "context": "Executable not found in PATH or specified path does not exist",
+        "category": "shell",
+        "bsd_equivalent": "EX_UNAVAILABLE (partial)",
+    },
     129: {
         "code": 129,
         "name": "EXIT_SIGNAL_HUP",
@@ -676,6 +717,10 @@ _SIMPLIFIED_MAPPINGS: dict[SimplifiedMode, dict[int, int]] = {
         94: 1,  # ERROR
         95: 1,  # ERROR
         96: 1,  # ERROR
+        124: 1,  # ERROR
+        125: 1,  # ERROR
+        126: 1,  # ERROR
+        127: 1,  # ERROR
         129: 1,  # ERROR
         130: 1,  # ERROR
         131: 1,  # ERROR
@@ -706,6 +751,7 @@ _SIMPLIFIED_MAPPINGS: dict[SimplifiedMode, dict[int, int]] = {
         61: 3,  # RUNTIME_ERROR
         62: 3,  # RUNTIME_ERROR
         63: 3,  # RUNTIME_ERROR
+        124: 3,  # RUNTIME_ERROR
         10: 4,  # SYSTEM_ERROR
         11: 4,  # SYSTEM_ERROR
         12: 4,  # SYSTEM_ERROR
@@ -717,6 +763,9 @@ _SIMPLIFIED_MAPPINGS: dict[SimplifiedMode, dict[int, int]] = {
         52: 4,  # SYSTEM_ERROR
         53: 4,  # SYSTEM_ERROR
         54: 4,  # SYSTEM_ERROR
+        125: 4,  # SYSTEM_ERROR
+        126: 4,  # SYSTEM_ERROR
+        127: 4,  # SYSTEM_ERROR
         129: 4,  # SYSTEM_ERROR
         130: 4,  # SYSTEM_ERROR
         131: 4,  # SYSTEM_ERROR

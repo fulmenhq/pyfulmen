@@ -9,7 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 _No unreleased changes._
 
-## [0.2.0] - 2026-01-05
+## [0.2.0] - 2026-01-06
 
 ### Added
 
@@ -48,13 +48,22 @@ _No unreleased changes._
 
 ### Infrastructure
 
-- **Crucible Sync (v0.2.26 → v0.3.2)**: Major standards update
-  - New agentic role configs (devlead, devrev, entarch, cicd, dataeng, infoarch, secrev)
+- **Crucible Sync (v0.2.26 → v0.4.1)**: Major standards update
+  - New agentic role configs (devlead, devrev, entarch, cicd, dataeng, infoarch, secrev, prodmktg)
   - Agentic-interface-adoption guide
   - Upstream schemas (3leaps/agentic, ailink)
   - Updated ai-agents and agentic-attribution standards
-  - Exit codes and signals config updates
+  - Exit codes fix: 58 codes (was 54) with correct Python sync path
+  - Signals catalog expansion: SIGKILL added as first-class signal (9 total)
+  - Similarity module relocated from foundry to standalone library path
   - App identity schema updates
+  - v1.1.0 module registry with weight/default_inclusion support
+
+- **Similarity Module Extraction**: Promoted from `pyfulmen.foundry.similarity` to `pyfulmen.similarity`
+  - New top-level module at `src/pyfulmen/similarity/`
+  - Deprecation shim in `foundry/__init__.py` (removal in v0.4.0)
+  - Updated `pyfulmen/__init__.py` exports
+  - Test fixtures relocated to `config/crucible-py/library/similarity/fixtures.yaml`
 
 ## [0.1.15] - 2025-12-19
 

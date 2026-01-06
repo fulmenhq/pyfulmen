@@ -5,7 +5,7 @@ development in Python, following the Fulmen ecosystem standards.
 
 Example:
     >>> import pyfulmen
-    >>> pyfulmen.__version__  # e.g., '0.1.4'
+    >>> pyfulmen.__version__  # e.g., '0.2.0'
 """
 
 from importlib.metadata import version as _get_version
@@ -25,7 +25,20 @@ __all__ = [
     "ascii",
     "docscribe",
     "signals",
+    "similarity",
 ]
 
 # Submodules
-from . import ascii, config, crucible, docscribe, foundry, logging, pathfinder, schema, signals, version
+from . import (
+    ascii,
+    config,
+    crucible,
+    docscribe,
+    foundry,
+    logging,
+    pathfinder,
+    schema,
+    signals,
+    similarity,
+    version,
+)
