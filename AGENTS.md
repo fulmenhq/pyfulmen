@@ -21,8 +21,8 @@ See [AI Agents Standard](docs/crucible-py/standards/ai-agents.md) for operating 
 
 PyFulmen uses Crucible v0.3.2 role prompts synced from SSOT.
 
-| Role       | Prompt                                              | Use When                        |
-| ---------- | --------------------------------------------------- | ------------------------------- |
+| Role       | Prompt                                                          | Use When                        |
+| ---------- | --------------------------------------------------------------- | ------------------------------- |
 | `devlead`  | [devlead.yaml](config/crucible-py/agentic/roles/devlead.yaml)   | Implementation, features, fixes |
 | `devrev`   | [devrev.yaml](config/crucible-py/agentic/roles/devrev.yaml)     | Code review, four-eyes audit    |
 | `infoarch` | [infoarch.yaml](config/crucible-py/agentic/roles/infoarch.yaml) | Documentation, schemas          |
@@ -155,17 +155,17 @@ Committer-of-Record: Dave Thompson <dave.thompson@3leaps.net> [@3leapsdave]
 
 ## Key Files
 
-| File                              | Purpose                             |
-| --------------------------------- | ----------------------------------- |
-| `src/pyfulmen/`                   | Main package source                 |
-| `src/pyfulmen/logging/`           | Progressive logging module          |
-| `src/pyfulmen/telemetry/`         | Enterprise telemetry                |
-| `src/pyfulmen/fulhash/`           | Fast, consistent hashing            |
-| `src/pyfulmen/crucible/`          | Crucible shim                       |
-| `config/crucible-py/`             | Synced config from Crucible (SSOT)  |
-| `schemas/crucible-py/`            | Synced schemas from Crucible        |
-| `docs/crucible-py/`               | Synced docs from Crucible           |
-| `.goneat/ssot-consumer.yaml`      | Crucible sync configuration         |
+| File                         | Purpose                            |
+| ---------------------------- | ---------------------------------- |
+| `src/pyfulmen/`              | Main package source                |
+| `src/pyfulmen/logging/`      | Progressive logging module         |
+| `src/pyfulmen/telemetry/`    | Enterprise telemetry               |
+| `src/pyfulmen/fulhash/`      | Fast, consistent hashing           |
+| `src/pyfulmen/crucible/`     | Crucible shim                      |
+| `config/crucible-py/`        | Synced config from Crucible (SSOT) |
+| `schemas/crucible-py/`       | Synced schemas from Crucible       |
+| `docs/crucible-py/`          | Synced docs from Crucible          |
+| `.goneat/ssot-consumer.yaml` | Crucible sync configuration        |
 
 ## Synced Assets
 

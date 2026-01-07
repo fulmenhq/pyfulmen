@@ -30,13 +30,13 @@ PyFulmen uses Crucible v0.3.2 role-based agentic operations. AI agents operate i
 
 ### Available Roles
 
-| Role       | Purpose                                      | Escalates To                    |
-| ---------- | -------------------------------------------- | ------------------------------- |
-| `devlead`  | Implementation, features, bug fixes          | @3leapsdave for releases        |
-| `devrev`   | Code review, four-eyes audit                 | @3leapsdave for disputes        |
-| `infoarch` | Documentation, schemas, standards            | @3leapsdave for standards       |
-| `secrev`   | Security review, vulnerability analysis      | @3leapsdave immediately         |
-| `entarch`  | Cross-repo coordination, ecosystem alignment | @3leapsdave for decisions       |
+| Role       | Purpose                                      | Escalates To              |
+| ---------- | -------------------------------------------- | ------------------------- |
+| `devlead`  | Implementation, features, bug fixes          | @3leapsdave for releases  |
+| `devrev`   | Code review, four-eyes audit                 | @3leapsdave for disputes  |
+| `infoarch` | Documentation, schemas, standards            | @3leapsdave for standards |
+| `secrev`   | Security review, vulnerability analysis      | @3leapsdave immediately   |
+| `entarch`  | Cross-repo coordination, ecosystem alignment | @3leapsdave for decisions |
 
 See [Role Catalog](config/crucible-py/agentic/roles/README.md) for full role definitions.
 
@@ -66,7 +66,7 @@ See [Role Catalog](config/crucible-py/agentic/roles/README.md) for full role def
 2. **Human Oversight**: Tag @3leapsdave for significant architectural decisions
 3. **Safety Protocols**: Follow `REPOSITORY_SAFETY_PROTOCOLS.md` for all operations
 4. **Quality Focus**: Prioritize correctness over speed in all implementations
-5. **Ecosystem Thinking**: Consider impact on other *fulmen libraries
+5. **Ecosystem Thinking**: Consider impact on other \*fulmen libraries
 6. **Test Accountability**:
    - Never dismiss test failures without proper investigation
    - Always perform root cause analysis for failing tests
@@ -113,7 +113,7 @@ See [Role Catalog](config/crucible-py/agentic/roles/README.md) for full role def
   - Linting and type checking must be clean
   - Code coverage must be maintained or improved
   - `make check-all` must pass before any commit
-- **Release Coordination**: Align with other *fulmen libraries when possible
+- **Release Coordination**: Align with other \*fulmen libraries when possible
 
 ### Release Authority
 
