@@ -267,20 +267,39 @@ precommit: fmt lint test ## Run pre-commit hooks (fast, critical issues)
 	@echo "Pre-commit hooks passed"
 
 # License compliance
+# Only audits runtime dependencies (excludes dev tools like mypy, twine, pytest)
+# Dev tools may use GPL/MPL licenses which is acceptable - they don't ship in the wheel
 .PHONY: license-audit
-license-audit: ## Audit dependencies for forbidden licenses
-	@echo "Auditing dependency licenses..."
+license-audit: ## Audit runtime dependencies for forbidden licenses (excludes dev tools)
+	@echo "Auditing runtime dependency licenses (excluding dev tools)..."
 	@mkdir -p dist/reports
-	@uv run pip-licenses --format=csv --output-file=dist/reports/license-inventory.csv 2>/dev/null || \
-		(uv pip install pip-licenses && uv run pip-licenses --format=csv --output-file=dist/reports/license-inventory.csv)
-	@forbidden='GPL|LGPL|AGPL|MPL|CDDL'; \
+	@# Extract runtime package names from pyproject.toml (direct + transitive)
+	@RUNTIME_PKGS=$$(uv pip compile pyproject.toml 2>/dev/null | grep -E "^[a-z]" | cut -d'=' -f1 | tr '\n' ' '); \
+	if [ -z "$$RUNTIME_PKGS" ]; then \
+		echo "Failed to resolve runtime dependencies"; \
+		exit 1; \
+	fi; \
+	echo "Runtime packages: $$RUNTIME_PKGS"; \
+	uv run pip-licenses --packages $$RUNTIME_PKGS --format=csv --output-file=dist/reports/license-inventory.csv 2>/dev/null || \
+		(uv pip install pip-licenses && uv run pip-licenses --packages $$RUNTIME_PKGS --format=csv --output-file=dist/reports/license-inventory.csv); \
+	forbidden='GPL|LGPL|AGPL|MPL|CDDL'; \
 	if grep -E "$$forbidden" dist/reports/license-inventory.csv >/dev/null 2>&1; then \
-		echo "Forbidden license detected. See dist/reports/license-inventory.csv"; \
+		echo "Forbidden license detected in runtime dependencies. See dist/reports/license-inventory.csv"; \
 		grep -E "$$forbidden" dist/reports/license-inventory.csv; \
 		exit 1; \
 	else \
-		echo "No forbidden licenses detected"; \
+		echo "No forbidden licenses in runtime dependencies"; \
 	fi
+
+# Full license inventory (includes dev tools - informational only, no enforcement)
+.PHONY: license-inventory
+license-inventory: ## Generate full license inventory including dev tools (informational)
+	@echo "Generating full license inventory (all packages)..."
+	@mkdir -p dist/reports
+	@uv run pip-licenses --format=csv --output-file=dist/reports/license-inventory-full.csv 2>/dev/null || \
+		(uv pip install pip-licenses && uv run pip-licenses --format=csv --output-file=dist/reports/license-inventory-full.csv)
+	@echo "Full inventory: dist/reports/license-inventory-full.csv"
+	@wc -l dist/reports/license-inventory-full.csv | awk '{print $$1 - 1 " packages total"}'
 
 .PHONY: clean
 clean:
