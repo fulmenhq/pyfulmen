@@ -3,6 +3,10 @@
 # Bootstrapped with: sfetch → goneat trust pyramid
 # Compliant with: FulmenHQ Makefile Standard
 
+# Default target
+.PHONY: all
+all: check-all
+
 # Read lifecycle phase for coverage gates
 LIFECYCLE := $(shell cat LIFECYCLE_PHASE 2>/dev/null || echo experimental)
 PREPUBLISH_SENTINEL := .artifacts/prepublish.json
@@ -162,7 +166,7 @@ sync-ssot: sync-crucible
 .PHONY: fmt
 fmt: ## Format code with ruff and goneat
 	@echo "Formatting code (ruff)..."
-	@uv run ruff format src/ tests/ scripts/ --exclude tests/fixtures/
+	@uv run ruff format src/ tests/ scripts/ examples/ --exclude tests/fixtures/
 	@echo "Formatting docs and config (goneat)..."
 	@$(GONEAT_RESOLVE); bash -c '$$GONEAT format --types yaml,json,markdown --folders . --finalize-eof --quiet 2>&1 | grep -v -E "(fixtures/invalid/malformed-yaml.yaml|encountered the following formatting errors)" || true'
 	@echo "All files formatted"

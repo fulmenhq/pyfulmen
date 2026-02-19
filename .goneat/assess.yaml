@@ -1,0 +1,16 @@
+# goneat assess configuration
+# Repository: pyfulmen
+#
+# Tunes linter thresholds for this project's conventions.
+# See: goneat docs show assess/lint-shell-make-gha
+version: 1
+lint:
+  make:
+    checkmake:
+      enabled: true
+      config:
+        # Default is 5, too strict for help/bootstrap/license-audit targets.
+        # 60 covers all current targets; anything larger should be extracted
+        # to a script.
+        max_body_length: 60
+        min_phony_targets: ["all", "clean", "test"]
