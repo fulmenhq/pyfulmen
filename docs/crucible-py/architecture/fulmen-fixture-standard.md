@@ -3,9 +3,9 @@ title: "Fulmen Fixture Standard"
 description: "Standard structure and requirements for Fulmen Fixture repositories - test infrastructure providing real-but-test-purpose servers, clients, and datastores"
 author: "Schema Cartographer (@schema-cartographer)"
 date: "2026-01-06"
-last_updated: "2026-01-06"
-status: "draft"
-tags: ["architecture", "fixture", "testing", "infrastructure", "v0.4.2"]
+last_updated: "2026-01-12"
+status: "active"
+tags: ["architecture", "fixture", "testing", "infrastructure", "v0.4.6"]
 ---
 
 # Fulmen Fixture Standard
@@ -47,10 +47,10 @@ This parallels workhorse placement but with testing-specific constraints.
 ### Pattern
 
 ```
-fixture-<mode>-<category>-<name>-<variant>
+fixture-<mode>-<category>-<name>
 ```
 
-All components are required. No implicit defaults.
+All components are required.
 
 ### Components
 
@@ -60,9 +60,18 @@ All components are required. No implicit defaults.
 | `<mode>`     | Enum                    | `server`, `client`, `datastore`, `identity`                   |
 | `<category>` | Enum                    | `proving`, `utility`, `chaos`                                 |
 | `<name>`     | `^[a-z][a-z0-9]{1,20}$` | Registered name from fixture catalog (no hyphens/underscores) |
-| `<variant>`  | `^[0-9]{3}$`            | 3-digit zero-padded variant code                              |
 
-**Full regex**: `^fixture-(server|client|datastore|identity)-(proving|utility|chaos)-[a-z][a-z0-9]{1,20}-[0-9]{3}$`
+**Full regex**: `^fixture-(server|client|datastore|identity)-(proving|utility|chaos)-[a-z][a-z0-9]{1,20}$`
+
+### Variant Strategy
+
+Variants (different configurations of the same fixture concept) are handled via:
+
+1. **Docker tags** for versioned variants: `fixture-server-proving-gauntlet:oauth-minimal`
+2. **Scenario files** for runtime configuration: `scenarios/oauth-full.yaml`
+3. **Future semantic variants** may use descriptive suffixes if needed (e.g., `fixture-server-proving-gauntlet-extended`)
+
+This approach simplifies naming while preserving flexibility. Most fixtures need only one repository with multiple scenarios.
 
 ### Modes
 
@@ -75,24 +84,33 @@ All components are required. No implicit defaults.
 
 **Note**: `identity` mode is planned for v0.4.3.
 
-### Variant Codes
+### Binary Naming
 
-- `001` is the reference/default implementation
-- `000` is reserved (unused)
-- Sequential assignment within a fixture name
-- Variants represent different configurations or capabilities of the same fixture concept
+The binary/executable name uses only the `<name>` component, without mode or category:
+
+| Repository Name                  | Binary Name | Rationale                                                               |
+| -------------------------------- | ----------- | ----------------------------------------------------------------------- |
+| `fixture-server-proving-rampart` | `rampart`   | Short, clean for `docker exec` and local use                            |
+| `fixture-server-utility-echo`    | `echo`      | Name only (conflicts with shell `echo` acceptable in container context) |
+
+**Identity information** appears in:
+
+- Repository/image name: `ghcr.io/fulmenhq/fixture-server-proving-rampart`
+- App identity: `.fulmen/app.yaml`
+- Version output: `rampart v1.0.0`
+- `/version` endpoint response
 
 ### Examples
 
-| Full Name                              | Mode      | Category | Name     | Variant | Description                           |
-| -------------------------------------- | --------- | -------- | -------- | ------- | ------------------------------------- |
-| `fixture-server-proving-gauntlet-001`  | server    | proving  | gauntlet | 001     | Protected backend, OAuth2 minimal     |
-| `fixture-server-proving-gauntlet-002`  | server    | proving  | gauntlet | 002     | Protected backend, OAuth2 full + PKCE |
-| `fixture-server-chaos-gremlin-001`     | server    | chaos    | gremlin  | 001     | Random latency injection              |
-| `fixture-server-utility-echo-001`      | server    | utility  | echo     | 001     | Simple request echo                   |
-| `fixture-client-proving-probe-001`     | client    | proving  | probe    | 001     | OAuth client tester                   |
-| `fixture-datastore-utility-bucket-001` | datastore | utility  | bucket   | 001     | S3-compatible minimal storage         |
-| `fixture-identity-proving-warden-001`  | identity  | proving  | warden   | 001     | Full OIDC with test users             |
+| Full Name                          | Mode      | Category | Name     | Description                   |
+| ---------------------------------- | --------- | -------- | -------- | ----------------------------- |
+| `fixture-server-proving-gauntlet`  | server    | proving  | gauntlet | Protected backend, OAuth2     |
+| `fixture-server-proving-rampart`   | server    | proving  | rampart  | HTTP protocol testing server  |
+| `fixture-server-chaos-gremlin`     | server    | chaos    | gremlin  | Failure injection server      |
+| `fixture-server-utility-echo`      | server    | utility  | echo     | Simple request echo           |
+| `fixture-client-proving-probe`     | client    | proving  | probe    | OAuth client tester           |
+| `fixture-datastore-utility-bucket` | datastore | utility  | bucket   | S3-compatible minimal storage |
+| `fixture-identity-proving-warden`  | identity  | proving  | warden   | Full OIDC with test users     |
 
 ## Behavioral Categories
 
@@ -115,7 +133,8 @@ All fixture names MUST be registered in `config/taxonomy/fixture-catalog.yaml` b
 1. Propose fixture name and category in PR to Crucible
 2. Add entry to `config/taxonomy/fixture-catalog.yaml`
 3. Create fixture repository with registered name
-4. Add variants as needed (increment variant code)
+
+**Important**: The fixture catalog serves as the authoritative registry for fixture names. Create the catalog entry BEFORE creating the repository.
 
 ### Registry Schema
 
@@ -130,25 +149,24 @@ fixtures:
       ja: "混合認証要件を持つ保護されたバックエンド"
     aliases:
       - "gantlet" # Common misspelling
-    variants:
-      "001":
-        name: "oauth-minimal"
+    scenarios:
+      - name: "oauth-minimal"
         description: "OAuth2 with basic scopes"
-      "002":
-        name: "oauth-full"
+      - name: "oauth-full"
         description: "OAuth2 with PKCE, refresh, introspection"
 ```
 
+Scenarios document the different configurations available within a single fixture repository.
+
 ### i18n Support
 
-| Field              | Constraint            | Notes                                         |
-| ------------------ | --------------------- | --------------------------------------------- |
-| `default_lang`     | Required, ISO 639-1   | Author's primary language                     |
-| `summary`          | Required, UTF-8       | In `default_lang`                             |
-| `summary_i18n`     | Optional, map         | lang code -> string (excludes `default_lang`) |
-| `description`      | Optional, UTF-8       | In `default_lang`, at variant level           |
-| `description_i18n` | Optional, map         | lang code -> string                           |
-| `aliases`          | Optional, UTF-8 array | i18n nicknames, typo corrections              |
+| Field          | Constraint            | Notes                                         |
+| -------------- | --------------------- | --------------------------------------------- |
+| `default_lang` | Required, ISO 639-1   | Author's primary language                     |
+| `summary`      | Required, UTF-8       | In `default_lang`                             |
+| `summary_i18n` | Optional, map         | lang code -> string (excludes `default_lang`) |
+| `description`  | Optional, UTF-8       | In `default_lang`                             |
+| `aliases`      | Optional, UTF-8 array | i18n nicknames, typo corrections              |
 
 **Key principle**: Canonical names are ASCII (Docker/DNS safe). All human-readable metadata supports full UTF-8. Authors can write in their primary language; English is not forced.
 
@@ -260,15 +278,308 @@ If helper library is NOT used:
 - SHOULD follow exit code conventions
 - SHOULD handle signals gracefully
 
+## CLI Requirements
+
+Fixtures MUST implement a minimal CLI surface for operational diagnostics. This is mandatory, not optional.
+
+### Required Commands
+
+#### Default Behavior (No Arguments)
+
+```bash
+rampart        # Starts server
+rampart serve  # Optional explicit alias
+```
+
+Fixtures MUST start serving when invoked without arguments. This maintains Docker compatibility where `ENTRYPOINT ["/rampart"]` should just work.
+
+#### Version Command
+
+```bash
+rampart version           # Standard output
+rampart version extended  # Extended build info
+```
+
+**Standard output**:
+
+```
+rampart v1.0.0
+```
+
+**Extended output**:
+
+```
+rampart v1.0.0
+  Commit:     abc1234
+  Built:      2026-01-08T12:00:00Z
+  Go:         go1.21.5
+  Platform:   linux/amd64
+  Crucible:   0.4.4
+
+Fulmen - Thrive on Scale
+https://3leaps.net
+```
+
+**Requirements**:
+
+- MUST include version string
+- MUST include Crucible version (for SSOT alignment debugging)
+- SHOULD include commit SHA and build date
+- Extended version SHOULD include ecosystem branding
+- Exit code: 0 on success
+
+#### Doctor Command
+
+```bash
+rampart doctor
+```
+
+**Purpose**: Pre-flight check before serving. Answers "can I run?"
+
+**Standard output** (ready):
+
+```
+rampart doctor
+
+Configuration
+  Port:       8080 (from PORT env, default: 8080)
+  Host:       127.0.0.1 (from HOST env, default: 127.0.0.1)
+  Log Level:  info (from LOG_LEVEL env, default: info)
+  Scenario:   default (from SCENARIO env, default: default)
+
+Port Check
+  ✓ Port 8080 is available
+
+Environment
+  ✓ Running as non-root (uid=1000)
+  ✓ Writable stderr for logging
+
+Ready to serve.
+```
+
+**Failure output** (port in use):
+
+```
+rampart doctor
+
+Configuration
+  Port:       8080 (from PORT env, default: 8080)
+  ...
+
+Port Check
+  ✗ Port 8080 is in use
+    PID 12345: /usr/bin/rampart (if detectable)
+
+Not ready. Fix issues above before starting.
+```
+
+**Requirements**:
+
+- MUST check if configured port is available
+- MUST show resolved configuration with sources (env var vs default)
+- SHOULD detect what process holds port (platform-dependent, best effort)
+- SHOULD check basic runtime requirements (stderr writable, etc.)
+- Exit code: 0 if ready, non-zero if issues found
+- Output MUST be human-readable (not JSON) - this is operator-facing
+
+### Exit Codes
+
+| Command           | Success      | Failure                |
+| ----------------- | ------------ | ---------------------- |
+| `version`         | 0            | 1 (shouldn't fail)     |
+| `doctor`          | 0 (ready)    | 1 (not ready)          |
+| `serve` / default | 0 (shutdown) | See foundry exit codes |
+| Port in use       | -            | 10 (foundry standard)  |
+
+### Implementation Notes
+
+Fixtures should NOT require a CLI framework (cobra, urfave/cli). Simple `os.Args` parsing is sufficient:
+
+```go
+func main() {
+    if len(os.Args) > 1 {
+        switch os.Args[1] {
+        case "version":
+            printVersion(len(os.Args) > 2 && os.Args[2] == "extended")
+            return
+        case "doctor":
+            os.Exit(runDoctor())
+        case "serve":
+            // fall through to serve
+        default:
+            fmt.Fprintf(os.Stderr, "unknown command: %s\n", os.Args[1])
+            os.Exit(1)
+        }
+    }
+    // default: serve
+    serve()
+}
+```
+
+## OpenAPI Publication
+
+Fixtures that expose HTTP endpoints MUST publish an OpenAPI specification to enable client generation, documentation, and contract testing.
+
+### Requirements
+
+| Requirement   | Level | Details                                       |
+| ------------- | ----- | --------------------------------------------- |
+| Generation    | MUST  | `make openapi` produces `dist/openapi.yaml`   |
+| Serving       | MUST  | `GET /openapi.yaml` returns the spec          |
+| Coverage test | MUST  | CI verifies spec covers all registered routes |
+| CI workflow   | MUST  | `make openapi` runs before `make test`        |
+
+### Build Artifact
+
+Fixtures MAY use either of these equivalent patterns:
+
+| Pattern        | Spec Location                    | Serving Mechanism               | Example  |
+| -------------- | -------------------------------- | ------------------------------- | -------- |
+| Build artifact | `dist/openapi.yaml`              | Read from filesystem at runtime | gauntlet |
+| Embedded       | `internal/handlers/openapi.yaml` | `//go:embed` into binary        | rampart  |
+
+Both patterns are acceptable as long as:
+
+- `GET /openapi.yaml` returns a deterministic, complete spec
+- The coverage test validates the published contract
+- `make openapi` generates/updates the spec; `make build` SHOULD depend on `openapi`
+
+### Coverage Testing
+
+Fixtures MUST include an automated coverage test that compares registered routes against the OpenAPI spec. See [ADR-0014: OpenAPI Spec Coverage Tests](decisions/ADR-0014-openapi-spec-coverage.md) for rationale and implementation patterns.
+
+The coverage test:
+
+1. Parses registered routes from the router source-of-truth
+2. Parses `paths` + methods from the generated spec
+3. Fails if any route is missing from the spec (unless explicitly excluded)
+
+**Intentional exclusions**: Maintainers MAY exclude experimental, internal, or self-referential endpoints (e.g., `/openapi.yaml` itself). All "going concern" endpoints intended for consumer use SHOULD be documented.
+
+### Release Assets
+
+Repository maintainers SHOULD decide whether the OpenAPI spec belongs in release assets (`dist/release/`). If included:
+
+- Copy `dist/openapi.yaml` to `dist/release/openapi.yaml` during `make release-prepare`
+- The spec becomes a signed release artifact alongside binaries
+- Document availability in release notes
+
+### Provenance Metadata
+
+OpenAPI specs SHOULD include provenance using the standard `info.x-*` extension mechanism (does NOT break OpenAPI tooling):
+
+```yaml
+openapi: "3.1.0"
+info:
+  title: "Rampart HTTP Testing Fixture"
+  version: "1.0.0"
+  x-generated-by: "swaggo/swag"
+  x-generated-at: "2026-01-12T10:00:00Z"
+  x-source-repo: "github.com/fulmenhq/fixture-server-proving-rampart"
+  x-crucible-version: "0.4.6"
+```
+
+Do NOT add YAML frontmatter or comments before the `openapi:` key—this breaks spec parsers.
+
+### Related Documentation
+
+- [ADR-0014: OpenAPI Spec Coverage Tests](decisions/ADR-0014-openapi-spec-coverage.md) - Decision rationale
+- [HTTP Server Patterns Guide](../guides/testing/http-server-patterns.md) - Implementation patterns
+- [HTTP REST Standard](../standards/protocol/http-rest-standards.md) - HTTP API conventions
+
+## Port Management Tiers
+
+Fixtures operate at different complexity levels for port management. Choose the tier appropriate for your fixture.
+
+### Tier 1: Simple (Recommended)
+
+Single service with environment variable configuration.
+
+| Variable | Purpose      | Default     |
+| -------- | ------------ | ----------- |
+| `PORT`   | Listen port  | `8080`      |
+| `HOST`   | Bind address | `127.0.0.1` |
+
+**Example**:
+
+```bash
+PORT=9090 HOST=0.0.0.0 rampart
+```
+
+**Use when**: Single HTTP endpoint, local development, simple CI.
+
+**Reference implementation**: `fixture-server-proving-rampart`
+
+### Tier 2: Multi-Port
+
+Services exposing multiple ports (e.g., HTTP + metrics, HTTP + gRPC).
+
+| Variable       | Purpose          | Default     |
+| -------------- | ---------------- | ----------- |
+| `PORT`         | Primary port     | `8080`      |
+| `METRICS_PORT` | Metrics endpoint | `9090`      |
+| `GRPC_PORT`    | gRPC endpoint    | `50051`     |
+| `HOST`         | Bind address     | `127.0.0.1` |
+
+**Example**:
+
+```bash
+PORT=8080 METRICS_PORT=9091 GRPC_PORT=50052 gauntlet
+```
+
+**Use when**: Multiple protocols, metrics exposure, health separated from main API.
+
+### Tier 3: Port Ranges (Future)
+
+Reserved for orchestrated multi-fixture environments where port allocation is managed centrally.
+
+| Variable          | Purpose                   | Example |
+| ----------------- | ------------------------- | ------- |
+| `PORT_RANGE_BASE` | Start of allocated range  | `8000`  |
+| `PORT_RANGE_SIZE` | Number of ports allocated | `10`    |
+
+This tier is **planned** for fixture composition scenarios where a controller allocates port ranges to avoid conflicts.
+
+### Host Binding Default
+
+**Default: `127.0.0.1`** (localhost only)
+
+**Rationale**:
+
+- Prevents accidental network exposure during local development
+- Safe default for `make run` scenarios
+- Container deployments explicitly set `HOST=0.0.0.0`
+
+**Docker Compose files SHOULD include**:
+
+```yaml
+environment:
+  - HOST=0.0.0.0 # Allow external access in container
+```
+
+### Port Conflict Detection
+
+Fixtures MUST detect port conflicts before binding:
+
+1. **On startup**: Check if port is available before attempting to bind
+2. **Exit code**: Use exit code 10 (foundry standard) for port-in-use
+3. **Error message**: Include port number and (if detectable) conflicting process
+
+```
+Error: port 8080 is already in use
+  Process: rampart (PID 12345)
+  Hint: Stop the existing process or use PORT=<other> to change port
+```
+
 ## Directory Structure
 
 ```
-fixture-server-proving-gauntlet-001/
+fixture-server-proving-gauntlet/
 ├── .fulmen/
 │   └── app.yaml                    # App Identity manifest (if using helper lib)
 ├── scenarios/
 │   ├── default.yaml                # Default scenario
-│   ├── oauth-minimal.yaml          # Scenario variants
+│   ├── oauth-minimal.yaml          # Scenario configurations
 │   └── oauth-full.yaml
 ├── docker-compose.yml              # Required: primary entry point
 ├── Dockerfile                      # Container build
@@ -285,15 +596,15 @@ fixture-server-proving-gauntlet-001/
 
 Fixture identity and version are separate concerns:
 
-| Concern          | Where It Lives  | Example                               |
-| ---------------- | --------------- | ------------------------------------- |
-| Fixture identity | Repo/image name | `fixture-server-proving-gauntlet-001` |
-| Fixture version  | Docker tag      | `v1.2.3`, `latest`, `sha-abc123`      |
+| Concern          | Where It Lives  | Example                           |
+| ---------------- | --------------- | --------------------------------- |
+| Fixture identity | Repo/image name | `fixture-server-proving-gauntlet` |
+| Fixture version  | Docker tag      | `v1.2.3`, `latest`, `sha-abc123`  |
 
 ```bash
 # Full image reference
-docker pull ghcr.io/fulmenhq/fixture-server-proving-gauntlet-001:v1.2.3
-docker pull ghcr.io/fulmenhq/fixture-server-proving-gauntlet-001:latest
+docker pull ghcr.io/fulmenhq/fixture-server-proving-gauntlet:v1.2.3
+docker pull ghcr.io/fulmenhq/fixture-server-proving-gauntlet:latest
 ```
 
 Never encode version in repository or image name.
@@ -459,36 +770,56 @@ Each scenario should document:
 
 ## Compliance Checklist
 
-- [ ] Name follows pattern: `fixture-<mode>-<category>-<name>-<variant>`
+### Naming & Registration
+
+- [ ] Name follows pattern: `fixture-<mode>-<category>-<name>`
 - [ ] Name registered in `config/taxonomy/fixture-catalog.yaml`
-- [ ] Variant code is 3-digit zero-padded (`001`, `002`, etc.)
+
+### Security
+
 - [ ] No PII in test data
 - [ ] No NPI/MNPI
 - [ ] No non-public interface tooling (in public repos)
+
+### Infrastructure
+
 - [ ] Container-first: `docker-compose.yml` at root
 - [ ] Scenario-driven configuration (YAML/JSON)
 - [ ] Structured logging (JSON to stderr)
 - [ ] Stateless by default
+
+### CLI Commands (Mandatory)
+
+- [ ] `version` command implemented
+- [ ] `doctor` command implemented
+- [ ] Default behavior (no args) starts server
+
+### Documentation
+
 - [ ] README with usage examples
 - [ ] INTEGRATION.md with required template sections
 - [ ] Scenarios documented
 
 ## Roadmap
 
-### v0.4.2 (Current)
+### v0.4.4 (Current)
+
+- Simplified naming (dropped variant suffix)
+- CLI requirements (`version`, `doctor` commands)
+- Port management tiers
+- Host binding default (127.0.0.1)
+
+### v0.4.3
 
 - Modes: `server`, `client`, `datastore`
 - Categories: `proving`, `utility`, `chaos`
 - Fixture catalog registry
 - i18n support for metadata
 
-### v0.4.3 (Planned)
+### Future
 
 - Add `identity` mode for OIDC/SAML fixtures
 - Alias resolver implementation
-
-### Future
-
 - CI validation: repo name matches catalog entry
 - Scenario schema standardization (after patterns emerge)
 - Fixture composition (multi-fixture test environments)
@@ -497,14 +828,17 @@ Each scenario should document:
 
 - [Repository Categories Taxonomy](../../config/taxonomy/repository-categories.yaml)
 - [Fixture Catalog](../../config/taxonomy/fixture-catalog.yaml)
+- [Ecosystem Brand Summary](../../config/branding/ecosystem.yaml) - For `version --extended` or `about` command
 - [Repository Category Standards](../standards/repository-category/README.md)
 - [Fulmen Ecosystem Guide](./fulmen-ecosystem-guide.md)
 - [Fulmen Forge Workhorse Standard](./fulmen-forge-workhorse-standard.md) - Layer 2 peer
 - [Fulmen Forge Microtool Standard](./fulmen-forge-microtool-standard.md) - Similar constraints model
+- [HTTP Server Patterns Guide](../guides/testing/http-server-patterns.md) - Implementation patterns and compliance checklists for fixture authors
+- [HTTP Client Patterns Guide](../guides/testing/http-client-patterns.md) - Testing patterns for fixture consumers
 
 ---
 
-**Document Status**: Draft
-**Last Updated**: 2026-01-06
+**Document Status**: Active
+**Last Updated**: 2026-01-08
 **Maintained By**: Schema Cartographer
 **Approval Required From**: EA Steward, Crucible Maintainers

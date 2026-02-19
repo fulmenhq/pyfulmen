@@ -198,8 +198,8 @@ Codex forges SHALL adhere to the "seven pillars" distilled by the Architecture C
 
 1. MDX-first authoring with component catalog (`src/components/mdx/`), hot reload, and error overlays.
 2. Rich code examples: syntax highlighting, line numbers, copy buttons, diff blocks, terminal renders.
-3. Automated API/spec documentation (OpenAPI, AsyncAPI, GraphQL) via Astro integrations or build scripts.
-4. Local dev “one command start”: `pnpm install && pnpm dev` must work cross-platform.
+3. Automated API/spec documentation (OpenAPI, AsyncAPI, GraphQL) via Astro integrations or build scripts. When ingesting OpenAPI specs from fixtures or workhorses, those upstream specs should follow [ADR-0014](decisions/ADR-0014-openapi-spec-coverage.md) coverage testing standards.
+4. Local dev "one command start": `pnpm install && pnpm dev` must work cross-platform.
 
 ### Pillar IV – Accessibility & Internationalisation
 
@@ -404,6 +404,7 @@ Codex forges also need to follow the shared [Portable Testing Practices](../stan
 - [Fulmen Ecosystem Guide](fulmen-ecosystem-guide.md)
 - [Fulmen Forge Workhorse Standard](fulmen-forge-workhorse-standard.md)
 - [Repository Category Taxonomy](../../config/taxonomy/repository-categories.yaml)
+- [Ecosystem Brand Summary](../../config/branding/ecosystem.yaml) - For `version --extended` or `about` endpoint
 - [Frontmatter Standard](../standards/frontmatter-standard.md)
 - [Fulmen Technical Manifesto](fulmen-technical-manifesto.md)
 
