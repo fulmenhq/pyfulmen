@@ -62,6 +62,19 @@ from .errors import AssetNotFoundError, CrucibleVersionError, ParseError
 # Data models
 from .models import AssetMetadata, CrucibleVersion
 
+# Role catalog (v0.2.1+)
+from .roles import (
+    RequiredReading,
+    RequiredReadingFile,
+    RoleEscalation,
+    RoleExample,
+    RoleMindset,
+    RolePrompt,
+    list_role_slugs,
+    load_role,
+    load_role_catalog,
+)
+
 __all__ = [
     # Bridge API (v0.1.5+) - Recommended for new code
     "list_categories",
@@ -88,6 +101,16 @@ __all__ = [
     # Legacy APIs (backward compatibility)
     "get_crucible_metadata_path",
     "get_crucible_info",
+    # Role catalog (v0.2.1+)
+    "list_role_slugs",
+    "load_role",
+    "load_role_catalog",
+    "RolePrompt",
+    "RoleMindset",
+    "RoleEscalation",
+    "RoleExample",
+    "RequiredReading",
+    "RequiredReadingFile",
     # Submodules (legacy compatibility)
     "schemas",
     "docs",
