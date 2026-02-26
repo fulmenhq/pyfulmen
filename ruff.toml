@@ -40,6 +40,8 @@ select = [
 "src/crucible/foundry/exit_codes.py" = ["E501", "UP035"]
 # Generated fulpack types: allow long lines (E501)
 "src/crucible/fulpack/*.py" = ["E501"]
+# Crucible synced files use str+Enum pattern for cross-language compatibility; suppress UP042
+"src/crucible/**/*.py" = ["UP042"]
 # Test fixture files: ignore all linting (they are data files, not code)
 "tests/fixtures/foundry/mime/*.json" = ["ALL"]
 "tests/fixtures/pathfinder/sample-files/*.txt" = ["ALL"]

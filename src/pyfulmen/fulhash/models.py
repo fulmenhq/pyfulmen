@@ -6,13 +6,13 @@ Implements the Digest type and Algorithm enum according to:
 - docs/crucible-py/standards/library/modules/fulhash.md
 """
 
-from enum import Enum
+from enum import StrEnum
 from typing import Annotated
 
 from pydantic import BaseModel, ConfigDict, Field, computed_field, field_validator
 
 
-class Algorithm(str, Enum):
+class Algorithm(StrEnum):
     """Supported hash algorithms.
 
     Attributes:

@@ -7,7 +7,7 @@ Defines the core data structures for file discovery operations.
 from __future__ import annotations
 
 from collections.abc import Callable
-from enum import Enum
+from enum import StrEnum
 from typing import Any
 
 from pydantic import ConfigDict, Field
@@ -87,7 +87,7 @@ class PathResult(FulmenDataModel):
     metadata: PathMetadata = Field(default_factory=lambda: PathMetadata(), description="Additional metadata")
 
 
-class ConstraintType(str, Enum):
+class ConstraintType(StrEnum):
     """Constraint classification for enforcement context."""
 
     REPOSITORY = "repository"
@@ -95,7 +95,7 @@ class ConstraintType(str, Enum):
     CLOUD = "cloud"
 
 
-class EnforcementLevel(str, Enum):
+class EnforcementLevel(StrEnum):
     """Enforcement severity levels for constraint violations."""
 
     STRICT = "strict"

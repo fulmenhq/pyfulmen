@@ -4,10 +4,10 @@ Internal module - not part of public API.
 """
 
 import platform
-from enum import Enum
+from enum import StrEnum
 
 
-class Platform(str, Enum):
+class Platform(StrEnum):
     """Supported platforms."""
 
     LINUX = "linux"
