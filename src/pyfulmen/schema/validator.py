@@ -173,7 +173,7 @@ def _diagnostics_from_errors(errors: Iterable[ValidationError]) -> list[Diagnost
             Diagnostic(
                 pointer=pointer,
                 message=err.message,
-                keyword=err.validator,
+                keyword=err.validator if isinstance(err.validator, str) else None,
                 severity="ERROR",
                 source="jsonschema",
             )

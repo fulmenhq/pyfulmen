@@ -42,6 +42,7 @@ help:
 	@echo "  make bootstrap         - Install tools and dependencies"
 	@echo "  make tools             - Verify external tools are present"
 	@echo "  make lint              - Run linting checks"
+	@echo "  make typecheck         - Run static type checks (mypy)"
 	@echo "  make fmt               - Apply code formatting"
 	@echo "  make test              - Run full test suite"
 	@echo "  make test-cov          - Run tests with coverage enforcement"
@@ -176,6 +177,11 @@ lint:
 	@echo "Running linter..."
 	@uv run ruff check src/ tests/ scripts/ --exclude tests/fixtures/
 
+.PHONY: typecheck
+typecheck:
+	@echo "Running type checks (mypy)..."
+	@uv run mypy
+
 .PHONY: test
 test:
 	@echo "Running tests (lifecycle=$(LIFECYCLE), min coverage=$(COVERAGE_MIN)%)..."
@@ -192,7 +198,7 @@ lifecycle:
 	@echo "Required test coverage: $(COVERAGE_MIN)%"
 
 .PHONY: check-all
-check-all: fmt lint test license-audit ## Run all quality checks (fmt, lint, test, license)
+check-all: fmt lint typecheck test license-audit ## Run all quality checks (fmt, lint, typecheck, test, license)
 	@echo "All quality checks passed"
 
 .PHONY: version
