@@ -35,6 +35,9 @@ dependencies = [
     "google-crc32c>=1.7.1",
 ]
 
+[project.scripts]
+pyfulmen = "pyfulmen.cli:main"
+
 [project.urls]
 Homepage = "https://github.com/fulmenhq/pyfulmen"
 Repository = "https://github.com/fulmenhq/pyfulmen"
