@@ -15,10 +15,12 @@ from typing import Any
 
 from jsonschema import Draft7Validator, ValidationError
 from jsonschema import validate as jsonschema_validate
+from referencing.exceptions import Unresolvable
 
 from .. import crucible
 from ..telemetry import MetricRegistry
 from . import catalog
+from .registry import OfflineSchemaResolutionError, crucible_registry
 
 
 @dataclass(slots=True)
@@ -48,7 +50,7 @@ class SchemaValidationError(Exception):
 
 def load_validator(category: str, version: str, name: str) -> Draft7Validator:
     schema = crucible.schemas.load_schema(category, version, name)
-    return Draft7Validator(schema)
+    return Draft7Validator(schema, registry=crucible_registry())
 
 
 def validate_against_schema(data: dict[str, Any], category: str, version: str, name: str) -> None:
@@ -76,10 +78,12 @@ def _validate_against_schema_impl(
     schema = crucible.schemas.load_schema(category, version, name)
 
     try:
-        jsonschema_validate(instance=data, schema=schema)
+        jsonschema_validate(instance=data, schema=schema, registry=crucible_registry())
+    except Unresolvable as exc:
+        raise _offline_resolution_error(exc) from exc
     except ValidationError as exc:
         registry.counter("schema_validation_errors").inc()
-        validator = Draft7Validator(schema)
+        validator = Draft7Validator(schema, registry=crucible_registry())
         errors = [err.message for err in validator.iter_errors(data)]
 
         raise SchemaValidationError(
@@ -104,8 +108,11 @@ def validate_data(schema_id: str, data: Any, *, use_goneat: bool = True) -> Vali
             return result
 
     schema = crucible.schemas.load_schema(info.category, info.version, info.name)
-    validator = Draft7Validator(schema)
-    diagnostics = _diagnostics_from_errors(validator.iter_errors(data))
+    validator = Draft7Validator(schema, registry=crucible_registry())
+    try:
+        diagnostics = _diagnostics_from_errors(validator.iter_errors(data))
+    except Unresolvable as exc:
+        raise _offline_resolution_error(exc) from exc
     return ValidationResult(schema=info, is_valid=not diagnostics, diagnostics=diagnostics, source="jsonschema")
 
 
@@ -140,6 +147,22 @@ def format_diagnostics(diagnostics: list[Diagnostic], *, style: str = "text") ->
 
 
 # Internal helpers -----------------------------------------------------------
+
+
+def _offline_resolution_error(exc: Unresolvable) -> OfflineSchemaResolutionError:
+    """Convert an unresolvable-$ref error into a clear offline error.
+
+    Network fetching is intentionally unsupported: schema refs must resolve
+    from the local schemas/crucible-py registry (see pyfulmen.schema.registry).
+    """
+    ref = getattr(exc, "ref", None)
+    if ref is None:
+        ref = getattr(getattr(exc, "_wrapped", None), "ref", "<unknown>")
+    return OfflineSchemaResolutionError(
+        f"Cannot resolve schema $ref {ref!r} offline: the URI is not registered in the "
+        "local Crucible schema registry (schemas/crucible-py) and network fetching is "
+        "disabled. Sync the referenced schema (make sync-crucible) or fix the $ref."
+    )
 
 
 def _diagnostics_from_errors(errors: Iterable[ValidationError]) -> list[Diagnostic]:
@@ -200,6 +223,7 @@ def _validate_with_goneat(info: catalog.SchemaInfo, data: Any) -> ValidationResu
 
 
 __all__ = [
+    "OfflineSchemaResolutionError",
     "SchemaValidationError",
     "Diagnostic",
     "ValidationResult",
