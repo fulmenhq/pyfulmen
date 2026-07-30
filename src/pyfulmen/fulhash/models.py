@@ -7,9 +7,18 @@ Implements the Digest type and Algorithm enum according to:
 """
 
 from enum import StrEnum
-from typing import Annotated
+from typing import Annotated, Any
 
-from pydantic import BaseModel, ConfigDict, Field, computed_field, field_validator
+from pydantic import (
+    BaseModel,
+    ConfigDict,
+    Field,
+    SerializerFunctionWrapHandler,
+    computed_field,
+    field_serializer,
+    field_validator,
+    model_serializer,
+)
 
 
 class Algorithm(StrEnum):
@@ -84,6 +93,24 @@ class Digest(BaseModel):
         ),
     ]
 
+    @field_validator("bytes", mode="before")
+    @classmethod
+    def coerce_bytes_from_list(cls, v: Any) -> Any:
+        """Coerce a JSON ``list[int]`` payload back into ``bytes``.
+
+        Per digest.schema.json, the ``bytes`` property is serialized as an
+        array of integers (0-255) in JSON; accept that form on validation so
+        JSON round-trips work.
+        """
+        if isinstance(v, list):
+            if any(not isinstance(item, int) or isinstance(item, bool) for item in v):
+                raise ValueError("invalid byte array: elements must be integers 0-255")
+            try:
+                return bytes(v)
+            except (TypeError, ValueError) as exc:
+                raise ValueError(f"invalid byte array: {exc}") from exc
+        return v
+
     @field_validator("hex")
     @classmethod
     def validate_hex_length(cls, v: str, info) -> str:
@@ -140,6 +167,29 @@ class Digest(BaseModel):
             raise ValueError(f"{algorithm.value} requires {expected_length} bytes, got {len(v)}")
 
         return v
+
+    @field_serializer("bytes", when_used="json-unless-none")
+    def serialize_bytes_as_list(self, v: bytes) -> list[int]:
+        """Serialize raw digest bytes as ``list[int]`` in JSON mode.
+
+        Per digest.schema.json, ``bytes`` is an array of integers (0-255).
+        Python mode (``model_dump()``) is unaffected and keeps ``bytes``.
+        """
+        return list(v)
+
+    # No return annotation: a declared dict[str, Any] would replace the
+    # model's serialization JSON schema with a bare object schema.
+    @model_serializer(mode="wrap", when_used="json")
+    def omit_none_bytes_in_json(self, handler: SerializerFunctionWrapHandler):
+        """Omit the ``bytes`` key entirely in JSON output when unset.
+
+        digest.schema.json marks ``bytes`` as optional; ``null`` is not a
+        valid value for it, so the key must be absent rather than ``None``.
+        """
+        data = handler(self)
+        if data.get("bytes") is None:
+            data.pop("bytes", None)
+        return data
 
     @computed_field  # type: ignore[misc]
     @property
