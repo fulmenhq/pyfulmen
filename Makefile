@@ -15,7 +15,7 @@ CURRENT_VERSION := $(shell cat VERSION 2>/dev/null || echo "0.0.0")
 # Tool installation (user-space bin dir; overridable with BINDIR=...)
 # Defaults to $HOME/.local/bin on macOS/Linux
 BINDIR ?= $(HOME)/.local/bin
-GONEAT_VERSION ?= v0.5.1
+GONEAT_VERSION ?= v0.5.15
 SFETCH_INSTALL_URL ?= https://github.com/3leaps/sfetch/releases/latest/download/install-sfetch.sh
 
 # Coverage thresholds by lifecycle phase
@@ -168,7 +168,7 @@ fmt: ## Format code with ruff and goneat
 	@echo "Formatting code (ruff)..."
 	@uv run ruff format src/ tests/ scripts/ examples/ --exclude tests/fixtures/
 	@echo "Formatting docs and config (goneat)..."
-	@$(GONEAT_RESOLVE); bash -c '$$GONEAT format --types yaml,json,markdown --folders . --finalize-eof --quiet 2>&1 | grep -v -E "(fixtures/invalid/malformed-yaml.yaml|encountered the following formatting errors)" || true'
+	@$(GONEAT_RESOLVE); "$$GONEAT" format --types yaml,json,markdown --folders . --finalize-eof --quiet 2>&1 | grep -v -E "(fixtures/invalid/malformed-yaml.yaml|encountered the following formatting errors)" || true
 	@echo "All files formatted"
 
 .PHONY: lint

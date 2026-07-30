@@ -48,6 +48,7 @@ print(role.checklists)  # {"security_review": ["Credentials stored securely ..."
 ```
 
 **Raises:**
+
 - `ValueError` if slug format is invalid (uppercase, hyphens, digits-first)
 - `AssetNotFoundError` if slug is valid but no matching role exists (includes similarity suggestions)
 
@@ -77,34 +78,34 @@ All types are dataclasses (not Pydantic). Import from `pyfulmen.crucible`.
 
 The top-level role definition. All roles have these required fields populated:
 
-| Field | Type | Notes |
-|-------|------|-------|
-| `slug` | `str` | Unique identifier (e.g., `"devlead"`) |
-| `name` | `str` | Human-readable name |
-| `description` | `str` | Short description |
-| `version` | `str` | Role version (semver) |
-| `status` | `str` | e.g., `"approved"` |
-| `scope` | `list[str]` | What the role covers |
-| `responsibilities` | `list[str]` | What the role does |
-| `escalates_to` | `list[RoleEscalation]` | When to hand off |
-| `does_not` | `list[str]` | Explicit boundaries |
+| Field              | Type                   | Notes                                 |
+| ------------------ | ---------------------- | ------------------------------------- |
+| `slug`             | `str`                  | Unique identifier (e.g., `"devlead"`) |
+| `name`             | `str`                  | Human-readable name                   |
+| `description`      | `str`                  | Short description                     |
+| `version`          | `str`                  | Role version (semver)                 |
+| `status`           | `str`                  | e.g., `"approved"`                    |
+| `scope`            | `list[str]`            | What the role covers                  |
+| `responsibilities` | `list[str]`            | What the role does                    |
+| `escalates_to`     | `list[RoleEscalation]` | When to hand off                      |
+| `does_not`         | `list[str]`            | Explicit boundaries                   |
 
 Optional fields (may be `None` or empty):
 
-| Field | Type | Notes |
-|-------|------|-------|
-| `author` | `str \| None` | Role author |
-| `category` | `str \| None` | Role category |
-| `extends` | `str \| None` | Base role URL |
-| `domains` | `list[str]` | Domain tags |
-| `tags` | `list[str]` | Search tags |
-| `context` | `str \| None` | When/how to use this role |
-| `mindset` | `RoleMindset \| None` | Focus questions and principles |
-| `examples` | `list[RoleExample]` | Example artifacts |
-| `checklists` | `dict[str, list[str]]` | Named checklists |
-| `pre_push_checklist` | `list[str]` | Pre-push checks |
-| `required_reading` | `RequiredReading \| None` | Files to read first |
-| `cross_role_note` | `str \| None` | Notes about role interactions |
+| Field                | Type                      | Notes                          |
+| -------------------- | ------------------------- | ------------------------------ |
+| `author`             | `str \| None`             | Role author                    |
+| `category`           | `str \| None`             | Role category                  |
+| `extends`            | `str \| None`             | Base role URL                  |
+| `domains`            | `list[str]`               | Domain tags                    |
+| `tags`               | `list[str]`               | Search tags                    |
+| `context`            | `str \| None`             | When/how to use this role      |
+| `mindset`            | `RoleMindset \| None`     | Focus questions and principles |
+| `examples`           | `list[RoleExample]`       | Example artifacts              |
+| `checklists`         | `dict[str, list[str]]`    | Named checklists               |
+| `pre_push_checklist` | `list[str]`               | Pre-push checks                |
+| `required_reading`   | `RequiredReading \| None` | Files to read first            |
+| `cross_role_note`    | `str \| None`             | Notes about role interactions  |
 
 #### `RoleMindset`
 
@@ -117,9 +118,9 @@ if role.mindset:
         print(f"  Follow: {p}")
 ```
 
-| Field | Type |
-|-------|------|
-| `focus` | `list[str]` |
+| Field        | Type        |
+| ------------ | ----------- |
+| `focus`      | `list[str]` |
 | `principles` | `list[str]` |
 
 #### `RoleEscalation`
@@ -129,17 +130,17 @@ for esc in role.escalates_to:
     print(f"Escalate to {esc.target} when: {esc.when}")
 ```
 
-| Field | Type |
-|-------|------|
+| Field    | Type  |
+| -------- | ----- |
 | `target` | `str` |
-| `when` | `str` |
+| `when`   | `str` |
 
 #### `RoleExample`
 
-| Field | Type |
-|-------|------|
-| `type` | `str` |
-| `title` | `str` |
+| Field     | Type  |
+| --------- | ----- |
+| `type`    | `str` |
+| `title`   | `str` |
 | `content` | `str` |
 
 #### `RequiredReading`
@@ -154,17 +155,17 @@ if role.required_reading:
         print(f"  Read {f.path}: {f.reason}")
 ```
 
-| Field | Type |
-|-------|------|
-| `description` | `str \| None` |
-| `pattern` | `str \| None` |
-| `files` | `list[RequiredReadingFile]` |
+| Field         | Type                        |
+| ------------- | --------------------------- |
+| `description` | `str \| None`               |
+| `pattern`     | `str \| None`               |
+| `files`       | `list[RequiredReadingFile]` |
 
 #### `RequiredReadingFile`
 
-| Field | Type |
-|-------|------|
-| `path` | `str` |
+| Field    | Type  |
+| -------- | ----- |
+| `path`   | `str` |
 | `reason` | `str` |
 
 ## Common Patterns

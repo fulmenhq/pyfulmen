@@ -1045,21 +1045,25 @@ uv run pytest tests/unit/logging/test_severity.py::TestSeverityComparison -v
 pyfulmen is designed for environments where dependency hygiene matters.
 
 **Dependency Transparency:**
+
 - **Auditable**: Run `uv tree` or `pip show` to inspect dependencies
 - **SBOM-ready**: Compatible with `cyclonedx-py` and standard Python tooling
 - **License-clean**: All dependencies use MIT, Apache-2.0, or compatible licenses
 
 **Bundled Data:**
+
 - All Crucible catalogs (country codes, exit codes, HTTP statuses) are bundled in the wheel
 - No runtime network calls for reference data
 - Version and provenance tracked in `.crucible/metadata/metadata.yaml`
 
 **Security Practices:**
+
 - Type hints and Pydantic validation throughout
 - Pattern matching uses bounded execution (no ReDoS vulnerabilities)
 - Vulnerability scanning via `pip-audit` or `safety`
 
 **Audit Commands:**
+
 ```bash
 # View dependency tree
 uv tree

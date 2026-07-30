@@ -9,3 +9,15 @@ tests/fixtures/foundry/mime/json-with-utf8-bom.json
 # Crucible test fixtures - deliberately malformed for validation testing
 config/crucible-py/library/foundry/fixtures/signals/invalid/malformed.yaml
 config/crucible-py/repository/app-identity/fixtures/invalid/*.yaml
+
+# Synced SSOT trees - content is owned upstream (crucible) and sync uses
+# overwrite semantics; local formatting would be clobbered and creates
+# permanent local-vs-upstream drift. Formatting fixes belong upstream.
+config/crucible-py/**
+schemas/crucible-py/**
+docs/crucible-py/**
+.crucible/**
+
+# Test fixtures whose byte content is load-bearing
+tests/fixtures/app-identity/invalid/*.yaml
+tests/fixtures/pathfinder/checksum-fixtures.yaml
