@@ -10,10 +10,10 @@ Source: schemas/taxonomy/library/fulencode/
 See: https://github.com/fulmenhq/crucible/blob/main/docs/standards/library/modules/fulencode.md
 """
 
-from enum import Enum
+from enum import StrEnum
 
 
-class EncodingFormat(str, Enum):
+class EncodingFormat(StrEnum):
     """EncodingFormat enum
 
     Generated from: schemas/taxonomy/library/fulencode/encoding-families/v1.0.0/families.yaml
@@ -44,7 +44,7 @@ class EncodingFormat(str, Enum):
     ASCII = "ascii"
 
 
-class NormalizationProfile(str, Enum):
+class NormalizationProfile(StrEnum):
     """NormalizationProfile enum
 
     Generated from: schemas/taxonomy/library/fulencode/normalization-profiles/v1.0.0/profiles.yaml
@@ -69,7 +69,7 @@ class NormalizationProfile(str, Enum):
     LEGACY_COMPATIBLE = "legacy_compatible"
 
 
-class ConfidenceLevel(str, Enum):
+class ConfidenceLevel(StrEnum):
     """ConfidenceLevel enum
 
     Generated from: schemas/taxonomy/library/fulencode/detection-confidence/v1.0.0/levels.yaml
