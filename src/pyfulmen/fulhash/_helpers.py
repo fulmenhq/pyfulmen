@@ -8,6 +8,11 @@ import hmac
 import re
 from pathlib import Path
 
+from .errors import (
+    InvalidChecksumError,
+    InvalidChecksumFormatError,
+    UnsupportedAlgorithmError,
+)
 from .models import Algorithm, Digest
 
 # Checksum string pattern from checksum-string.schema.json
@@ -33,7 +38,8 @@ def format_checksum(algorithm: str | Algorithm, hex_digest: str) -> str:
         Formatted checksum string in format "algorithm:hex"
 
     Raises:
-        ValueError: If algorithm is unsupported or hex is invalid
+        UnsupportedAlgorithmError: If algorithm is unsupported (ValueError subclass)
+        InvalidChecksumError: If hex is invalid (ValueError subclass)
 
     Examples:
         >>> from pyfulmen.fulhash import format_checksum, Algorithm
@@ -51,17 +57,17 @@ def format_checksum(algorithm: str | Algorithm, hex_digest: str) -> str:
 
     # Validate algorithm is supported
     if algo_str not in ALGORITHM_HEX_LENGTHS:
-        raise ValueError(
+        raise UnsupportedAlgorithmError(
             f"Unsupported algorithm: {algo_str}. Supported algorithms: {', '.join(ALGORITHM_HEX_LENGTHS.keys())}"
         )
 
     # Validate hex format
     expected_length = ALGORITHM_HEX_LENGTHS[algo_str]
     if not re.match(r"^[0-9a-f]+$", hex_digest):
-        raise ValueError(f"Invalid hex format: must be lowercase hexadecimal, got: {hex_digest!r}")
+        raise InvalidChecksumError(f"Invalid hex format: must be lowercase hexadecimal, got: {hex_digest!r}")
 
     if len(hex_digest) != expected_length:
-        raise ValueError(f"{algo_str} requires {expected_length} hex characters, got {len(hex_digest)}")
+        raise InvalidChecksumError(f"{algo_str} requires {expected_length} hex characters, got {len(hex_digest)}")
 
     return f"{algo_str}:{hex_digest}"
 
@@ -76,7 +82,8 @@ def parse_checksum(checksum: str) -> tuple[str, str]:
         Tuple of (algorithm, hex_digest)
 
     Raises:
-        ValueError: If checksum format is invalid
+        InvalidChecksumFormatError: If checksum format is invalid (ValueError subclass)
+        UnsupportedAlgorithmError: If algorithm is unsupported (ValueError subclass)
 
     Examples:
         >>> from pyfulmen.fulhash import parse_checksum
@@ -93,30 +100,62 @@ def parse_checksum(checksum: str) -> tuple[str, str]:
 
     # Check for colon separator
     if ":" not in checksum:
-        raise ValueError(f"Invalid checksum format: expected format 'algorithm:hex', got: {checksum!r}")
+        raise InvalidChecksumFormatError(f"Invalid checksum format: expected format 'algorithm:hex', got: {checksum!r}")
 
     # Split on first colon only
     parts = checksum.split(":", 1)
     if len(parts) != 2:
-        raise ValueError(f"Invalid checksum format: expected format 'algorithm:hex', got: {checksum!r}")
+        raise InvalidChecksumFormatError(f"Invalid checksum format: expected format 'algorithm:hex', got: {checksum!r}")
 
     algorithm, hex_digest = parts
 
     # Validate algorithm is supported
     if algorithm not in ALGORITHM_HEX_LENGTHS:
-        raise ValueError(
+        raise UnsupportedAlgorithmError(
             f"Unsupported algorithm: {algorithm}. Supported algorithms: {', '.join(ALGORITHM_HEX_LENGTHS.keys())}"
         )
 
     # Validate hex format
     expected_length = ALGORITHM_HEX_LENGTHS[algorithm]
     if not re.match(r"^[0-9a-f]+$", hex_digest):
-        raise ValueError(f"Invalid hex format: must be lowercase hexadecimal, got: {hex_digest!r}")
+        raise InvalidChecksumFormatError(f"Invalid hex format: must be lowercase hexadecimal, got: {hex_digest!r}")
 
     if len(hex_digest) != expected_length:
-        raise ValueError(f"{algorithm} requires {expected_length} hex characters, got {len(hex_digest)}")
+        raise InvalidChecksumFormatError(
+            f"{algorithm} requires {expected_length} hex characters, got {len(hex_digest)}"
+        )
 
     return algorithm, hex_digest
+
+
+def parse_digest(checksum: str) -> Digest:
+    """Parse checksum string into a Digest model.
+
+    Composes parse_checksum with Digest construction; raw bytes are decoded
+    from the hex component (gofulmen ParseDigest parity).
+
+    Args:
+        checksum: Checksum string in format "algorithm:hex"
+
+    Returns:
+        Digest with algorithm, hex, bytes, and formatted fields
+
+    Raises:
+        InvalidChecksumFormatError: If checksum format is invalid (ValueError subclass)
+        UnsupportedAlgorithmError: If algorithm is unsupported (ValueError subclass)
+
+    Examples:
+        >>> from pyfulmen.fulhash import parse_digest
+        >>> digest = parse_digest("xxh3-128:a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6")
+        >>> digest.formatted
+        'xxh3-128:a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6'
+    """
+    algo_str, hex_digest = parse_checksum(checksum)
+    return Digest(
+        algorithm=Algorithm(algo_str),
+        hex=hex_digest,
+        bytes=bytes.fromhex(hex_digest),
+    )
 
 
 def validate_checksum_string(checksum: str) -> bool:
@@ -262,6 +301,7 @@ def multi_hash(source: str | Path | bytes, algorithms: list[Algorithm]) -> dict[
 __all__ = [
     "format_checksum",
     "parse_checksum",
+    "parse_digest",
     "validate_checksum_string",
     "compare_digests",
     "verify",

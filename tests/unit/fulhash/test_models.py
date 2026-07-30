@@ -5,7 +5,12 @@ import json
 import pytest
 from pydantic import ValidationError
 
-from pyfulmen.fulhash import Algorithm, Digest
+from pyfulmen.fulhash import (
+    Algorithm,
+    Digest,
+    InvalidChecksumError,
+    UnsupportedAlgorithmError,
+)
 from pyfulmen.schema.validator import validate_against_schema
 
 
@@ -320,3 +325,103 @@ class TestDigestSchemaRoundTrip:
         parsed = Digest.model_validate_json(json_str)
         assert parsed == digest
         assert parsed.bytes is None
+
+
+class TestDigestCrucibleBridge:
+    """Test to_crucible/from_crucible bridge methods."""
+
+    HEX = "531df2844447dd5077db03842cd75395"
+    RAW = bytes.fromhex("531df2844447dd5077db03842cd75395")
+
+    def test_algorithm_is_crucible_reexport(self):
+        """Algorithm re-export is identical to the generated crucible enum."""
+        import crucible.fulhash
+
+        assert Algorithm is crucible.fulhash.Algorithm
+
+    def test_to_crucible_with_bytes(self):
+        """to_crucible copies all four fields, bytes as list[int]."""
+        digest = Digest(algorithm=Algorithm.XXH3_128, hex=self.HEX, bytes=self.RAW)
+        cd = digest.to_crucible()
+
+        assert cd["algorithm"] == "xxh3-128"
+        assert cd["hex"] == self.HEX
+        assert cd["formatted"] == f"xxh3-128:{self.HEX}"
+        assert cd["bytes"] == list(self.RAW)
+
+    def test_to_crucible_without_bytes_omits_key(self):
+        """to_crucible omits the bytes key entirely when unset."""
+        digest = Digest(algorithm=Algorithm.XXH3_128, hex=self.HEX)
+        cd = digest.to_crucible()
+
+        assert "bytes" not in cd
+
+    def test_round_trip_with_bytes(self):
+        """Digest -> to_crucible -> from_crucible round-trips to an equal digest."""
+        digest = Digest(algorithm=Algorithm.XXH3_128, hex=self.HEX, bytes=self.RAW)
+        restored = Digest.from_crucible(digest.to_crucible())
+
+        assert restored == digest
+        assert restored.bytes == self.RAW
+        assert restored.formatted == digest.formatted
+
+    def test_round_trip_without_bytes(self):
+        """Round-trip without bytes derives raw bytes from hex."""
+        digest = Digest(algorithm=Algorithm.XXH3_128, hex=self.HEX)
+        restored = Digest.from_crucible(digest.to_crucible())
+
+        assert restored.algorithm == digest.algorithm
+        assert restored.hex == digest.hex
+        assert restored.formatted == digest.formatted
+        assert restored.bytes == bytes.fromhex(self.HEX)
+
+    def test_from_crucible_bytes_absent_derives_from_hex(self):
+        """from_crucible decodes bytes from hex when the bytes field is absent."""
+        restored = Digest.from_crucible(
+            {
+                "algorithm": "xxh3-128",
+                "hex": self.HEX,
+                "formatted": f"xxh3-128:{self.HEX}",
+            }
+        )
+        assert restored.bytes == self.RAW
+
+    def test_from_crucible_missing_bytes_and_hex_raises(self):
+        """from_crucible with neither bytes nor hex raises InvalidChecksumError."""
+        with pytest.raises(InvalidChecksumError, match="missing both bytes and hex"):
+            Digest.from_crucible({"algorithm": "xxh3-128"})
+
+    def test_from_crucible_unknown_algorithm_raises(self):
+        """from_crucible with an unknown algorithm raises UnsupportedAlgorithmError."""
+        with pytest.raises(UnsupportedAlgorithmError, match="Unsupported algorithm: md5"):
+            Digest.from_crucible({"algorithm": "md5", "hex": "abc123"})
+
+    def test_from_crucible_errors_are_value_errors(self):
+        """Bridge errors remain catchable as ValueError (load-bearing compat)."""
+        with pytest.raises(ValueError):
+            Digest.from_crucible({"algorithm": "md5", "hex": "abc123"})
+        with pytest.raises(ValueError):
+            Digest.from_crucible({"algorithm": "xxh3-128"})
+
+    def test_from_crucible_conflicting_fields_bytes_win(self):
+        """Non-empty bytes are authoritative: hex is derived, never trusted."""
+        wrong_hex = "0" * 32
+        digest = Digest.from_crucible({"algorithm": "xxh3-128", "hex": wrong_hex, "bytes": list(self.RAW)})
+        assert digest.bytes == self.RAW
+        assert digest.hex == self.HEX  # derived from bytes, not the payload hex
+
+    def test_from_crucible_empty_bytes_falls_back_to_hex(self):
+        """An empty bytes list is treated as absent (gofulmen len > 0 parity)."""
+        digest = Digest.from_crucible({"algorithm": "xxh3-128", "hex": self.HEX, "bytes": []})
+        assert digest.hex == self.HEX
+        assert digest.bytes == self.RAW
+
+    def test_from_crucible_empty_bytes_without_hex_raises(self):
+        """Empty bytes with no hex raises the stable missing-fields error."""
+        with pytest.raises(InvalidChecksumError, match="missing both bytes and hex"):
+            Digest.from_crucible({"algorithm": "xxh3-128", "bytes": []})
+
+    def test_from_crucible_invalid_hex_raises_typed_error(self):
+        """Undecodable hex raises InvalidChecksumError, not a bare ValueError."""
+        with pytest.raises(InvalidChecksumError, match="Invalid hex in crucible digest"):
+            Digest.from_crucible({"algorithm": "xxh3-128", "hex": "zz" * 16})

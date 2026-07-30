@@ -12,11 +12,16 @@ import yaml
 from pyfulmen.fulhash import (
     Algorithm,
     Digest,
+    FulHashError,
+    InvalidChecksumError,
+    InvalidChecksumFormatError,
+    UnsupportedAlgorithmError,
     compare_digests,
     format_checksum,
     hash_bytes,
     hash_string,
     parse_checksum,
+    parse_digest,
     validate_checksum_string,
 )
 
@@ -265,8 +270,155 @@ class TestCompareDigests:
         assert compare_digests(digest1, digest2)
 
 
+class TestParseDigest:
+    """Test parse_digest() function."""
+
+    def test_parse_digest_xxh3(self):
+        """Test parsing XXH3-128 checksum into a Digest."""
+        digest = parse_digest("xxh3-128:a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6")
+
+        assert digest.algorithm == Algorithm.XXH3_128
+        assert digest.hex == "a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6"
+        assert digest.bytes == bytes.fromhex("a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6")
+        assert digest.formatted == "xxh3-128:a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6"
+
+    def test_parse_digest_sha256(self):
+        """Test parsing SHA-256 checksum into a Digest."""
+        checksum = "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        digest = parse_digest(checksum)
+
+        assert digest.algorithm == Algorithm.SHA256
+        assert digest.formatted == checksum
+
+    def test_parse_digest_roundtrip_with_hash(self):
+        """Test hash -> formatted -> parse_digest round-trip."""
+        original = hash_bytes(b"Hello, World!")
+        parsed = parse_digest(original.formatted)
+
+        assert parsed == original
+        assert parsed.bytes == original.bytes
+
+    def test_parse_digest_invalid_format(self):
+        """Test parse_digest rejects missing separator."""
+        with pytest.raises(InvalidChecksumFormatError, match="expected format 'algorithm:hex'"):
+            parse_digest("invalid-no-separator")
+
+    def test_parse_digest_unsupported_algorithm(self):
+        """Test parse_digest rejects unsupported algorithm."""
+        with pytest.raises(UnsupportedAlgorithmError, match="Unsupported algorithm: md5"):
+            parse_digest("md5:abc123def456")
+
+    def test_parse_digest_invalid_hex_length(self):
+        """Test parse_digest rejects wrong hex length."""
+        with pytest.raises(ValueError, match="32 hex characters"):
+            parse_digest("xxh3-128:abc123")
+
+
+class TestErrorHierarchy:
+    """Test the FulHash error class hierarchy and ValueError compatibility."""
+
+    def test_unsupported_algorithm_error_bases(self):
+        """UnsupportedAlgorithmError subclasses FulHashError and ValueError."""
+        assert issubclass(UnsupportedAlgorithmError, FulHashError)
+        assert issubclass(UnsupportedAlgorithmError, ValueError)
+
+    def test_invalid_checksum_error_bases(self):
+        """InvalidChecksumError subclasses FulHashError and ValueError."""
+        assert issubclass(InvalidChecksumError, FulHashError)
+        assert issubclass(InvalidChecksumError, ValueError)
+
+    def test_invalid_checksum_format_error_bases(self):
+        """InvalidChecksumFormatError subclasses InvalidChecksumError."""
+        assert issubclass(InvalidChecksumFormatError, InvalidChecksumError)
+        assert issubclass(InvalidChecksumFormatError, FulHashError)
+        assert issubclass(InvalidChecksumFormatError, ValueError)
+
+    def test_fulhash_error_base(self):
+        """FulHashError is a plain Exception subclass."""
+        assert issubclass(FulHashError, Exception)
+        assert not issubclass(FulHashError, ValueError)
+
+    def test_raised_instances_are_value_errors(self):
+        """Raised errors are catchable as ValueError (load-bearing compat)."""
+        with pytest.raises(UnsupportedAlgorithmError) as exc_info:
+            format_checksum("md5", "abc123def456")
+        assert isinstance(exc_info.value, ValueError)
+        assert isinstance(exc_info.value, FulHashError)
+
+        with pytest.raises(InvalidChecksumFormatError) as exc_info:
+            parse_checksum("invalid-no-separator")
+        assert isinstance(exc_info.value, ValueError)
+        assert isinstance(exc_info.value, FulHashError)
+
+    def test_hash_bytes_unsupported_algorithm_is_value_error(self):
+        """hash_bytes raises UnsupportedAlgorithmError catchable as ValueError."""
+        with pytest.raises(UnsupportedAlgorithmError) as exc_info:
+            hash_bytes(b"test", "md5")  # type: ignore[arg-type]
+        assert isinstance(exc_info.value, ValueError)
+
+
 class TestErrorFixtures:
     """Test error handling against error fixtures."""
+
+    @pytest.mark.parametrize(
+        "fixture",
+        [f for f in ERROR_FIXTURES if "checksum" in f],
+        ids=lambda f: f"{f['name']}-parse_checksum",
+    )
+    def test_error_fixtures_parse_checksum(self, fixture):
+        """Checksum error fixtures raise the expected error from parse_checksum."""
+        with pytest.raises(FulHashError) as exc_info:
+            parse_checksum(fixture["checksum"])
+
+        assert type(exc_info.value).__name__ == fixture["expected_error"]
+        error = str(exc_info.value).lower()
+        for substring in fixture["error_message_contains"]:
+            assert substring.lower() in error
+
+    @pytest.mark.parametrize(
+        "fixture",
+        [f for f in ERROR_FIXTURES if "checksum" in f],
+        ids=lambda f: f"{f['name']}-parse_digest",
+    )
+    def test_error_fixtures_parse_digest(self, fixture):
+        """Checksum error fixtures raise the expected error from parse_digest."""
+        with pytest.raises(FulHashError) as exc_info:
+            parse_digest(fixture["checksum"])
+
+        assert type(exc_info.value).__name__ == fixture["expected_error"]
+        error = str(exc_info.value).lower()
+        for substring in fixture["error_message_contains"]:
+            assert substring.lower() in error
+
+    @pytest.mark.parametrize(
+        "fixture",
+        [f for f in ERROR_FIXTURES if "algorithm" in f],
+        ids=lambda f: f"{f['name']}-format_checksum",
+    )
+    def test_error_fixtures_format_checksum(self, fixture):
+        """Algorithm error fixtures raise the expected error from format_checksum."""
+        with pytest.raises(FulHashError) as exc_info:
+            format_checksum(fixture["algorithm"], "a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6")
+
+        assert type(exc_info.value).__name__ == fixture["expected_error"]
+        error = str(exc_info.value).lower()
+        for substring in fixture["error_message_contains"]:
+            assert substring.lower() in error
+
+    @pytest.mark.parametrize(
+        "fixture",
+        [f for f in ERROR_FIXTURES if "algorithm" in f],
+        ids=lambda f: f"{f['name']}-hash_bytes",
+    )
+    def test_error_fixtures_hash_path(self, fixture):
+        """Algorithm error fixtures raise the expected error from the hash path."""
+        with pytest.raises(FulHashError) as exc_info:
+            hash_bytes(fixture["input"].encode("utf-8"), fixture["algorithm"])
+
+        assert type(exc_info.value).__name__ == fixture["expected_error"]
+        error = str(exc_info.value).lower()
+        for substring in fixture["error_message_contains"]:
+            assert substring.lower() in error
 
     def test_unsupported_algorithm_format(self):
         """Test unsupported algorithm in format_checksum."""
