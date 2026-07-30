@@ -3,7 +3,10 @@ Text similarity and normalization utilities for PyFulmen.
 
 This module provides Levenshtein distance calculation, normalized similarity
 scoring, suggestion ranking, and Unicode-aware text normalization following
-the Foundry text similarity standard.
+the Fulmen text similarity standard.
+
+Promoted from pyfulmen.foundry.similarity to standalone module in v0.2.0
+per Crucible v0.4.0 module registry (platform-modules v1.1.0).
 
 Public API:
     distance(a, b) -> int - Calculate Levenshtein edit distance
@@ -17,7 +20,7 @@ Public API:
     Suggestion - Data model for ranked suggestions
 
 Example:
-    >>> from pyfulmen.foundry import similarity
+    >>> from pyfulmen import similarity
     >>>
     >>> # Calculate edit distance
     >>> similarity.distance("kitten", "sitting")
@@ -44,9 +47,13 @@ Example:
     'cafe'
 
 References:
-    - Standard: docs/crucible-py/standards/library/foundry/similarity.md
+    - Standard: docs/crucible-py/standards/fulmen/module-registry.md
     - Fixtures: config/crucible-py/library/foundry/similarity-fixtures.yaml
     - Schema: schemas/crucible-py/library/foundry/v2.0.0/similarity.schema.json
+
+Note:
+    This module requires the 'similarity' extra: pip install pyfulmen[similarity]
+    The rapidfuzz library is used for efficient text similarity calculations.
 """
 
 from ._distance import distance, score, substring_match

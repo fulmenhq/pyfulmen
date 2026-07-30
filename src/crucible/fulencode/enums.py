@@ -64,6 +64,8 @@ class NormalizationProfile(str, Enum):
 
     FILENAME_SAFE = "filename_safe"
 
+    TEXT_SAFE = "text_safe"
+
     LEGACY_COMPATIBLE = "legacy_compatible"
 
 

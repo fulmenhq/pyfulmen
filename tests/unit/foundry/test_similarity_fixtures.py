@@ -8,12 +8,12 @@ parity and compliance with the Foundry similarity standard.
 import pytest
 import yaml
 
-from pyfulmen.foundry import similarity
+from pyfulmen import similarity
 
 
 def load_fixtures():
     """Load similarity fixtures from Crucible SSOT."""
-    fixture_path = "config/crucible-py/library/foundry/similarity-fixtures.yaml"
+    fixture_path = "config/crucible-py/library/similarity/fixtures.yaml"
 
     with open(fixture_path) as f:
         data = yaml.safe_load(f)
@@ -172,7 +172,7 @@ class TestFixtureMetadata:
 
     def test_fixture_version(self, fixture_data):
         """Verify fixture version is compatible (v2.0)."""
-        fixture_path = "config/crucible-py/library/foundry/similarity-fixtures.yaml"
+        fixture_path = "config/crucible-py/library/similarity/fixtures.yaml"
 
         with open(fixture_path) as f:
             data = yaml.safe_load(f)

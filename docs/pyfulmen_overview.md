@@ -3,10 +3,10 @@ title: "PyFulmen Overview"
 description: "Python foundation library for the Fulmen ecosystem"
 author: "PyFulmen Architect"
 date: "2025-10-11"
-last_updated: "2025-11-06"
+last_updated: "2026-07-30"
 status: "active"
 lifecycle_phase: "alpha"
-version: "0.1.12"
+version: "0.2.2"
 tags:
   ["python", "library", "fulmen", "enterprise", "telemetry", "observability"]
 ---
@@ -584,7 +584,7 @@ PyFulmen's dependency structure follows the Fulmen ecosystem model to prevent ci
 
 ## Roadmap & Gaps
 
-### Current Release (v0.1.12)
+### Current Version (v0.2.2 — unreleased)
 
 **Status**: Alpha - Core modules stable, Enterprise Telemetry system complete
 
@@ -615,9 +615,9 @@ PyFulmen's dependency structure follows the Fulmen ecosystem model to prevent ci
 
 **Test Coverage**: 278+ tests passing (259 baseline + 19 new telemetry integration tests), 93% coverage across all modules
 
-### Next Release (v0.2.0)
+### Planned for first published 0.2.x release
 
-**Target**: Q1 2026
+**Target**: TBD
 
 **Planned Features**:
 

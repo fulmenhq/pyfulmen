@@ -1,19 +1,32 @@
 # pyfulmen
 
-**Curated Libraries for Scale**
+**Stop reinventing catalogs. Start shipping.**
 
-Python Fulmen libraries for enterprise-scale development.
+Every team writes their own HTTP status helpers, exit code enums, and country code lookups. pyfulmen provides production-grade Python implementations derived from a single source of truth—so your Python services use the same codes as your Go, Rust, and TypeScript services.
 
-**Lifecycle Phase**: `alpha` | **Version**: 0.1.13 | **Coverage**: 93%
-**Install**: `uv pip install pyfulmen` (or `pip install pyfulmen`)
+- **Zero runtime network calls**: All catalogs bundled in the wheel
+- **Cross-language parity**: Same exit codes, signals, and schemas as gofulmen, rsfulmen, tsfulmen
+- **Type-safe**: Full type hints and Pydantic models throughout
+
+**Lifecycle Phase**: `alpha` | **Version**: 0.2.2 (unreleased) | **Coverage**: 93%
+
+**Install**: Not yet published to PyPI. Install from a local wheel or editable checkout — see [Installation](#installation).
+
+## Who Should Use This
+
+**Platform Engineers & SREs**: Standardize exit codes across all services so alerting thresholds and runbooks work consistently—whether the service is written in Python, Go, Rust, or TypeScript.
+
+**Security & Compliance Teams**: Bundled catalogs eliminate network calls for reference data. Audit dependencies with `uv tree` or `pip-audit`.
+
+**Polyglot Teams**: When your organization runs multiple languages, pyfulmen ensures your Python services speak the same language as the rest of your stack. Same HTTP status groupings. Same signal handling semantics. Same error codes.
+
+**Data Engineers**: Use pyfulmen's structured logging and metrics with your existing observability stack. Pydantic models throughout for validation.
 
 ## Overview
 
-PyFulmen is part of the Fulmen ecosystem, providing templates, processes, and tools for enterprise-scale development in Python.
+pyfulmen is part of the Fulmen ecosystem, providing templates, processes, and tools for enterprise-scale development in Python.
 
-📖 **[Read the full PyFulmen Overview](docs/pyfulmen_overview.md)** for a comprehensive guide to modules, observability features, and the roadmap.
-
-> **Alpha Status**: Early adopters; rapidly evolving features. Minimum coverage: 30%. See [Repository Lifecycle Standard](docs/crucible-py/standards/repository-lifecycle.md) for quality expectations.
+📖 **[Read the full pyfulmen Overview](docs/pyfulmen_overview.md)** for a comprehensive guide to modules, observability features, and the roadmap.
 
 **Key Features:**
 
@@ -309,9 +322,9 @@ make build
 
 # Install in another project
 cd /path/to/your/project
-pip install /path/to/pyfulmen/dist/pyfulmen-0.1.11-py3-none-any.whl
+pip install /path/to/pyfulmen/dist/pyfulmen-0.2.2-py3-none-any.whl
 # Or with uv
-uv add /path/to/pyfulmen/dist/pyfulmen-0.1.11-py3-none-any.whl
+uv add /path/to/pyfulmen/dist/pyfulmen-0.2.2-py3-none-any.whl
 ```
 
 ### Editable Install (for library development)
@@ -1027,6 +1040,39 @@ uv run pytest tests/unit/logging/test_severity.py::TestSeverityComparison -v
 - **Docstrings**: Google style
 - **Imports**: Organized automatically by Ruff
 
+## Supply Chain & Security
+
+pyfulmen is designed for environments where dependency hygiene matters.
+
+**Dependency Transparency:**
+- **Auditable**: Run `uv tree` or `pip show` to inspect dependencies
+- **SBOM-ready**: Compatible with `cyclonedx-py` and standard Python tooling
+- **License-clean**: All dependencies use MIT, Apache-2.0, or compatible licenses
+
+**Bundled Data:**
+- All Crucible catalogs (country codes, exit codes, HTTP statuses) are bundled in the wheel
+- No runtime network calls for reference data
+- Version and provenance tracked in `.crucible/metadata/metadata.yaml`
+
+**Security Practices:**
+- Type hints and Pydantic validation throughout
+- Pattern matching uses bounded execution (no ReDoS vulnerabilities)
+- Vulnerability scanning via `pip-audit` or `safety`
+
+**Audit Commands:**
+```bash
+# View dependency tree
+uv tree
+
+# Check for known vulnerabilities
+pip-audit
+
+# Generate SBOM
+cyclonedx-py -o sbom.json
+```
+
+See [SECURITY.md](SECURITY.md) for vulnerability reporting and our full security policy.
+
 ## Contributing
 
 Contributions are welcome! Please follow these steps:
@@ -1038,19 +1084,9 @@ Contributions are welcome! Please follow these steps:
 5. Push to the branch.
 6. Open a Pull Request.
 
-PyFulmen follows the [Fulmen Helper Library Standard](docs/crucible-py/architecture/fulmen-helper-library-standard.md).
+pyfulmen follows the [Fulmen Helper Library Standard](docs/crucible-py/architecture/fulmen-helper-library-standard.md).
 
-See [Python Coding Standards](docs/crucible-py/standards/coding/python.md) for code style guidelines.
-
-### Code of Conduct
-
-This project adheres to the Contributor Covenant Code of Conduct. By participating, you are expected to uphold this code. See [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md) for more information.
-
-### Attribution
-
-AI-assisted contributions should be attributed in commits:
-
-For more details, see [MAINTAINERS.md](MAINTAINERS.md) and [CONTRIBUTING.md](CONTRIBUTING.md).
+See [Python Coding Standards](docs/crucible-py/standards/coding/python.md) for code style guidelines, [MAINTAINERS.md](MAINTAINERS.md) for governance, and [SECURITY.md](SECURITY.md) for vulnerability reporting.
 
 ## Licensing
 
@@ -1079,15 +1115,8 @@ See `LIFECYCLE_PHASE` file and [CHANGELOG.md](CHANGELOG.md) for version history.
 
 <div align="center">
 
-⚡ **Python Foundation for the Fulmen Ecosystem** ⚡
+**Built by the [3 Leaps](https://3leaps.net) team**
 
-_Idiomatic Python access to Crucible schemas, platform-aware config paths, and three-layer configuration loading_
-
-<br><br>
-
-**Built with 🔨 by the 3 Leaps team**
-**Part of the [Fulmen Ecosystem](https://fulmenhq.dev) - Lightning-fast enterprise development**
-
-**Crucible Integration** • **Config Management** • **Schema Validation** • **Observability**
+Part of the [Fulmen Ecosystem](https://github.com/fulmenhq) — Enterprise-grade libraries that thrive on scale
 
 </div>

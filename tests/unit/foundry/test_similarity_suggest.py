@@ -7,8 +7,8 @@ threshold filtering and result limiting.
 
 import pytest
 
-from pyfulmen.foundry import similarity
-from pyfulmen.foundry.similarity import Suggestion
+from pyfulmen import similarity
+from pyfulmen.similarity import Suggestion
 
 
 class TestSuggest:

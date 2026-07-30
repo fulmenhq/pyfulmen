@@ -1,6 +1,6 @@
 [project]
 name = "pyfulmen"
-version = "0.1.15"
+version = "0.2.2"
 description = "Python Fulmen libraries"
 authors = [
     {name = "3 Leaps Team", email = "dev@3leaps.net"}
@@ -19,13 +19,17 @@ classifiers = [
     "Typing :: Typed",
 ]
 
+# Core dependencies (light modules - serde-class and stdlib wrappers)
+# Heavy dependencies (native extensions) are in optional extras per module registry
 dependencies = [
-    "jsonschema>=4.25.1",
     "click>=8.1.0",
     "pydantic>=2.12.0",
     "pyyaml>=6.0.3",
     "uuid6>=2025.0.1",
     "wcwidth>=0.2.0",
+    # Heavy deps kept in base for backward compatibility in v0.2.0
+    # Will be moved to extras in v0.3.0 per module registry weight classification
+    "jsonschema>=4.25.1",
     "xxhash>=3.5.0",
     "rapidfuzz>=3.14.1",
     "google-crc32c>=1.7.1",
@@ -45,9 +49,27 @@ dev = [
     "pytest-cov>=4.1.0",
     "ruff>=0.1.0",
     "twine>=5.0.0",
+    "pip-licenses>=5.0.0",
+]
+# Module extras per Crucible v0.4.0 module registry (platform-modules v1.1.0)
+# These are currently included in base deps for v0.2.0 backward compatibility
+# but documented here for future extraction in v0.3.0
+similarity = [
+    "rapidfuzz>=3.14.1",
+]
+schema = [
+    "jsonschema>=4.25.1",
+]
+hashing = [
+    "xxhash>=3.5.0",
+    "google-crc32c>=1.7.1",
 ]
 telemetry = [
     "prometheus_client>=0.20.0,<0.21",
+]
+# Full install includes all optional modules
+full = [
+    "pyfulmen[similarity,schema,hashing,telemetry]",
 ]
 
 [build-system]
@@ -58,9 +80,48 @@ build-backend = "hatchling.build"
 packages = ["src/pyfulmen", "src/crucible"]
 
 [tool.hatch.build.targets.wheel.force-include]
+# Enumerated subtrees: hatchling does not apply exclude patterns to
+# force-include, so wholesale "schemas" mappings would ship anything a
+# future sync drops there. New shipped subtrees must be added explicitly.
 "src/pyfulmen/py.typed" = "pyfulmen/py.typed"
 "config" = "config"
-"schemas" = "schemas"
+"schemas/crucible-py/ascii" = "schemas/crucible-py/ascii"
+"schemas/crucible-py/assessment" = "schemas/crucible-py/assessment"
+"schemas/crucible-py/config" = "schemas/crucible-py/config"
+"schemas/crucible-py/content" = "schemas/crucible-py/content"
+"schemas/crucible-py/design" = "schemas/crucible-py/design"
+"schemas/crucible-py/devsecops" = "schemas/crucible-py/devsecops"
+"schemas/crucible-py/enact" = "schemas/crucible-py/enact"
+"schemas/crucible-py/error-handling" = "schemas/crucible-py/error-handling"
+"schemas/crucible-py/library" = "schemas/crucible-py/library"
+"schemas/crucible-py/meta" = "schemas/crucible-py/meta"
+"schemas/crucible-py/observability" = "schemas/crucible-py/observability"
+"schemas/crucible-py/pathfinder" = "schemas/crucible-py/pathfinder"
+"schemas/crucible-py/protocol" = "schemas/crucible-py/protocol"
+"schemas/crucible-py/schema-validation" = "schemas/crucible-py/schema-validation"
+"schemas/crucible-py/server" = "schemas/crucible-py/server"
+"schemas/crucible-py/standards" = "schemas/crucible-py/standards"
+"schemas/crucible-py/taxonomy" = "schemas/crucible-py/taxonomy"
+"schemas/crucible-py/terminal" = "schemas/crucible-py/terminal"
+"schemas/crucible-py/tooling" = "schemas/crucible-py/tooling"
+"schemas/crucible-py/web" = "schemas/crucible-py/web"
+
+[tool.hatch.build.targets.sdist]
+# Explicit sdist surface: source, shipped assets, and package metadata only.
+# Without this section hatchling ships the entire repository (internal docs,
+# tooling config, CI, tests) in the source distribution.
+include = [
+    "src/**",
+    "config/**",
+    "schemas/**",
+    "/VERSION",
+    "/LICENSE",
+    "/README.md",
+    "/CHANGELOG.md",
+]
+exclude = [
+    "schemas/crucible-py/upstream/**",
+]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

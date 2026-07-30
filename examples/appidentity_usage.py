@@ -82,22 +82,21 @@ def example_manual_loading():
             "vendor": "examplevendor",
             "env_prefix": "EXAMPLE_",
             "config_name": "example-config",
-            "description": "Example application for demonstration"
+            "description": "Example application for demonstration",
         },
-"metadata": {
+        "metadata": {
             "telemetry_namespace": "example_telemetry",
             "python": {
                 "distribution_name": "example-app",
                 "package_name": "example_app",
-                "console_scripts": [
-                    {"name": "example", "entry_point": "example_app.cli:main"}
-                ]
-            }
-        }
+                "console_scripts": [{"name": "example", "entry_point": "example_app.cli:main"}],
+            },
+        },
     }
 
-    with tempfile.NamedTemporaryFile(mode='w', suffix='.yaml', delete=False) as f:
+    with tempfile.NamedTemporaryFile(mode="w", suffix=".yaml", delete=False) as f:
         import yaml
+
         yaml.dump(test_config, f)
         temp_path = f.name
 
@@ -112,7 +111,7 @@ def example_manual_loading():
         print(f"Console Scripts: {identity.console_scripts}")
 
         # Check provenance information
-        provenance = getattr(identity, '_provenance', {})
+        provenance = getattr(identity, "_provenance", {})
         if provenance:
             print(f"Loaded from: {provenance.get('source_path', 'Unknown')}")
 
@@ -175,7 +174,7 @@ def example_testing_patterns():
         vendor="testvendor",
         env_prefix="TEST_",
         config_name="test-config",
-        description="Test application for unit testing"
+        description="Test application for unit testing",
     )
 
     try:
@@ -239,8 +238,9 @@ def example_error_handling():
         }
     }
 
-    with tempfile.NamedTemporaryFile(mode='w', suffix='.yaml', delete=False) as f:
+    with tempfile.NamedTemporaryFile(mode="w", suffix=".yaml", delete=False) as f:
         import yaml
+
         yaml.dump(invalid_config, f)
         temp_path = f.name
 
@@ -284,7 +284,7 @@ def example_advanced_usage():
 
         # Raw metadata access (for debugging)
         print("\n🔍 Raw Metadata Access:")
-        raw_metadata = getattr(identity, '_raw_metadata', {})
+        raw_metadata = getattr(identity, "_raw_metadata", {})
         if raw_metadata:
             print(f"   Raw keys: {list(raw_metadata.keys())}")
 

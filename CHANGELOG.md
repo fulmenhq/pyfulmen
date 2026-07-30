@@ -7,7 +7,89 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-_No unreleased changes._
+> **Note**: Versions 0.2.0–0.2.2 below were version bumps committed to the
+> repository but never released — no git tags, no PyPI publication. They are
+> recorded for history; the first published 0.2.x release will ship this work
+> together.
+
+## [0.2.2] - 2026-02-20 (never released)
+
+### Security
+
+- Resolved urllib3 and jaraco-context dependency vulnerabilities
+
+### Changed
+
+- Updated all runtime and dev dependencies
+- Migrated `str + Enum` classes to `StrEnum`; added `sbom/` to `.gitignore`
+
+## [0.2.1] - 2026-02-19 (never released)
+
+### Added
+
+- Typed role catalog API in the crucible module
+- `SECURITY.md`
+
+### Infrastructure
+
+- Crucible sync v0.4.2 → v0.4.12; bootstrap modernization
+- Resolved all goneat lint and format issues
+
+## [0.2.0] - 2026-01-06 (never released)
+
+### Added
+
+- **License Audit Target**: `make license-audit` checks dependencies for forbidden licenses (GPL, LGPL, AGPL, MPL, CDDL)
+  - Uses pip-licenses for CSV inventory generation
+  - Integrated into `check-all` dependency chain
+
+- **Dependency Protection Config**: `.goneat/dependencies.yaml` for Python license compliance
+  - Forbidden/allowed license lists
+  - Package cooling policy (7-day min age, supply chain protection)
+  - Serde-class exemptions for pydantic, pyyaml
+
+- **Foundation Tools Scope**: `.goneat/tools.yaml` expanded with Python-specific tools
+  - uv, ruff, actionlint, ripgrep, jq, yq, yamlfmt
+
+### Changed
+
+- **Role-Based Agentic Model**: Migrated from identity scheme to Crucible v0.3.2 role catalog
+  - AGENTS.md rewritten with role-based model (devlead, devrev, infoarch, secrev)
+  - MAINTAINERS.md updated with role catalog references
+  - Attribution format now includes `Role:` trailer
+
+- **Bootstrap Modernization**: Aligned with gofulmen/rsfulmen patterns
+  - New `scripts/make-bootstrap.sh` for clean sfetch → goneat trust pyramid
+  - BINDIR defaults to `$HOME/.local/bin` (not `./bin`)
+  - Updated goneat to v0.4.1
+  - Bootstrap now calls `goneat doctor tools --scope foundation`
+
+- **Hook Configuration**: `.goneat/hooks.yaml` updated
+  - Pre-push now includes `dependencies` category
+  - Uses `--hook-manifest` flag for explicit config
+
+- **Makefile Improvements**: GONEAT_RESOLVE pattern replaces hardcoded `./bin/goneat`
+  - All goneat-dependent targets now resolve from BINDIR or PATH
+  - Added `##` comments for help generation
+
+### Infrastructure
+
+- **Crucible Sync (v0.2.26 → v0.4.1)**: Major standards update
+  - New agentic role configs (devlead, devrev, entarch, cicd, dataeng, infoarch, secrev, prodmktg)
+  - Agentic-interface-adoption guide
+  - Upstream schemas (3leaps/agentic, ailink)
+  - Updated ai-agents and agentic-attribution standards
+  - Exit codes fix: 58 codes (was 54) with correct Python sync path
+  - Signals catalog expansion: SIGKILL added as first-class signal (9 total)
+  - Similarity module relocated from foundry to standalone library path
+  - App identity schema updates
+  - v1.1.0 module registry with weight/default_inclusion support
+
+- **Similarity Module Extraction**: Promoted from `pyfulmen.foundry.similarity` to `pyfulmen.similarity`
+  - New top-level module at `src/pyfulmen/similarity/`
+  - Deprecation shim in `foundry/__init__.py` (removal in v0.4.0)
+  - Updated `pyfulmen/__init__.py` exports
+  - Test fixtures relocated to `config/crucible-py/library/similarity/fixtures.yaml`
 
 ## [0.1.15] - 2025-12-19
 

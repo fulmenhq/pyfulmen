@@ -236,9 +236,11 @@ Implementers MUST comply with ecosystem standards in Crucible's `docs/standards/
      - `/health`: Liveness/readiness (JSON: `{status: "healthy", version: str}`).
      - `/version`: Full version info (integrate Crucible/SSOT versions from helper).
      - `/metrics`: Prometheus/OpenTelemetry export.
+     - `/openapi.yaml`: OpenAPI specification (SHOULD serve if publishing HTTP API).
      - Error responses: JSON per [API HTTP Standards](docs/standards/protocol/http-rest-standards.md) (e.g., `{error: {code: str, message: str, details: any}}`).
      - gRPC: Use proto defs from Crucible schemas; unary/streaming with metadata propagation.
    - **Messages**: Structured payloads validated against schemas (e.g., log events, metrics). Use helper's Foundry for patterns (e.g., HTTP status groups, MIME types).
+   - **OpenAPI Documentation**: Workhorses exposing HTTP APIs SHOULD publish OpenAPI specs with coverage testing per [ADR-0014](decisions/ADR-0014-openapi-spec-coverage.md). See [HTTP Server Patterns](../guides/testing/http-server-patterns.md) for implementation guidance.
    - Refer to [API Standards](docs/standards/protocol/README.md).
 
 10. **CLI Surface for Server Invocation**
@@ -508,6 +510,7 @@ make test                   # Exit 0: All tests pass
 
 - [Fulmen Helper Library Standard](fulmen-helper-library-standard.md)
 - [Repository Category Taxonomy](../../schemas/taxonomy/repository-category/v1.0.0/README.md)
+- [Ecosystem Brand Summary](../../config/branding/ecosystem.yaml) - For `version --extended` or `about` command/endpoint
 - [Technical Manifesto](fulmen-technical-manifesto.md)
 - [Binary Naming Convention](#binary-naming-convention) (this document)
 - Prototype: forge-workhorse-groningen (Go), forge-workhorse-groningen-py (Python)

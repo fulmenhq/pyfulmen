@@ -13,10 +13,10 @@ Example:
 """
 
 import logging
-from enum import Enum
+from enum import StrEnum
 
 
-class Severity(str, Enum):
+class Severity(StrEnum):
     """Log severity levels from Crucible observability standards.
 
     Severity Model (Crucible Logging Standard):

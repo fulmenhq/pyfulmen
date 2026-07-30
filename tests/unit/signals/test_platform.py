@@ -165,7 +165,9 @@ class TestSignalListing:
             unsupported = list_unsupported_signals()
 
             assert isinstance(unsupported, list)
-            assert len(unsupported) == 0  # All signals supported on Unix
+            # SIGKILL is in catalog but can't be caught on any platform
+            assert len(unsupported) == 1
+            assert "SIGKILL" in unsupported
 
     def test_list_unsupported_signals_windows(self):
         """Test listing unsupported signals on Windows."""
@@ -173,12 +175,14 @@ class TestSignalListing:
             unsupported = list_unsupported_signals()
 
             assert isinstance(unsupported, list)
-            assert len(unsupported) == 5  # 5 signals not supported on Windows
+            # 5 Unix signals + SIGKILL (can't be caught on any platform)
+            assert len(unsupported) == 6
             assert "SIGHUP" in unsupported
             assert "SIGPIPE" in unsupported
             assert "SIGALRM" in unsupported
             assert "SIGUSR1" in unsupported
             assert "SIGUSR2" in unsupported
+            assert "SIGKILL" in unsupported
 
 
 class TestPlatformInfo:
@@ -203,8 +207,8 @@ class TestPlatformInfo:
         assert isinstance(info["python_platform"], str)
         assert isinstance(info["supported_signals"], list)
         assert isinstance(info["unsupported_signals"], list)
-        assert info["total_signals"] == 8
-        assert len(info["supported_signals"]) + len(info["unsupported_signals"]) == 8
+        assert info["total_signals"] == 9  # 8 original + SIGKILL
+        assert len(info["supported_signals"]) + len(info["unsupported_signals"]) == 9
 
     @patch("pyfulmen.signals._platform._get_platform_name", return_value="windows")
     def test_get_platform_info_windows(self, mock_platform):
@@ -213,7 +217,7 @@ class TestPlatformInfo:
 
         assert info["platform"] == "windows"
         assert len(info["supported_signals"]) == 3
-        assert len(info["unsupported_signals"]) == 5
+        assert len(info["unsupported_signals"]) == 6  # 5 Unix-only + SIGKILL
 
     @patch("pyfulmen.signals._platform._get_platform_name", return_value="linux")
     def test_get_platform_info_linux(self, mock_platform):
@@ -222,7 +226,7 @@ class TestPlatformInfo:
 
         assert info["platform"] == "linux"
         assert len(info["supported_signals"]) == 8
-        assert len(info["unsupported_signals"]) == 0
+        assert len(info["unsupported_signals"]) == 1  # SIGKILL can't be caught
 
 
 class TestFallbackBehaviorDetails:

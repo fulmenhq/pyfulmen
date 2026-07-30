@@ -99,9 +99,9 @@ class TestFulmenDataModel:
 
     def test_data_model_enum_values(self):
         """FulmenDataModel should serialize enum values as strings."""
-        from enum import Enum
+        from enum import StrEnum
 
-        class Status(str, Enum):
+        class Status(StrEnum):
             ACTIVE = "active"
             INACTIVE = "inactive"
 
@@ -297,9 +297,9 @@ class TestFulmenCatalogModel:
 
     def test_catalog_model_enum_values(self):
         """FulmenCatalogModel should serialize enum values."""
-        from enum import Enum
+        from enum import StrEnum
 
-        class CategoryType(str, Enum):
+        class CategoryType(StrEnum):
             PATTERN = "pattern"
             MIME = "mime"
 
@@ -325,9 +325,9 @@ class TestFulmenBaseModel:
 
     def test_base_model_enum_values(self):
         """FulmenBaseModel should use enum values."""
-        from enum import Enum
+        from enum import StrEnum
 
-        class Status(str, Enum):
+        class Status(StrEnum):
             ACTIVE = "active"
 
         class TestModel(FulmenBaseModel):

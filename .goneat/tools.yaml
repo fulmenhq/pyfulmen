@@ -1,6 +1,188 @@
-# Tools manifest for pyfulmen
-# NOTE: goneat is installed via sfetch trust anchor in Makefile bootstrap
-# This file is for additional tools only (none currently required)
-version: v1.0.0
-binDir: ./bin
-tools: []
+# goneat Tools Configuration (v1.0.0)
+# Repository: pyfulmen
+#
+# This file is the SINGLE SOURCE OF TRUTH for tools configuration.
+# There are NO hidden defaults or runtime merging.
+#
+# Edit this file to:
+# - Add/remove tools
+# - Change tool detection commands
+# - Modify installer priorities
+# - Define custom scopes
+#
+# Validate changes with: goneat doctor tools validate
+# See schema: schemas/tools/tools.v1.0.0.json
+scopes:
+  foundation:
+    description: Core foundation tools required for goneat and Python development
+    tools:
+      - actionlint
+      - ripgrep
+      - jq
+      - yq
+      - uv
+      - ruff
+      - yamlfmt
+tools:
+  actionlint:
+    name: actionlint
+    description: GitHub Actions workflow linter
+    kind: system
+    detect_command: actionlint -version
+    platforms:
+      - darwin
+      - linux
+      - windows
+    version_args:
+      - -version
+    check_args:
+      - -help
+    installer_priority:
+      darwin:
+        - brew
+        - bun
+      linux:
+        - brew
+        - bun
+      windows:
+        - scoop
+        - winget
+  jq:
+    name: jq
+    description: JSON processor - used in CI/CD scripts
+    kind: system
+    detect_command: jq --version
+    platforms:
+      - darwin
+      - linux
+      - windows
+    installer_priority:
+      darwin:
+        - brew
+        - bun
+        - mise
+      linux:
+        - brew
+        - bun
+        - mise
+      windows:
+        - bun
+        - scoop
+        - winget
+  ripgrep:
+    name: ripgrep
+    description: Fast text search - used by goneat for license auditing
+    kind: system
+    detect_command: rg --version
+    platforms:
+      - darwin
+      - linux
+      - windows
+    installer_priority:
+      darwin:
+        - brew
+        - bun
+        - mise
+      linux:
+        - brew
+        - bun
+        - mise
+      windows:
+        - bun
+        - scoop
+        - winget
+  ruff:
+    name: ruff
+    description: Fast Python linter and formatter
+    kind: python
+    detect_command: ruff --version
+    platforms:
+      - darwin
+      - linux
+      - windows
+    version_args:
+      - --version
+    check_args:
+      - --help
+    installer_priority:
+      darwin:
+        - uv
+        - brew
+        - pipx
+      linux:
+        - uv
+        - brew
+        - pipx
+      windows:
+        - uv
+        - pipx
+        - scoop
+    version_scheme: semver
+    minimum_version: 0.4.0
+  uv:
+    name: uv
+    description: Fast Python package manager - required for pyfulmen development
+    kind: system
+    detect_command: uv --version
+    platforms:
+      - darwin
+      - linux
+      - windows
+    version_args:
+      - --version
+    installer_priority:
+      darwin:
+        - brew
+        - mise
+      linux:
+        - brew
+        - mise
+      windows:
+        - scoop
+        - winget
+    version_scheme: semver
+    minimum_version: 0.4.0
+  yamlfmt:
+    name: yamlfmt
+    description: YAML formatter and linter
+    kind: system
+    detect_command: yamlfmt --version
+    platforms:
+      - darwin
+      - linux
+      - windows
+    version_args:
+      - --version
+    check_args:
+      - --help
+    installer_priority:
+      darwin:
+        - brew
+        - bun
+      linux:
+        - brew
+        - bun
+      windows:
+        - scoop
+  yq:
+    name: yq
+    description: YAML processor
+    kind: system
+    detect_command: yq --version
+    platforms:
+      - darwin
+      - linux
+      - windows
+    installer_priority:
+      darwin:
+        - brew
+        - bun
+        - mise
+      linux:
+        - brew
+        - bun
+        - mise
+      windows:
+        - bun
+        - scoop
+        - winget

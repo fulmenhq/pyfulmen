@@ -7,10 +7,16 @@ This module provides:
 - UUIDv7 correlation ID generation
 - Pattern catalog for regex, MIME types, HTTP statuses, country codes
 - Exit codes with simplified mode mappings
-- Text similarity and normalization utilities (similarity submodule)
+
+Note:
+    The similarity submodule has been promoted to a top-level module in v0.2.0.
+    Use `from pyfulmen import similarity` instead of `from pyfulmen.foundry import similarity`.
+    The old import path remains available for backward compatibility but is deprecated.
 """
 
-from crucible.pyfulmen.foundry.exit_codes import (
+import warnings
+
+from crucible.foundry.exit_codes import (
     EXIT_CODE_METADATA,
     EXIT_CODES_VERSION,
     ExitCode,
@@ -21,8 +27,10 @@ from crucible.pyfulmen.foundry.exit_codes import (
     map_to_simplified,
 )
 
-from . import similarity
-from .catalog import (
+# Backward compatibility shim for similarity (deprecated in v0.2.0)
+# Import from new location but keep available here for compatibility
+from pyfulmen import similarity as _similarity_module
+from pyfulmen.foundry.catalog import (
     Country,
     FoundryCatalog,
     HttpStatusCode,
@@ -52,7 +60,7 @@ from .catalog import (
     list_mime_types,
     validate_country_code,
 )
-from .models import (
+from pyfulmen.foundry.models import (
     FulmenBaseModel,
     FulmenCatalogModel,
     FulmenConfigModel,
@@ -60,6 +68,27 @@ from .models import (
     generate_correlation_id,
     utc_now_rfc3339nano,
 )
+
+
+class _SimilarityDeprecationShim:
+    """Shim that emits deprecation warning on first access."""
+
+    _warned = False
+
+    def __getattr__(self, name: str):
+        if not _SimilarityDeprecationShim._warned:
+            warnings.warn(
+                "Importing similarity from pyfulmen.foundry is deprecated. "
+                "Use 'from pyfulmen import similarity' instead. "
+                "This import path will be removed in v0.4.0.",
+                DeprecationWarning,
+                stacklevel=2,
+            )
+            _SimilarityDeprecationShim._warned = True
+        return getattr(_similarity_module, name)
+
+
+similarity = _SimilarityDeprecationShim()
 
 __all__ = [
     "FulmenBaseModel",

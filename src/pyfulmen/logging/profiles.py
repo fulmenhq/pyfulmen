@@ -11,11 +11,11 @@ Example:
     ['console', 'file']
 """
 
-from enum import Enum
+from enum import StrEnum
 from typing import Any
 
 
-class LoggingProfile(str, Enum):
+class LoggingProfile(StrEnum):
     """Progressive logging profiles from Crucible standards.
 
     Profiles provide zero-complexity defaults with enterprise power-ups:
