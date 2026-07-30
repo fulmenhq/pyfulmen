@@ -23,16 +23,24 @@ Examples:
         'xxh3-128:531df2844447dd5077db03842cd75395'
 """
 
-from ._file import hash, hash_file
+from ._file import DEFAULT_CHUNK_SIZE, hash, hash_file, hash_reader
 from ._hash import hash_bytes, hash_string
 from ._helpers import (
     compare_digests,
     format_checksum,
     multi_hash,
+    multi_hash_bytes,
+    multi_hash_file,
+    multi_hash_reader,
+    multi_hash_text,
     parse_checksum,
     parse_digest,
     validate_checksum_string,
     verify,
+    verify_bytes,
+    verify_file,
+    verify_reader,
+    verify_text,
 )
 from ._stream import StreamHasher, stream
 from .errors import (
@@ -45,6 +53,7 @@ from .models import Algorithm, Digest
 
 __all__ = [
     "Algorithm",
+    "DEFAULT_CHUNK_SIZE",
     "Digest",
     "FulHashError",
     "UnsupportedAlgorithmError",
@@ -54,6 +63,7 @@ __all__ = [
     "hash_bytes",
     "hash_string",
     "hash_file",
+    "hash_reader",
     "stream",
     "StreamHasher",
     "format_checksum",
@@ -62,7 +72,15 @@ __all__ = [
     "validate_checksum_string",
     "compare_digests",
     "verify",
+    "verify_bytes",
+    "verify_text",
+    "verify_file",
+    "verify_reader",
     "multi_hash",
+    "multi_hash_bytes",
+    "multi_hash_text",
+    "multi_hash_file",
+    "multi_hash_reader",
 ]
 
 __version__ = "0.2.2"

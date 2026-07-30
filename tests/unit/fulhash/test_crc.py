@@ -84,8 +84,9 @@ class TestCRCAlgorithms:
         f.write_bytes(data)
         assert verify(f, expected_crc32) is True
 
-        # Verify string (as text)
-        assert verify("123456789", expected_crc32) is True
+        # Verify string (as text) — deprecated since 0.3.0
+        with pytest.warns(DeprecationWarning, match="Passing a str to fulhash.verify"):
+            assert verify("123456789", expected_crc32) is True
 
     def test_multi_hash(self):
         """Test multi_hash helper."""
