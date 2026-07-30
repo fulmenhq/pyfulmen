@@ -1,0 +1,7 @@
+# Aligned with goneat format (yamlfmt), which emits no document-start marker.
+extends: default
+
+rules:
+  document-start: disable
+  line-length:
+    max: 80

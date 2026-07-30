@@ -10,10 +10,10 @@ Source: schemas/taxonomy/library/fulpack/
 See: https://github.com/fulmenhq/crucible/blob/main/docs/standards/library/modules/fulpack.md
 """
 
-from enum import Enum
+from enum import StrEnum
 
 
-class ArchiveFormat(str, Enum):
+class ArchiveFormat(StrEnum):
     """ArchiveFormat enum
 
     Generated from: schemas/taxonomy/library/fulpack/archive-formats/v1.0.0/formats.yaml
@@ -28,7 +28,7 @@ class ArchiveFormat(str, Enum):
     GZIP = "gzip"
 
 
-class EntryType(str, Enum):
+class EntryType(StrEnum):
     """EntryType enum
 
     Generated from: schemas/taxonomy/library/fulpack/entry-types/v1.0.0/types.yaml
@@ -41,7 +41,7 @@ class EntryType(str, Enum):
     SYMLINK = "symlink"
 
 
-class Operation(str, Enum):
+class Operation(StrEnum):
     """Operation enum
 
     Generated from: schemas/taxonomy/library/fulpack/operations/v1.0.0/operations.yaml
