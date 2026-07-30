@@ -2,7 +2,7 @@
 
 This document tracks PyFulmen's implementation status for ecosystem-wide Architecture Decision Records (ADRs) synced from Crucible.
 
-**Last Updated**: 2025-10-17
+**Last Updated**: 2026-07-30
 
 ## Adoption Status Levels
 
@@ -24,6 +24,15 @@ Based on [ADR Adoption Status Schema v1.0.0](https://schemas.fulmenhq.dev/standa
 | [ADR-0003](../../crucible-py/architecture/decisions/ADR-0003-progressive-logging-profiles.md)      | Progressive Logging Profiles      | **verified** (40)    | All profiles implemented: SIMPLE, STRUCTURED, ENTERPRISE, CUSTOM                        | -                                                           |
 | [ADR-0004](../../crucible-py/architecture/decisions/ADR-0004-schema-driven-config-hydration.md)    | Schema-Driven Config Hydration    | **implemented** (30) | Layer 1 & 2 complete (defaults + user overrides), Layer 3 (BYOC) partial                | -                                                           |
 | [ADR-0005](../../crucible-py/architecture/decisions/ADR-0005-camelcase-to-language-conventions.md) | CamelCase to Language Conventions | **verified** (40)    | Field aliases working throughout (snake_case externally, Pydantic handles conversion)   | [ADR-0001](ADR-0001-fulmencatalogmodel-populate-by-name.md) |
+| [ADR-0006](../../crucible-py/architecture/decisions/ADR-0006-error-data-models.md)                 | Fulmen Errors as Schema-Backed Data Models | **implemented** (30) | error_handling module wraps errors as schema-validated data models              | -                                                           |
+| [ADR-0007](../../crucible-py/architecture/decisions/ADR-0007-telemetry-default-histogram-buckets.md) | Default Histogram Buckets for Millisecond Metrics | **verified** (40) | Histogram DEFAULT_BUCKETS match the standard [1..10000] ms ladder             | [ADR-0008](ADR-0008-global-metric-registry-singleton.md)    |
+| [ADR-0008](../../crucible-py/architecture/decisions/ADR-0008-helper-library-instrumentation-patterns.md) | Helper Library Instrumentation Patterns | **implemented** (30) | Module-level helpers on the global registry are the sole library pattern; only taxonomy-registered names emitted | [ADR-0008](ADR-0008-global-metric-registry-singleton.md)    |
+| [ADR-0009](../../crucible-py/architecture/decisions/ADR-0009-go-module-root-relocation.md)         | Go Module Root Relocation         | **not-applicable** (0) | Go-specific repository layout decision                                                | -                                                           |
+| [ADR-0010](../../crucible-py/architecture/decisions/ADR-0010-semantic-versioning-adoption.md)      | Semantic Versioning Adoption for Go Module Compatibility | **not-applicable** (0) | Go module tagging decision (PyFulmen already follows SemVer independently) | -                                                           |
+| [ADR-0011](../../crucible-py/architecture/decisions/ADR-0011-lorage-devsecops-schemas-semver-experimental.md) | Temporary SemVer Flexibility for L'Orage DevSecOps Schemas | **not-applicable** (0) | Schemas synced for reference only; no PyFulmen consumer surface | -                                                           |
+| [ADR-0012](../../crucible-py/architecture/decisions/ADR-0012-schema-ref-ids.md)                    | Absolute $id URLs for Cross-Schema $ref References | **implemented** (30) | Offline schema registry resolves absolute $id refs from schemas/crucible-py    | -                                                           |
+| [ADR-0013](../../crucible-py/architecture/decisions/ADR-0013-rust-sync-pattern-validation.md)      | Rust Language Support Uses Sync Pattern | **not-applicable** (0) | Rust-specific sync decision                                                     | -                                                           |
+| [ADR-0014](../../crucible-py/architecture/decisions/ADR-0014-openapi-spec-coverage.md)             | OpenAPI Spec Coverage Tests       | **not-applicable** (0) | PyFulmen is a library with no OpenAPI surface                                          | -                                                           |
 
 ## Detailed Status Notes
 

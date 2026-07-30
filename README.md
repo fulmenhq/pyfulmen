@@ -32,7 +32,7 @@ pyfulmen is part of the Fulmen ecosystem, providing templates, processes, and to
 
 - **Progressive Logging** - Zero-complexity to enterprise-grade logging with SIMPLE → STRUCTURED → ENTERPRISE profiles
 - **Error Handling** - Pathfinder-compatible errors with telemetry metadata and schema validation (v0.1.6+)
-- **Exit Codes** - Standardized 54-code catalog with simplified modes for monitoring/alerting (v0.1.9+)
+- **Exit Codes** - Standardized 58-code catalog with simplified modes for monitoring/alerting (v0.1.9+)
 - **Enterprise Telemetry** - Comprehensive metrics system with MetricRegistry, Prometheus export, and cross-module instrumentation
 - **FulHash** - Fast, consistent hashing with xxh3-128 (default) and sha256 support, CRC32/CRC32C support, thread-safe streaming (v0.1.6+)
 - **Crucible Shim** - Idiomatic Python access to Crucible schemas, docs, and config defaults
@@ -117,7 +117,7 @@ metadata:
     package_name: "myapp_core"
     console_scripts:
       - name: "myapp"
-        module: "myapp.cli:main"
+        entry_point: "myapp.cli:main"
 ```
 
 ### CLI Commands
@@ -226,7 +226,7 @@ pyfulmen signals list
 pyfulmen signals windows-fallback --format markdown
 ```
 
-📖 **[Complete Signal Handling Documentation](src/pyfulmen/signals/README.md)** for detailed API reference, asyncio integration, and enterprise features.
+📖 **[Complete Signal Handling Documentation](docs/modules/signals.md)** for detailed API reference, asyncio integration, and enterprise features.
 
 ## Enterprise Telemetry
 
@@ -235,7 +235,7 @@ PyFulmen provides comprehensive enterprise telemetry with MetricRegistry, Promet
 ### Quick Start
 
 ```python
-from pyfulmen.telemetry import counter, gauge, histogram, get_global_registry
+from pyfulmen.telemetry import counter, drain_events, gauge, histogram
 
 # Create metrics instantly - zero complexity
 ops_counter = counter("operations_total")
@@ -247,29 +247,26 @@ ops_counter.inc()
 memory_gauge.set(1024 * 1024)
 request_duration.observe(45.2)
 
-# Retrieve metrics for monitoring
-registry = get_global_registry()
-events = registry.get_events()
-for event in events:
+# Consume metrics for monitoring (clears the buffer - the default
+# registry's event buffer is unbounded, so drain it periodically)
+for event in drain_events():
     print(f"{event.name}: {event.value}")
 ```
 
 ### Enterprise Features
 
 ```python
-from pyfulmen.telemetry import MetricRegistry, PrometheusExporter
+from pyfulmen.telemetry import MetricRegistry
+from pyfulmen.telemetry.prometheus import PrometheusExporter  # requires pyfulmen[telemetry]
 
 # Create custom registry
 registry = MetricRegistry()
-
-# Add metrics with labels
-request_counter = registry.counter("http_requests_total", labels=["method", "status"])
-request_counter.labels(method="GET", status="200").inc()
+registry.counter("http_requests_total").inc(tags={"method": "GET", "status": "200"})
 
 # Export for Prometheus
 exporter = PrometheusExporter(registry)
-metrics_text = exporter.export()
-print(metrics_text)
+exporter.refresh()  # sync registry events into Prometheus collectors
+print(exporter.generate_latest())
 ```
 
 ### Cross-Module Instrumentation
@@ -278,15 +275,15 @@ PyFulmen modules automatically instrument themselves:
 
 ```python
 from pyfulmen import foundry, fulhash, error_handling
+from pyfulmen.telemetry import drain_events
 
 # These operations are automatically instrumented
 mime_type = foundry.detect_mime_type("example.txt")  # Records timing and algorithm
 file_hash = fulhash.hash_file("example.txt")         # Records bytes processed and timing
 wrapped_error = error_handling.wrap(base_error)      # Records wrap operations
 
-# All metrics are available in the global registry
-registry = get_global_registry()
-events = registry.get_events()
+# All metrics land in the global default registry
+events = drain_events()
 ```
 
 ### CLI Commands
@@ -302,7 +299,7 @@ pyfulmen telemetry list
 pyfulmen telemetry export --format prometheus
 ```
 
-📖 **[Complete Telemetry Documentation](src/pyfulmen/telemetry/README.md)** for detailed API reference, Prometheus integration, and instrumentation patterns.
+📖 **[Telemetry Instrumentation Pattern](docs/development/telemetry-instrumentation-pattern.md)** for detailed API reference, Prometheus integration, and instrumentation patterns.
 
 ## Installation
 
@@ -711,7 +708,7 @@ error = FulmenError(
 sys.exit(error.exit_code)
 ```
 
-**54 Exit Codes across 11 categories**:
+**58 Exit Codes across 11 categories**:
 
 - **Standard** (0-1): SUCCESS, FAILURE
 - **Networking** (10-15): PORT_IN_USE, CONNECTION_TIMEOUT, CONNECTION_REFUSED, etc.
@@ -853,7 +850,7 @@ make bootstrap
 # - Syncs Crucible assets
 
 # 3. Verify setup
-make test   # Run test suite (should see 1674 tests passing)
+make test   # Run test suite (1,890+ tests should pass)
 
 # 4. Development cycle
 make fmt              # Format code with Ruff
@@ -1035,7 +1032,7 @@ uv run pytest tests/unit/logging/test_severity.py::TestSeverityComparison -v
 ### Code Style
 
 - **Formatter**: Ruff (line length: 120)
-- **Linter**: Ruff with pyproject.toml configuration
+- **Linter**: Ruff configured via `ruff.toml` (see ADR-0004: tool configs live in dedicated files, not `pyproject.toml`)
 - **Type Hints**: Required for public APIs (Python 3.12+)
 - **Docstrings**: Google style
 - **Imports**: Organized automatically by Ruff
@@ -1100,9 +1097,8 @@ See [Python Coding Standards](docs/crucible-py/standards/coding/python.md) for c
 
 ### OSS Policies
 
-- Code of Conduct: [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md)
 - Security Policy: [SECURITY.md](SECURITY.md)
-- Contributing Guide: [CONTRIBUTING.md](CONTRIBUTING.md)
+- Governance: [MAINTAINERS.md](MAINTAINERS.md)
 
 ## Status
 
