@@ -1,0 +1,40 @@
+name: Audit
+"on":
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  schedule:
+    # Weekly sweep so new advisories against unchanged deps still surface.
+    - cron: "17 6 * * 1"
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  pip-audit:
+    name: Dependency vulnerability audit
+    runs-on: ubuntu-latest
+    steps:
+      # v4.4.0
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - name: Install uv
+        # v3.2.4
+        uses: astral-sh/setup-uv@caf0cab7a618c569241d31dcd442f54681755d39
+      - name: Set up Python
+        run: uv python install 3.13
+      - name: Check lockfile is up to date
+        run: uv lock --check
+      - name: Export locked runtime dependencies
+        # Runtime deps only (no dev group): dev tools do not ship in the
+        # wheel. This mirrors the scope of `make license-audit`.
+        run: |
+          uv export --locked --no-dev --no-emit-project --no-hashes \
+            --output-file requirements-runtime.txt
+      - name: Run pip-audit
+        # --no-deps + --disable-pip: the uv export is a fully pinned,
+        # complete resolution, so nothing needs installing to audit it.
+        # Any vulnerability fails the job. To waive a specific advisory,
+        # add `--ignore-vuln <ID>` with a comment citing the rationale.
+        run: |
+          uvx pip-audit --strict --no-deps --disable-pip \
+            --requirement requirements-runtime.txt
