@@ -6,6 +6,7 @@ Provides Counter, Gauge, and Histogram instruments for telemetry.
 
 from __future__ import annotations
 
+import math
 import threading
 from datetime import UTC, datetime
 from typing import TYPE_CHECKING
@@ -68,19 +69,20 @@ class Counter:
             msg = "Counter delta must be >= 0"
             raise ValueError(msg)
 
+        # _record happens under the instrument lock so event order matches
+        # state order (exporters read the latest event as current state).
         with self._lock:
             self._value += delta
             current_value = self._value
-
-        self.registry._record(
-            MetricEvent(
-                timestamp=datetime.now(UTC),
-                name=self.name,
-                value=current_value,
-                unit=_unit_for(self.name),
-                tags=tags,
+            self.registry._record(
+                MetricEvent(
+                    timestamp=datetime.now(UTC),
+                    name=self.name,
+                    value=current_value,
+                    unit=_unit_for(self.name),
+                    tags=tags,
+                )
             )
-        )
 
 
 class Gauge:
@@ -147,6 +149,9 @@ class Histogram:
         self.buckets = sorted(buckets) if buckets else self.DEFAULT_BUCKETS
         self._count = 0
         self._sum = 0.0
+        # Kahan compensation term: keeps incremental summation as accurate as
+        # the previous sort-then-sum implementation without its quadratic cost.
+        self._sum_compensation = 0.0
         self._bucket_counts = [0] * len(self.buckets)
         self._lock = threading.Lock()
 
@@ -163,21 +168,35 @@ class Histogram:
         """
         with self._lock:
             self._count += 1
-            self._sum += value
+            # Kahan compensated summation: numerically stable incremental sum.
+            # If the running sum overflows to +/-inf it saturates cleanly:
+            # compensation is reset so later finite observations can never
+            # turn the sum into NaN. (The previous sort-then-sum could
+            # transiently recover from same-sign overflow, but only by
+            # retaining every observation, which cost O(n log n) per
+            # observe; measurement metrics never approach these magnitudes.)
+            y = value - self._sum_compensation
+            t = self._sum + y
+            if math.isfinite(t):
+                self._sum_compensation = (t - self._sum) - y
+            else:
+                self._sum_compensation = 0.0
+            self._sum = t
             for i, upper_bound in enumerate(self.buckets):
                 if value <= upper_bound:
                     self._bucket_counts[i] += 1
             summary = self._create_summary()
-
-        self.registry._record(
-            MetricEvent(
-                timestamp=datetime.now(UTC),
-                name=self.name,
-                value=summary,
-                unit="ms" if "ms" in self.name else ("s" if "seconds" in self.name else None),
-                tags=tags,
+            # _record under the lock so event order matches observation order
+            # (exporters read the latest event as current state).
+            self.registry._record(
+                MetricEvent(
+                    timestamp=datetime.now(UTC),
+                    name=self.name,
+                    value=summary,
+                    unit="ms" if "ms" in self.name else ("s" if "seconds" in self.name else None),
+                    tags=tags,
+                )
             )
-        )
 
     def _create_summary(self) -> HistogramSummary:
         """Create histogram summary from the incremental bucket state.

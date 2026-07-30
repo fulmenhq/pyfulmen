@@ -238,6 +238,8 @@ PyFulmen provides comprehensive enterprise telemetry with MetricRegistry, Promet
 from pyfulmen.telemetry import counter, drain_events, gauge, histogram
 
 # Create metrics instantly - zero complexity
+# (Illustrative names; production metrics must use names registered in
+# the Crucible metrics taxonomy - see the instrumentation pattern doc.)
 ops_counter = counter("operations_total")
 memory_gauge = gauge("memory_bytes")
 request_duration = histogram("request_duration_ms")
@@ -278,25 +280,12 @@ from pyfulmen import foundry, fulhash, error_handling
 from pyfulmen.telemetry import drain_events
 
 # These operations are automatically instrumented
-mime_type = foundry.detect_mime_type("example.txt")  # Records timing and algorithm
+mime_type = foundry.detect_mime_type(b"%PDF-1.7 ...")  # Records timing and algorithm
 file_hash = fulhash.hash_file("example.txt")         # Records bytes processed and timing
 wrapped_error = error_handling.wrap(base_error)      # Records wrap operations
 
 # All metrics land in the global default registry
 events = drain_events()
-```
-
-### CLI Commands
-
-```bash
-# Show telemetry system information
-pyfulmen telemetry info
-
-# List available metrics with current values
-pyfulmen telemetry list
-
-# Export metrics in Prometheus format
-pyfulmen telemetry export --format prometheus
 ```
 
 📖 **[Telemetry Instrumentation Pattern](docs/development/telemetry-instrumentation-pattern.md)** for detailed API reference, Prometheus integration, and instrumentation patterns.
