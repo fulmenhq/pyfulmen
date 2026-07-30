@@ -13,6 +13,7 @@ import xxhash
 
 from pyfulmen.telemetry import MetricRegistry
 
+from .errors import SUPPORTED_ALGORITHMS_TEXT, UnsupportedAlgorithmError
 from .models import Algorithm, Digest
 
 
@@ -77,7 +78,9 @@ class StreamHasher:
         elif self._algorithm == Algorithm.CRC32C:
             self._hasher = google_crc32c.Checksum()
         else:
-            raise ValueError(f"Unsupported algorithm: {self._algorithm}")
+            raise UnsupportedAlgorithmError(
+                f"Unsupported algorithm: {self._algorithm}. Supported algorithms: {SUPPORTED_ALGORITHMS_TEXT}"
+            )
 
     @property
     def algorithm(self) -> Algorithm:

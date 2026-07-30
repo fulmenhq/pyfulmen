@@ -6,7 +6,6 @@ Implements the Digest type and Algorithm enum according to:
 - docs/crucible-py/standards/library/modules/fulhash.md
 """
 
-from enum import StrEnum
 from typing import Annotated, Any
 
 from pydantic import (
@@ -20,21 +19,20 @@ from pydantic import (
     model_serializer,
 )
 
+import crucible.fulhash as _crucible_fulhash
 
-class Algorithm(StrEnum):
-    """Supported hash algorithms.
+# SSOT re-export: the Algorithm enum is generated from crucible
+# (src/crucible/fulhash/types.py). Member names/values and the StrEnum base
+# are byte-identical to the previous local definition, so this is a drop-in
+# replacement. Keep `pyfulmen.fulhash.models.Algorithm` importable — external
+# code and tests import it from this path.
+from crucible.fulhash import Algorithm
 
-    Attributes:
-        XXH3_128: Fast non-cryptographic 128-bit hash (default)
-        SHA256: Cryptographic 256-bit hash
-        CRC32: 32-bit Cyclic Redundancy Check (legacy compatibility)
-        CRC32C: 32-bit CRC (Castagnoli) (HW accelerated)
-    """
-
-    XXH3_128 = "xxh3-128"
-    SHA256 = "sha256"
-    CRC32 = "crc32"
-    CRC32C = "crc32c"
+from .errors import (
+    SUPPORTED_ALGORITHMS_TEXT,
+    InvalidChecksumError,
+    UnsupportedAlgorithmError,
+)
 
 
 class Digest(BaseModel):
@@ -202,6 +200,64 @@ class Digest(BaseModel):
         ^(xxh3-128:[0-9a-f]{32}|sha256:[0-9a-f]{64}|crc32:[0-9a-f]{8}|crc32c:[0-9a-f]{8})$
         """
         return f"{self.algorithm.value}:{self.hex}"
+
+    def to_crucible(self) -> _crucible_fulhash.Digest:
+        """Convert to the generated crucible Digest TypedDict.
+
+        Copies algorithm/hex/formatted; ``bytes`` is included as ``list[int]``
+        only when set (the schema marks it optional and null is not valid).
+        """
+        result: _crucible_fulhash.Digest = {
+            "algorithm": self.algorithm.value,
+            "hex": self.hex,
+            "formatted": self.formatted,
+        }
+        if self.bytes is not None:
+            result["bytes"] = list(self.bytes)
+        return result
+
+    @classmethod
+    def from_crucible(cls, crucible_digest: _crucible_fulhash.Digest) -> "Digest":
+        """Build a Digest from the generated crucible Digest TypedDict.
+
+        Mirrors gofulmen ``FromCrucible``: validates the algorithm, takes raw
+        bytes from the ``bytes`` field when present, otherwise decodes them
+        from ``hex``; errors if both are missing. ``formatted`` is recomputed
+        rather than trusted from the payload.
+
+        Note: uses defensive ``.get()`` access throughout because the
+        generated TypedDict is currently ``total=False`` (known codegen
+        defect — filed upstream against crucible).
+
+        Raises:
+            UnsupportedAlgorithmError: If the algorithm is not supported.
+            InvalidChecksumError: If both ``bytes`` and ``hex`` are missing.
+        """
+        algo_value = crucible_digest.get("algorithm")
+        try:
+            algorithm = Algorithm(algo_value)
+        except ValueError as exc:
+            raise UnsupportedAlgorithmError(
+                f"Unsupported algorithm: {algo_value}. Supported algorithms: {SUPPORTED_ALGORITHMS_TEXT}"
+            ) from exc
+
+        raw_bytes = crucible_digest.get("bytes")
+        hex_digest = crucible_digest.get("hex")
+
+        if raw_bytes:
+            # Non-empty bytes are authoritative (gofulmen parity): hex is
+            # always derived from them, never trusted from the payload.
+            digest_bytes = bytes(raw_bytes)
+            hex_digest = digest_bytes.hex()
+        elif hex_digest:
+            try:
+                digest_bytes = bytes.fromhex(hex_digest)
+            except ValueError as exc:
+                raise InvalidChecksumError(f"Invalid hex in crucible digest: {hex_digest!r}") from exc
+        else:
+            raise InvalidChecksumError("crucible digest missing both bytes and hex fields")
+
+        return cls(algorithm=algorithm, hex=hex_digest, bytes=digest_bytes)
 
 
 __all__ = ["Algorithm", "Digest"]

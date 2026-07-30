@@ -30,15 +30,26 @@ from ._helpers import (
     format_checksum,
     multi_hash,
     parse_checksum,
+    parse_digest,
     validate_checksum_string,
     verify,
 )
 from ._stream import StreamHasher, stream
+from .errors import (
+    FulHashError,
+    InvalidChecksumError,
+    InvalidChecksumFormatError,
+    UnsupportedAlgorithmError,
+)
 from .models import Algorithm, Digest
 
 __all__ = [
     "Algorithm",
     "Digest",
+    "FulHashError",
+    "UnsupportedAlgorithmError",
+    "InvalidChecksumError",
+    "InvalidChecksumFormatError",
     "hash",
     "hash_bytes",
     "hash_string",
@@ -47,10 +58,11 @@ __all__ = [
     "StreamHasher",
     "format_checksum",
     "parse_checksum",
+    "parse_digest",
     "validate_checksum_string",
     "compare_digests",
     "verify",
     "multi_hash",
 ]
 
-__version__ = "0.1.6"
+__version__ = "0.2.2"

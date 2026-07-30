@@ -13,6 +13,7 @@ import xxhash
 
 from pyfulmen.telemetry import counter, histogram
 
+from .errors import SUPPORTED_ALGORITHMS_TEXT, UnsupportedAlgorithmError
 from .models import Algorithm, Digest
 
 
@@ -60,7 +61,9 @@ def hash_bytes(data: bytes, algorithm: Algorithm = Algorithm.XXH3_128) -> Digest
         hex_digest = f"{value:08x}"
         counter("fulhash_operations_total_crc32c").inc()
     else:
-        raise ValueError(f"Unsupported algorithm: {algorithm}")
+        raise UnsupportedAlgorithmError(
+            f"Unsupported algorithm: {algorithm}. Supported algorithms: {SUPPORTED_ALGORITHMS_TEXT}"
+        )
 
     # Record telemetry
     counter("fulhash_bytes_hashed_total").inc(len(data))
