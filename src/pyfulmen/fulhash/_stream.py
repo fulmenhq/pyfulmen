@@ -11,8 +11,6 @@ from typing import Self
 import google_crc32c
 import xxhash
 
-from pyfulmen.telemetry import MetricRegistry
-
 from .errors import SUPPORTED_ALGORITHMS_TEXT, UnsupportedAlgorithmError
 from .models import Algorithm, Digest
 
@@ -163,8 +161,10 @@ def stream(algorithm: Algorithm = Algorithm.XXH3_128) -> StreamHasher:
     Returns:
         StreamHasher instance ready to accept data
 
-    Telemetry:
-        - Emits fulhash_stream_created_count counter (streamer creation)
+    Note:
+        StreamHasher is intentionally unmetered: digest() is re-callable,
+        so per-operation telemetry would risk double-counting. Use
+        hash_bytes/hash_file/hash_reader for metered one-shot operations.
 
     Examples:
         >>> from pyfulmen.fulhash import stream, Algorithm
@@ -174,9 +174,6 @@ def stream(algorithm: Algorithm = Algorithm.XXH3_128) -> StreamHasher:
         >>> digest.formatted
         'sha256:dffd6021bb2bd5b0af676290809ec3a53191dd81c7f70a4b28688a362182986f'
     """
-    registry = MetricRegistry()
-    registry.counter("fulhash_stream_created_count").inc()
-
     return StreamHasher(algorithm)
 
 

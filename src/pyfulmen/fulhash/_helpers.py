@@ -5,9 +5,15 @@ checksum strings according to the checksum-string.schema.json specification.
 """
 
 import hmac
+import io
 import re
+import warnings
 from pathlib import Path
+from typing import BinaryIO
 
+from ._file import DEFAULT_CHUNK_SIZE, _validate_chunk_size, hash_file, hash_reader
+from ._hash import hash_bytes, hash_string
+from ._stream import stream
 from .errors import (
     InvalidChecksumError,
     InvalidChecksumFormatError,
@@ -218,13 +224,143 @@ def compare_digests(a: Digest, b: Digest) -> bool:
     return hmac.compare_digest(a.hex, b.hex)
 
 
-def verify(source: str | Path | bytes, expected_digest: str) -> bool:
-    """Verify data against an expected checksum.
+def verify_bytes(data: bytes, expected: str) -> bool:
+    """Verify byte data against an expected checksum.
 
-    Computes hash of source and compares with expected digest.
+    Parses expected via parse_checksum, hashes data with the parsed
+    algorithm, and compares using constant-time hmac.compare_digest.
 
     Args:
-        source: Data to verify (string, bytes, or file path)
+        data: Bytes to verify
+        expected: Expected checksum string ("algorithm:hex")
+
+    Returns:
+        True if hash matches, False otherwise
+
+    Raises:
+        InvalidChecksumFormatError: If checksum format is invalid
+        UnsupportedAlgorithmError: If algorithm is unsupported
+
+    Examples:
+        >>> from pyfulmen.fulhash import hash_bytes, verify_bytes
+        >>> verify_bytes(b"Hello", hash_bytes(b"Hello").formatted)
+        True
+    """
+    algo_str, expected_hex = parse_checksum(expected)
+    digest = hash_bytes(data, Algorithm(algo_str))
+    return hmac.compare_digest(digest.hex, expected_hex)
+
+
+def verify_text(text: str, expected: str, encoding: str = "utf-8") -> bool:
+    """Verify text against an expected checksum.
+
+    The text is encoded (default UTF-8) and hashed; it is never treated
+    as a file path. Use verify_file for paths.
+
+    Args:
+        text: Text to verify
+        expected: Expected checksum string ("algorithm:hex")
+        encoding: Text encoding (default: utf-8)
+
+    Returns:
+        True if hash matches, False otherwise
+
+    Raises:
+        InvalidChecksumFormatError: If checksum format is invalid
+        UnsupportedAlgorithmError: If algorithm is unsupported
+
+    Examples:
+        >>> from pyfulmen.fulhash import hash_string, verify_text
+        >>> verify_text("Hello", hash_string("Hello").formatted)
+        True
+    """
+    algo_str, expected_hex = parse_checksum(expected)
+    digest = hash_string(text, Algorithm(algo_str), encoding)
+    return hmac.compare_digest(digest.hex, expected_hex)
+
+
+def verify_file(path: Path | str, expected: str, *, chunk_size: int = DEFAULT_CHUNK_SIZE) -> bool:
+    """Verify file contents against an expected checksum.
+
+    Delegates to hash_file (streaming, chunk_size blocks) and compares
+    using constant-time hmac.compare_digest.
+
+    Args:
+        path: Path to file (Path object or string)
+        expected: Expected checksum string ("algorithm:hex")
+        chunk_size: Read block size in bytes, must be > 0 (default: 64 KiB)
+
+    Returns:
+        True if hash matches, False otherwise
+
+    Raises:
+        InvalidChecksumFormatError: If checksum format is invalid
+        UnsupportedAlgorithmError: If algorithm is unsupported
+        FileNotFoundError: If file does not exist
+        PermissionError: If file cannot be read
+        IsADirectoryError: If path is a directory
+        ValueError: If chunk_size is not > 0
+
+    Examples:
+        >>> from pyfulmen.fulhash import verify_file
+        >>> verify_file("data.txt", "xxh3-128:...")  # doctest: +SKIP
+    """
+    algo_str, expected_hex = parse_checksum(expected)
+    digest = hash_file(path, Algorithm(algo_str), chunk_size=chunk_size)
+    return hmac.compare_digest(digest.hex, expected_hex)
+
+
+def verify_reader(reader: BinaryIO, expected: str, *, chunk_size: int = DEFAULT_CHUNK_SIZE) -> bool:
+    """Verify a caller-supplied binary stream against an expected checksum.
+
+    Delegates to hash_reader: reads from the CURRENT position to EOF in
+    chunk_size blocks; never seeks; stream is NOT closed and position is
+    NOT restored (at EOF on return). Non-seekable streams fully supported.
+    Text-mode streams rejected with TypeError.
+
+    Args:
+        reader: Binary stream to read from (current position to EOF)
+        expected: Expected checksum string ("algorithm:hex")
+        chunk_size: Read block size in bytes, must be > 0 (default: 64 KiB)
+
+    Returns:
+        True if hash matches, False otherwise
+
+    Raises:
+        InvalidChecksumFormatError: If checksum format is invalid
+        UnsupportedAlgorithmError: If algorithm is unsupported
+        TypeError: If reader is a text-mode stream
+        ValueError: If chunk_size is not > 0
+        OSError: If the underlying stream read fails
+
+    Examples:
+        >>> import io
+        >>> from pyfulmen.fulhash import hash_bytes, verify_reader
+        >>> expected = hash_bytes(b"Hello").formatted
+        >>> verify_reader(io.BytesIO(b"Hello"), expected)
+        True
+    """
+    algo_str, expected_hex = parse_checksum(expected)
+    digest = hash_reader(reader, Algorithm(algo_str), chunk_size=chunk_size)
+    return hmac.compare_digest(digest.hex, expected_hex)
+
+
+def verify(source: str | Path | bytes, expected_digest: str) -> bool:
+    """Verify data against an expected checksum (type dispatcher).
+
+    Dispatches on source type:
+    - bytes → verify_bytes()
+    - str → verify_text() (deprecated; see below)
+    - Path → verify_file()
+
+    .. deprecated:: 0.3.0
+        Passing a str to fulhash.verify() is deprecated because it is
+        ambiguous (the string is hashed as text, never treated as a path).
+        Use verify_text(), verify_bytes(), or verify_file() instead.
+        str support will be removed in v0.5.0.
+
+    Args:
+        source: Data to verify (bytes, string-as-text, or file path)
         expected_digest: Expected checksum string ("algorithm:hex")
 
     Returns:
@@ -232,70 +368,191 @@ def verify(source: str | Path | bytes, expected_digest: str) -> bool:
 
     Raises:
         ValueError: If checksum format is invalid or algorithm unsupported
+        TypeError: If source type is not supported
         OSError: If file read fails
 
     Examples:
         >>> from pyfulmen.fulhash import verify
         >>> verify(b"Hello", "xxh3-128:...")  # doctest: +SKIP
     """
-    from ._hash import hash_bytes, hash_string
-    from ._stream import stream
-
-    algo_str, expected_hex = parse_checksum(expected_digest)
-    algorithm = Algorithm(algo_str)
-
-    # Compute actual digest
     if isinstance(source, bytes):
-        digest = hash_bytes(source, algorithm)
+        return verify_bytes(source, expected_digest)
     elif isinstance(source, str):
-        digest = hash_string(source, algorithm)
+        warnings.warn(
+            "Passing a str to fulhash.verify() is deprecated because it is "
+            "ambiguous (the string is hashed as text, never treated as a path). "
+            "Use verify_text(), verify_bytes(), or verify_file() instead. "
+            "str support will be removed in v0.5.0.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
+        return verify_text(source, expected_digest)
     elif isinstance(source, Path):
-        if not source.exists():
-            raise FileNotFoundError(f"File not found: {source}")
-        hasher = stream(algorithm)
-        with open(source, "rb") as f:
-            while chunk := f.read(65536):
-                hasher.update(chunk)
-        digest = hasher.digest()
+        return verify_file(source, expected_digest)
     else:
         raise TypeError(f"Unsupported source type: {type(source)}")
 
-    return hmac.compare_digest(digest.hex, expected_hex)
 
-
-def multi_hash(source: str | Path | bytes, algorithms: list[Algorithm]) -> dict[Algorithm, Digest]:
-    """Compute multiple digests in a single pass.
-
-    Optimized for streaming data once to multiple hashers.
+def multi_hash_bytes(data: bytes, algorithms: list[Algorithm]) -> dict[Algorithm, Digest]:
+    """Compute multiple digests of byte data in a single pass.
 
     Args:
-        source: Data to hash (bytes, string, or Path)
+        data: Bytes to hash
         algorithms: List of algorithms to compute
 
     Returns:
         Dictionary mapping Algorithm to Digest
+
+    Examples:
+        >>> from pyfulmen.fulhash import Algorithm, multi_hash_bytes
+        >>> digests = multi_hash_bytes(b"Hello", [Algorithm.XXH3_128, Algorithm.SHA256])
+        >>> sorted(d.value for d in digests)
+        ['sha256', 'xxh3-128']
     """
-    from ._stream import stream
+    hashers = [stream(algo) for algo in algorithms]
+    for h in hashers:
+        h.update(data)
+    return {h.algorithm: h.digest() for h in hashers}
+
+
+def multi_hash_text(text: str, algorithms: list[Algorithm], encoding: str = "utf-8") -> dict[Algorithm, Digest]:
+    """Compute multiple digests of text in a single pass.
+
+    The text is encoded (default UTF-8) and hashed; it is never treated
+    as a file path. Use multi_hash_file for paths.
+
+    Args:
+        text: Text to hash
+        algorithms: List of algorithms to compute
+        encoding: Text encoding (default: utf-8)
+
+    Returns:
+        Dictionary mapping Algorithm to Digest
+    """
+    return multi_hash_bytes(text.encode(encoding), algorithms)
+
+
+def multi_hash_file(
+    path: Path | str,
+    algorithms: list[Algorithm],
+    *,
+    chunk_size: int = DEFAULT_CHUNK_SIZE,
+) -> dict[Algorithm, Digest]:
+    """Compute multiple digests of file contents in a single pass.
+
+    Streams the file once in chunk_size blocks, feeding all hashers.
+
+    Args:
+        path: Path to file (Path object or string)
+        algorithms: List of algorithms to compute
+        chunk_size: Read block size in bytes, must be > 0 (default: 64 KiB)
+
+    Returns:
+        Dictionary mapping Algorithm to Digest
+
+    Raises:
+        FileNotFoundError: If file does not exist
+        PermissionError: If file cannot be read
+        IsADirectoryError: If path is a directory
+        ValueError: If chunk_size is not > 0
+    """
+    _validate_chunk_size(chunk_size)
 
     hashers = [stream(algo) for algo in algorithms]
+    with open(path, "rb") as f:
+        while chunk := f.read(chunk_size):
+            for h in hashers:
+                h.update(chunk)
+    return {h.algorithm: h.digest() for h in hashers}
 
+
+def multi_hash_reader(
+    reader: BinaryIO,
+    algorithms: list[Algorithm],
+    *,
+    chunk_size: int = DEFAULT_CHUNK_SIZE,
+) -> dict[Algorithm, Digest]:
+    """Compute multiple digests of a caller-supplied binary stream in a single pass.
+
+    reader must be a binary stream (BinaryIO) opened by the caller.
+    FulHash reads from the CURRENT position to EOF in chunk_size blocks;
+    it never seeks — bytes before the position are not hashed. Stream is
+    NOT closed, position NOT restored (at EOF on return; ownership stays
+    with caller). Non-seekable streams (pipes, sockets, stdin.buffer)
+    fully supported (no seek/tell ever called). Text-mode streams
+    rejected with TypeError. chunk_size > 0 (default 64 KiB).
+
+    Args:
+        reader: Binary stream to read from (current position to EOF)
+        algorithms: List of algorithms to compute
+        chunk_size: Read block size in bytes, must be > 0 (default: 64 KiB)
+
+    Returns:
+        Dictionary mapping Algorithm to Digest
+
+    Raises:
+        TypeError: If reader is a text-mode stream
+        ValueError: If chunk_size is not > 0
+        OSError: If the underlying stream read fails
+    """
+    _validate_chunk_size(chunk_size)
+    if isinstance(reader, io.TextIOBase):
+        raise TypeError(
+            "multi_hash_reader requires a binary stream (BinaryIO); got a text-mode stream. Open with 'rb'."
+        )
+
+    hashers = [stream(algo) for algo in algorithms]
+    while chunk := reader.read(chunk_size):
+        if isinstance(chunk, str):
+            raise TypeError(
+                "multi_hash_reader requires a binary stream (BinaryIO); reader.read() returned str. Open with 'rb'."
+            )
+        for h in hashers:
+            h.update(chunk)
+    return {h.algorithm: h.digest() for h in hashers}
+
+
+def multi_hash(source: str | Path | bytes, algorithms: list[Algorithm]) -> dict[Algorithm, Digest]:
+    """Compute multiple digests in a single pass (type dispatcher).
+
+    Dispatches on source type:
+    - bytes → multi_hash_bytes()
+    - str → multi_hash_text() (deprecated; see below)
+    - Path → multi_hash_file()
+
+    .. deprecated:: 0.3.0
+        Passing a str to fulhash.multi_hash() is deprecated because it is
+        ambiguous (the string is hashed as text, never treated as a path).
+        Use multi_hash_text(), multi_hash_bytes(), or multi_hash_file()
+        instead. str support will be removed in v0.5.0.
+
+    Args:
+        source: Data to hash (bytes, string-as-text, or Path)
+        algorithms: List of algorithms to compute
+
+    Returns:
+        Dictionary mapping Algorithm to Digest
+
+    Raises:
+        TypeError: If source type is not supported
+        OSError: If file read fails
+    """
     if isinstance(source, bytes):
-        for h in hashers:
-            h.update(source)
+        return multi_hash_bytes(source, algorithms)
     elif isinstance(source, str):
-        # Treat as text
-        data = source.encode("utf-8")
-        for h in hashers:
-            h.update(data)
+        warnings.warn(
+            "Passing a str to fulhash.multi_hash() is deprecated because it is "
+            "ambiguous (the string is hashed as text, never treated as a path). "
+            "Use multi_hash_text(), multi_hash_bytes(), or multi_hash_file() "
+            "instead. str support will be removed in v0.5.0.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
+        return multi_hash_text(source, algorithms)
     elif isinstance(source, Path):
-        with open(source, "rb") as f:
-            while chunk := f.read(65536):
-                for h in hashers:
-                    h.update(chunk)
+        return multi_hash_file(source, algorithms)
     else:
         raise TypeError(f"Unsupported source type: {type(source)}")
-
-    return {h.algorithm: h.digest() for h in hashers}
 
 
 __all__ = [
@@ -305,5 +562,13 @@ __all__ = [
     "validate_checksum_string",
     "compare_digests",
     "verify",
+    "verify_bytes",
+    "verify_text",
+    "verify_file",
+    "verify_reader",
     "multi_hash",
+    "multi_hash_bytes",
+    "multi_hash_text",
+    "multi_hash_file",
+    "multi_hash_reader",
 ]

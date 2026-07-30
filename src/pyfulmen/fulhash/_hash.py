@@ -54,12 +54,10 @@ def hash_bytes(data: bytes, algorithm: Algorithm = Algorithm.XXH3_128) -> Digest
         value = zlib.crc32(data) & 0xFFFFFFFF
         digest_bytes = value.to_bytes(4, byteorder="big")
         hex_digest = f"{value:08x}"
-        counter("fulhash_operations_total_crc32").inc()
     elif algorithm == Algorithm.CRC32C:
         value = google_crc32c.value(data) & 0xFFFFFFFF
         digest_bytes = value.to_bytes(4, byteorder="big")
         hex_digest = f"{value:08x}"
-        counter("fulhash_operations_total_crc32c").inc()
     else:
         raise UnsupportedAlgorithmError(
             f"Unsupported algorithm: {algorithm}. Supported algorithms: {SUPPORTED_ALGORITHMS_TEXT}"
@@ -93,7 +91,7 @@ def hash_string(
         Digest with algorithm, hex, bytes, and formatted fields
 
     Telemetry:
-        - Emits fulhash_hash_string_count counter (hash operations)
+        - Emits fulhash_hash_string_total counter (string hash operations)
 
     Examples:
         >>> from pyfulmen.fulhash import hash_string, Algorithm
