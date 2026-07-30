@@ -16,8 +16,31 @@ sources:
         subdir: docs/crucible-py
       - type: schema
         source_path: schemas
+        # Enumerated includes: everything except the re-vendored upstream/** tree,
+        # which must not land in this repo or its distributions. The sync format
+        # has no exclude support, so new top-level schema dirs upstream must be
+        # added here explicitly.
         paths:
-          - '**/*'
+          - 'ascii/**'
+          - 'assessment/**'
+          - 'config/**'
+          - 'content/**'
+          - 'design/**'
+          - 'devsecops/**'
+          - 'enact/**'
+          - 'error-handling/**'
+          - 'library/**'
+          - 'meta/**'
+          - 'observability/**'
+          - 'pathfinder/**'
+          - 'protocol/**'
+          - 'schema-validation/**'
+          - 'server/**'
+          - 'standards/**'
+          - 'taxonomy/**'
+          - 'terminal/**'
+          - 'tooling/**'
+          - 'web/**'
         subdir: schemas/crucible-py
       - type: config
         source_path: config

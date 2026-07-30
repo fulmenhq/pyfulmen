@@ -80,9 +80,48 @@ build-backend = "hatchling.build"
 packages = ["src/pyfulmen", "src/crucible"]
 
 [tool.hatch.build.targets.wheel.force-include]
+# Enumerated subtrees: hatchling does not apply exclude patterns to
+# force-include, so wholesale "schemas" mappings would ship anything a
+# future sync drops there. New shipped subtrees must be added explicitly.
 "src/pyfulmen/py.typed" = "pyfulmen/py.typed"
 "config" = "config"
-"schemas" = "schemas"
+"schemas/crucible-py/ascii" = "schemas/crucible-py/ascii"
+"schemas/crucible-py/assessment" = "schemas/crucible-py/assessment"
+"schemas/crucible-py/config" = "schemas/crucible-py/config"
+"schemas/crucible-py/content" = "schemas/crucible-py/content"
+"schemas/crucible-py/design" = "schemas/crucible-py/design"
+"schemas/crucible-py/devsecops" = "schemas/crucible-py/devsecops"
+"schemas/crucible-py/enact" = "schemas/crucible-py/enact"
+"schemas/crucible-py/error-handling" = "schemas/crucible-py/error-handling"
+"schemas/crucible-py/library" = "schemas/crucible-py/library"
+"schemas/crucible-py/meta" = "schemas/crucible-py/meta"
+"schemas/crucible-py/observability" = "schemas/crucible-py/observability"
+"schemas/crucible-py/pathfinder" = "schemas/crucible-py/pathfinder"
+"schemas/crucible-py/protocol" = "schemas/crucible-py/protocol"
+"schemas/crucible-py/schema-validation" = "schemas/crucible-py/schema-validation"
+"schemas/crucible-py/server" = "schemas/crucible-py/server"
+"schemas/crucible-py/standards" = "schemas/crucible-py/standards"
+"schemas/crucible-py/taxonomy" = "schemas/crucible-py/taxonomy"
+"schemas/crucible-py/terminal" = "schemas/crucible-py/terminal"
+"schemas/crucible-py/tooling" = "schemas/crucible-py/tooling"
+"schemas/crucible-py/web" = "schemas/crucible-py/web"
+
+[tool.hatch.build.targets.sdist]
+# Explicit sdist surface: source, shipped assets, and package metadata only.
+# Without this section hatchling ships the entire repository (internal docs,
+# tooling config, CI, tests) in the source distribution.
+include = [
+    "src/**",
+    "config/**",
+    "schemas/**",
+    "/VERSION",
+    "/LICENSE",
+    "/README.md",
+    "/CHANGELOG.md",
+]
+exclude = [
+    "schemas/crucible-py/upstream/**",
+]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
