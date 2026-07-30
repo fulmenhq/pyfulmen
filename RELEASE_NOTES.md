@@ -6,10 +6,14 @@ This document tracks release notes for recent PyFulmen releases.
 
 ---
 
+> **Note (2026-07-30)**: Versions 0.2.0–0.2.2 were committed locally but never
+> released — no git tags, no PyPI publication. Entries below describe completed
+> work, not shipped releases.
+
 ## [0.2.0] - Crucible v0.3.2 Integration & CI/CD Modernization - 2026-01-05
 
 **Release Type**: Minor - Role-Based Model & Dependency Protection
-**Status**: Ready for Release
+**Status**: Unreleased — version bumped locally 2026-01-05; never tagged, pushed, or published
 
 **Summary**: PyFulmen v0.2.0 aligns with Crucible v0.3.2's role-based agentic model, modernizes the bootstrap and CI/CD infrastructure to match gofulmen/rsfulmen patterns, and adds dependency protection (license compliance and supply chain security).
 

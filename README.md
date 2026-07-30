@@ -8,9 +8,9 @@ Every team writes their own HTTP status helpers, exit code enums, and country co
 - **Cross-language parity**: Same exit codes, signals, and schemas as gofulmen, rsfulmen, tsfulmen
 - **Type-safe**: Full type hints and Pydantic models throughout
 
-**Lifecycle Phase**: `stable` | **Version**: 0.2.0 | **Coverage**: 93%
+**Lifecycle Phase**: `alpha` | **Version**: 0.2.2 (unreleased) | **Coverage**: 93%
 
-**Install**: `uv pip install pyfulmen` (or `pip install pyfulmen`)
+**Install**: Not yet published to PyPI. Install from a local wheel or editable checkout — see [Installation](#installation).
 
 ## Who Should Use This
 
@@ -322,9 +322,9 @@ make build
 
 # Install in another project
 cd /path/to/your/project
-pip install /path/to/pyfulmen/dist/pyfulmen-0.1.11-py3-none-any.whl
+pip install /path/to/pyfulmen/dist/pyfulmen-0.2.2-py3-none-any.whl
 # Or with uv
-uv add /path/to/pyfulmen/dist/pyfulmen-0.1.11-py3-none-any.whl
+uv add /path/to/pyfulmen/dist/pyfulmen-0.2.2-py3-none-any.whl
 ```
 
 ### Editable Install (for library development)

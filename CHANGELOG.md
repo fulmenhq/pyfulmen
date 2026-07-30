@@ -7,9 +7,35 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-_No unreleased changes._
+> **Note**: Versions 0.2.0–0.2.2 below were version bumps committed to the
+> repository but never released — no git tags, no PyPI publication. They are
+> recorded for history; the first published 0.2.x release will ship this work
+> together.
 
-## [0.2.0] - 2026-01-06
+## [0.2.2] - 2026-02-20 (never released)
+
+### Security
+
+- Resolved urllib3 and jaraco-context dependency vulnerabilities
+
+### Changed
+
+- Updated all runtime and dev dependencies
+- Migrated `str + Enum` classes to `StrEnum`; added `sbom/` to `.gitignore`
+
+## [0.2.1] - 2026-02-19 (never released)
+
+### Added
+
+- Typed role catalog API in the crucible module
+- `SECURITY.md`
+
+### Infrastructure
+
+- Crucible sync v0.4.2 → v0.4.12; bootstrap modernization
+- Resolved all goneat lint and format issues
+
+## [0.2.0] - 2026-01-06 (never released)
 
 ### Added
 
