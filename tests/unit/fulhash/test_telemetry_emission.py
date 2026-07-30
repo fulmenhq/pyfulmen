@@ -53,15 +53,12 @@ def _assert_only_taxonomy_names(events: list) -> None:
     for event in events:
         # Name-level taxonomy check (raises ValueError on unregistered names)
         telemetry.validate_metric_name(event.name)
+        # Counters resolve their unit from the taxonomy (fallback "count"),
+        # so every registered event validates fully — including
+        # fulhash_bytes_hashed_total, which carries unit "bytes".
+        assert telemetry.validate_metric_event(event) is True
         if event.name == "fulhash_bytes_hashed_total":
-            # Known pre-existing instrument limitation (out of W2B scope):
-            # Counter hardcodes unit="count" while the taxonomy declares
-            # unit "bytes" for this metric, so full-event validation fails
-            # on the unit check alone. The name is taxonomy-valid (asserted
-            # above via validate_metric_name).
-            assert telemetry.validate_metric_event(event) is False
-        else:
-            assert telemetry.validate_metric_event(event) is True
+            assert event.unit == "bytes"
 
 
 @pytest.fixture(autouse=True)

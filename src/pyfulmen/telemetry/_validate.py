@@ -2,13 +2,15 @@
 
 from __future__ import annotations
 
+from functools import lru_cache
 from typing import Any
 
 from .models import MetricEvent
 
 
+@lru_cache(maxsize=1)
 def _load_metrics_taxonomy() -> dict[str, Any]:
-    """Load metrics taxonomy for validation."""
+    """Load metrics taxonomy for validation (cached after first read)."""
     import yaml
 
     from ..crucible import _paths
@@ -18,8 +20,12 @@ def _load_metrics_taxonomy() -> dict[str, Any]:
         return yaml.safe_load(f)
 
 
+@lru_cache(maxsize=1)
 def _build_metric_unit_map() -> dict[str, str]:
-    """Build mapping of metric names to their required units."""
+    """Build mapping of metric names to their required units (cached).
+
+    The returned dict is shared; callers must treat it as read-only.
+    """
     taxonomy = _load_metrics_taxonomy()
     return {metric["name"]: metric["unit"] for metric in taxonomy.get("metrics", [])}
 

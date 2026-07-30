@@ -10,10 +10,23 @@ import threading
 from datetime import UTC, datetime
 from typing import TYPE_CHECKING
 
+from ._validate import _build_metric_unit_map
 from .models import HistogramBucket, HistogramSummary, MetricEvent
 
 if TYPE_CHECKING:
     from ._registry import MetricRegistry
+
+
+def _unit_for(name: str) -> str:
+    """Resolve the taxonomy-declared unit for a metric name.
+
+    Falls back to "count" for names outside the taxonomy or if the
+    taxonomy cannot be loaded (telemetry must never break the host app).
+    """
+    try:
+        return _build_metric_unit_map().get(name, "count")
+    except Exception:
+        return "count"
 
 
 class Counter:
@@ -64,7 +77,7 @@ class Counter:
                 timestamp=datetime.now(UTC),
                 name=self.name,
                 value=current_value,
-                unit="count",
+                unit=_unit_for(self.name),
                 tags=tags,
             )
         )
@@ -132,18 +145,28 @@ class Histogram:
         self.name = name
         self.registry = registry
         self.buckets = sorted(buckets) if buckets else self.DEFAULT_BUCKETS
-        self._observations: list[float] = []
+        self._count = 0
+        self._sum = 0.0
+        self._bucket_counts = [0] * len(self.buckets)
         self._lock = threading.Lock()
 
     def observe(self, value: float, tags: dict[str, str] | None = None) -> None:
         """Record observation in histogram.
+
+        Bucket state is maintained incrementally, so each observation is
+        O(number of buckets) regardless of how many observations have been
+        recorded.
 
         Args:
             value: Observed value
             tags: Optional tags for this metric event
         """
         with self._lock:
-            self._observations.append(value)
+            self._count += 1
+            self._sum += value
+            for i, upper_bound in enumerate(self.buckets):
+                if value <= upper_bound:
+                    self._bucket_counts[i] += 1
             summary = self._create_summary()
 
         self.registry._record(
@@ -157,20 +180,15 @@ class Histogram:
         )
 
     def _create_summary(self) -> HistogramSummary:
-        """Create histogram summary from observations.
+        """Create histogram summary from the incremental bucket state.
 
         Returns:
             HistogramSummary with cumulative bucket counts
         """
-        sorted_obs = sorted(self._observations)
-        count = len(sorted_obs)
-        total = sum(sorted_obs)
+        buckets = [
+            HistogramBucket(le=upper_bound, count=count)
+            for upper_bound, count in zip(self.buckets, self._bucket_counts, strict=True)
+        ]
+        buckets.append(HistogramBucket(le=float("inf"), count=self._count))
 
-        buckets = []
-        for upper_bound in self.buckets:
-            cumulative_count = sum(1 for v in sorted_obs if v <= upper_bound)
-            buckets.append(HistogramBucket(le=upper_bound, count=cumulative_count))
-
-        buckets.append(HistogramBucket(le=float("inf"), count=count))
-
-        return HistogramSummary(count=count, sum=total, buckets=buckets)
+        return HistogramSummary(count=self._count, sum=self._sum, buckets=buckets)

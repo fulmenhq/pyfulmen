@@ -1,8 +1,8 @@
 # Telemetry Instrumentation Pattern
 
 **Status**: Active  
-**Version**: 1.1  
-**Last Updated**: 2025-10-24  
+**Version**: 1.3  
+**Last Updated**: 2026-07-30  
 **Related**:
 
 - ADR-0008 (Global Metric Registry Singleton - local)
@@ -16,7 +16,14 @@ This document defines the standard pattern for adding telemetry instrumentation 
 
 ### Wrapper Method with Try/Finally
 
-**Option A: Using Module-Level Helpers (Recommended)**
+**Module-level helpers are the only sanctioned pattern for library code.**
+The helpers (`counter`, `histogram`, `gauge`) emit to the process-wide
+default registry, which is the only registry consumers can observe (via
+`get_events()` / `drain_events()`). Creating a `MetricRegistry()` inside
+library code emits into a throwaway instance that no consumer can ever
+read — the metrics silently disappear. Explicit `MetricRegistry`
+instances are reserved for tests and for applications that deliberately
+manage their own registry end to end.
 
 ```python
 import time
@@ -48,38 +55,23 @@ def _public_operation_impl(self, args):
     pass
 ```
 
-**Option B: Using Explicit Registry**
+### Consumer Responsibility: Drain the Registry
+
+The default registry buffers every emitted `MetricEvent` in memory and
+the buffer is **unbounded**. Applications that consume PyFulmen telemetry
+(or that call instrumented APIs at high frequency — logging in
+particular) must periodically consume the buffer:
 
 ```python
-import time
-from pyfulmen.telemetry import MetricRegistry
+from pyfulmen.telemetry import drain_events
 
-def public_operation(self, args):
-    """Public API method with telemetry instrumentation.
-
-    Telemetry:
-        - Emits operation_name_ms histogram (operation duration)
-        - Emits operation_name_errors counter (on exceptions)
-    """
-    start_time = time.perf_counter()
-    registry = MetricRegistry()
-
-    try:
-        return self._public_operation_impl(args)
-    except Exception as err:
-        # Emit error counter
-        registry.counter("operation_name_errors").inc()
-        raise
-    finally:
-        # Always emit duration metric
-        duration_ms = (time.perf_counter() - start_time) * 1000
-        registry.histogram("operation_name_ms").observe(duration_ms)
-
-def _public_operation_impl(self, args):
-    """Internal implementation without telemetry wrapper."""
-    # Original logic here, unchanged
-    pass
+events = drain_events()  # returns buffered events and clears the buffer
 ```
+
+`get_events()` copies without clearing and does not release memory.
+Long-running processes that never call `drain_events()` will grow their
+event buffer without bound. A bounded buffer is a planned follow-up; the
+drain requirement stands until it lands.
 
 ### Key Principles
 
@@ -98,20 +90,15 @@ def _public_operation_impl(self, args):
 **Naming**: `<module>_<operation>_ms`
 
 ```python
-# Using module-level helpers (recommended)
 histogram("pathfinder_find_ms").observe(duration_ms)
 histogram("config_load_ms").observe(duration_ms)
-
-# Using explicit registry
-registry.histogram("pathfinder_find_ms").observe(duration_ms)
-registry.histogram("config_load_ms").observe(duration_ms)
 ```
 
 **Examples**:
 
 - `pathfinder_find_ms` - File discovery operation duration
 - `config_load_ms` - Configuration loading duration
-- `schema_validation_ms` - Schema validation duration
+- `logging_emit_latency_ms` - Log emission duration
 
 ### Counters (Event Counting)
 
@@ -120,16 +107,14 @@ registry.histogram("config_load_ms").observe(duration_ms)
 **Naming**: `<module>_<event>_<unit>` or `<module>_<event>s`
 
 ```python
-# Using module-level helpers (recommended)
 counter("pathfinder_validation_errors").inc()
 counter("pathfinder_security_warnings").inc()
 counter("foundry_lookup_count").inc()
-
-# Using explicit registry
-registry.counter("pathfinder_validation_errors").inc()
-registry.counter("pathfinder_security_warnings").inc()
-registry.counter("foundry_lookup_count").inc()
 ```
+
+Counters resolve their event unit from the Crucible metrics taxonomy
+(e.g., `fulhash_bytes_hashed_total` emits `unit="bytes"`); names outside
+the taxonomy fall back to `count`.
 
 **Examples**:
 
@@ -145,13 +130,8 @@ registry.counter("foundry_lookup_count").inc()
 **Naming**: `<module>_<state>_<unit>`
 
 ```python
-# Using module-level helpers (recommended)
 gauge("cache_size_bytes").set(cache.size)
 gauge("active_connections_count").set(len(connections))
-
-# Using explicit registry
-registry.gauge("cache_size_bytes").set(cache.size)
-registry.gauge("active_connections_count").set(len(connections))
 ```
 
 **Note**: Less common in helper libraries, more common in services.
@@ -176,26 +156,17 @@ Before adding metrics, verify they exist in Crucible taxonomy:
 
 ### Step 3: Add Imports
 
-**Option A: Using Module-Level Helpers (Recommended)**
-
 ```python
 import time
 from pyfulmen.telemetry import counter, histogram, gauge
-```
-
-**Option B: Using Explicit Registry**
-
-```python
-import time
-from pyfulmen.telemetry import MetricRegistry
 ```
 
 ### Step 4: Wrap Public Methods
 
 1. Rename method: `public_method()` → `_public_method_impl()`
 2. Create wrapper with try/finally structure
-3. Initialize timer and registry
-4. Emit metrics in appropriate blocks
+3. Initialize timer
+4. Emit metrics via the module-level helpers in appropriate blocks
 
 ### Step 5: Add Tests
 
@@ -264,40 +235,7 @@ def find_files(self, query: FindQuery) -> list[PathResult]:
     return results
 ```
 
-### After (v0.1.6 Phase 1)
-
-```python
-def find_files(self, query: FindQuery) -> list[PathResult]:
-    """
-    Perform file discovery.
-
-    Telemetry:
-        - Emits pathfinder_find_ms histogram (operation duration)
-    """
-    start_time = time.perf_counter()
-    registry = MetricRegistry()
-
-    try:
-        return self._find_files_impl(query)
-    finally:
-        duration_ms = (time.perf_counter() - start_time) * 1000
-        registry.histogram("pathfinder_find_ms").observe(duration_ms)
-
-def _find_files_impl(self, query: FindQuery) -> list[PathResult]:
-    """Internal implementation of find_files without telemetry."""
-    # Original logic unchanged - just moved here
-    if self.config.validate_inputs:
-        schema_validator.validate_against_schema(...)
-
-    results: list[PathResult] = []
-    root_path = Path(query.root).resolve()
-
-    # ... discovery logic ...
-
-    return results
-```
-
-### After (v0.1.6 Phase 2 - Module Helpers)
+### After (duration histogram)
 
 ```python
 def find_files(self, query: FindQuery) -> list[PathResult]:
@@ -329,63 +267,7 @@ def _find_files_impl(self, query: FindQuery) -> list[PathResult]:
     return results
 ```
 
-### After (v0.1.6 Phase 1.5 - Complete)
-
-```python
-def find_files(self, query: FindQuery) -> list[PathResult]:
-    """
-    Perform file discovery.
-
-    Telemetry:
-        - Emits pathfinder_find_ms histogram (operation duration)
-        - Emits pathfinder_validation_errors counter (on validation failure)
-        - Emits pathfinder_security_warnings counter (on security violation)
-    """
-    start_time = time.perf_counter()
-    registry = MetricRegistry()
-
-    try:
-        return self._find_files_impl(query, registry)
-    finally:
-        duration_ms = (time.perf_counter() - start_time) * 1000
-        registry.histogram("pathfinder_find_ms").observe(duration_ms)
-
-def _find_files_impl(self, query: FindQuery, registry: MetricRegistry) -> list[PathResult]:
-    """Internal implementation with registry access for error counters."""
-    # Validation with error counter
-    if self.config.validate_inputs:
-        try:
-            schema_validator.validate_against_schema(...)
-        except ValueError:
-            registry.counter("pathfinder_validation_errors").inc()
-            raise
-
-    # Discovery logic with security counter
-    for pattern in query.include:
-        matches = root_path.glob(pattern)
-        for match in matches:
-            try:
-                # Path safety validation
-                try:
-                    validate_path(str(abs_match))
-                except PathTraversalError:
-                    registry.counter("pathfinder_security_warnings").inc()
-                    raise
-
-                # Constraint violation handling
-                if self._violates_constraint(...):
-                    violation = PathTraversalError(...)
-                    registry.counter("pathfinder_security_warnings").inc()
-
-                    if constraint.enforcement_level == EnforcementLevel.STRICT.value:
-                        raise violation
-            except PathTraversalError:
-                raise
-
-    return results
-```
-
-### After (v0.1.6 Phase 2 - Module Helpers)
+### After (complete, with error counters)
 
 ```python
 def find_files(self, query: FindQuery) -> list[PathResult]:
@@ -457,28 +339,38 @@ def _find_files_impl(self, query: FindQuery) -> list[PathResult]:
 
 ### Optimization Tips
 
-1. **Lazy Initialization**: Only create registry when needed
-2. **Minimal Computation**: Calculate duration only (avoid complex logic in wrapper)
-3. **No Defensive Copying**: Don't clone args/results just for telemetry
-4. **Cache Instruments**: Registry caches counters/histograms by name
+1. **Minimal Computation**: Calculate duration only (avoid complex logic in wrapper)
+2. **No Defensive Copying**: Don't clone args/results just for telemetry
+3. **Cache Instruments**: The default registry caches counters/histograms by name
 
 ### Anti-Patterns
 
-❌ **Don't** create registry in hot loops:
+❌ **Don't** create `MetricRegistry()` instances in library code:
 
 ```python
-for item in items:
-    registry = MetricRegistry()  # BAD - creates new instance each iteration
-    registry.counter("processed").inc()
+def public_operation(self, args):
+    registry = MetricRegistry()  # BAD - private throwaway instance
+    registry.counter("operation_errors").inc()  # invisible to every consumer
 ```
 
-✅ **Do** create registry once:
+Each `MetricRegistry()` is an independent instance. Metrics emitted into
+it are unobservable by consumers (who read the default registry via
+`get_events()`/`drain_events()`) and are garbage-collected with the
+instance — the emission is pure overhead.
+
+✅ **Do** use the module-level helpers, which share the default registry:
 
 ```python
-registry = MetricRegistry()
-for item in items:
-    registry.counter("processed").inc()  # GOOD
+from pyfulmen.telemetry import counter
+
+def public_operation(self, args):
+    counter("operation_errors").inc()  # GOOD - observable via drain_events()
 ```
+
+❌ **Don't** emit metric names that are not registered in the Crucible
+taxonomy (`config/crucible-py/taxonomy/metrics.yaml`). Unregistered names
+fail `validate_metric_event()` and break cross-language consistency;
+coordinate with the Crucible team to register names first.
 
 ## Testing Strategy
 
@@ -591,7 +483,7 @@ def hash_file(path: Path | str, algorithm: Algorithm = Algorithm.XXH3_128) -> Di
 When adding telemetry to a module:
 
 - [ ] Review Crucible taxonomy for applicable metrics
-- [ ] Add imports (`time`, `counter`/`histogram`/`gauge` or `MetricRegistry`)
+- [ ] Add imports (`time`, `counter`/`histogram`/`gauge` module helpers)
 - [ ] Extract logic to `_<method>_impl()` for each public method
 - [ ] Add try/finally wrapper with histogram
 - [ ] Add counter emissions for error paths
@@ -672,6 +564,11 @@ Aggregation tools can correlate if needed.
 
 ## Changelog
 
+- **2026-07-30 v1.3**: Module-level helpers declared the only sanctioned
+  library pattern; removed explicit-registry option (per-call registries
+  emit to unobservable throwaway instances); documented the
+  `drain_events()` requirement and unbounded-buffer caveat; counters now
+  resolve units from the metrics taxonomy
 - **2025-11-06 v1.2**: Updated for Phase 2 module-level helpers (ADR-0008 implementation)
 - **2025-10-24 v1.1**: Added Phase 8 FulHash performance-sensitive pattern, linked Crucible ADR-0008
 - **2025-10-24 v1.0**: Initial version based on Pathfinder Phase 1 retrofit

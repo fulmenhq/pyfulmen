@@ -13,8 +13,6 @@ from typing import Any
 
 import yaml
 
-from pyfulmen.telemetry import MetricRegistry
-
 from .errors import ParseError
 
 
@@ -48,9 +46,6 @@ def parse_frontmatter(content: str | bytes) -> tuple[str, dict[str, Any] | None]
         >>> print(meta)
         {'title': 'Test'}
     """
-    registry = MetricRegistry()
-    registry.counter("docscribe_parse_count").inc()
-
     # Handle bytes input
     if isinstance(content, bytes):
         content = content.decode("utf-8")

@@ -518,31 +518,35 @@ class TestLoggerProfileComparison:
 class TestTelemetry:
     """Test telemetry instrumentation.
 
-    Note: Current implementation creates independent MetricRegistry instances per call,
-    so telemetry emission cannot be directly tested without module-level singleton helpers
-    (per ADR-0008). These tests verify the code path executes without errors.
-
-    Full telemetry testing will be added when module-level helpers are implemented.
+    Metrics are emitted through the module-level helpers backed by the
+    global default registry (per ADR-0008), so emission is asserted by
+    draining the global registry.
     """
 
     def test_log_with_telemetry_enabled(self):
-        """Verify log() executes with telemetry without errors."""
+        """Verify log() emits both logging metrics on the global registry."""
+        from pyfulmen import telemetry
         from pyfulmen.logging import Logger
 
+        telemetry.drain_events()
         logger = Logger(service="test")
         logger.info("Test message")
 
-        # Telemetry is emitted to an internal registry instance.
-        # Full assertion testing requires module-level singleton helpers per ADR-0008.
+        names = {e.name for e in telemetry.drain_events()}
+        assert "logging_emit_count" in names
+        assert "logging_emit_latency_ms" in names
 
     def test_multiple_log_calls_emit_counters(self):
         """Verify multiple log calls each emit telemetry."""
+        from pyfulmen import telemetry
         from pyfulmen.logging import Logger
 
+        telemetry.drain_events()
         logger = Logger(service="test")
         logger.info("Message 1")
         logger.warn("Message 2")
         logger.error("Message 3")
 
-        # Each call emits logging_emit_count counter and logging_emit_latency_ms histogram.
-        # Full metric assertion requires module-level helpers per ADR-0008.
+        events = telemetry.drain_events()
+        assert len([e for e in events if e.name == "logging_emit_count"]) == 3
+        assert len([e for e in events if e.name == "logging_emit_latency_ms"]) == 3

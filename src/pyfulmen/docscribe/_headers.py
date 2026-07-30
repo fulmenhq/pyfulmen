@@ -5,8 +5,6 @@ from __future__ import annotations
 import re
 from typing import Any
 
-from pyfulmen.telemetry import MetricRegistry
-
 from .models import DocumentHeader
 
 
@@ -30,9 +28,6 @@ def extract_headers(content: str | bytes) -> list[DocumentHeader]:
         >>> print(headers[0].anchor)
         title
     """
-    registry = MetricRegistry()
-    registry.counter("docscribe_extract_headers_count").inc()
-
     if isinstance(content, bytes):
         content = content.decode("utf-8")
 

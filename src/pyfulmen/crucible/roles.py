@@ -15,13 +15,11 @@ Example:
 from __future__ import annotations
 
 import re
-import time
 from dataclasses import dataclass, field
 
 import yaml
 
 from .. import foundry
-from ..telemetry import MetricRegistry
 from . import _paths
 from .errors import AssetNotFoundError
 
@@ -198,30 +196,20 @@ def load_role(slug: str) -> RolePrompt:
     if not _ROLE_SLUG_RE.fullmatch(slug):
         raise ValueError(f"Invalid role slug: {slug!r}")
 
-    registry = MetricRegistry()
-    start_time = time.perf_counter()
+    role_file = _ROLES_DIR / f"{slug}.yaml"
+    if not role_file.exists():
+        available = list_role_slugs()
+        suggestions = foundry.similarity.suggest(slug, available, min_score=0.6, max_suggestions=3, normalize_text=True)
+        raise AssetNotFoundError(
+            slug,
+            category="roles",
+            suggestions=[s.value for s in suggestions],
+        )
 
-    try:
-        role_file = _ROLES_DIR / f"{slug}.yaml"
-        if not role_file.exists():
-            registry.counter("crucible_role_not_found_count").inc()
-            available = list_role_slugs()
-            suggestions = foundry.similarity.suggest(
-                slug, available, min_score=0.6, max_suggestions=3, normalize_text=True
-            )
-            raise AssetNotFoundError(
-                slug,
-                category="roles",
-                suggestions=[s.value for s in suggestions],
-            )
+    with role_file.open("r", encoding="utf-8") as f:
+        data = yaml.safe_load(f)
 
-        with role_file.open("r", encoding="utf-8") as f:
-            data = yaml.safe_load(f)
-
-        return _parse_role(data)
-    finally:
-        duration_ms = (time.perf_counter() - start_time) * 1000
-        registry.histogram("crucible_load_role_ms").observe(duration_ms)
+    return _parse_role(data)
 
 
 def load_role_catalog() -> dict[str, RolePrompt]:
