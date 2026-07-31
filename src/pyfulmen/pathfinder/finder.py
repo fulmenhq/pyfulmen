@@ -14,7 +14,7 @@ from pathlib import Path
 
 from pyfulmen.fulhash import Algorithm, hash_file
 from pyfulmen.schema import validator as schema_validator
-from pyfulmen.telemetry import MetricRegistry
+from pyfulmen.telemetry import counter, histogram
 
 from .ignore import IgnoreMatcher
 from .models import (
@@ -75,16 +75,15 @@ class Finder:
         """
         # Initialize telemetry
         start_time = time.perf_counter()
-        registry = MetricRegistry()
 
         try:
-            return self._find_files_impl(query, registry)
+            return self._find_files_impl(query)
         finally:
             # Emit duration metric
             duration_ms = (time.perf_counter() - start_time) * 1000
-            registry.histogram("pathfinder_find_ms").observe(duration_ms)
+            histogram("pathfinder_find_ms").observe(duration_ms)
 
-    def _find_files_impl(self, query: FindQuery, registry: MetricRegistry) -> list[PathResult]:
+    def _find_files_impl(self, query: FindQuery) -> list[PathResult]:
         """Internal implementation of find_files without telemetry."""
         # Validate input if enabled
         if self.config.validate_inputs:
@@ -95,8 +94,8 @@ class Finder:
                     "v1.0.0",
                     "find-query",
                 )
-            except ValueError:
-                registry.counter("pathfinder_validation_errors").inc()
+            except (ValueError, schema_validator.SchemaValidationError):
+                counter("pathfinder_validation_errors").inc()
                 raise
 
         results: list[PathResult] = []
@@ -133,7 +132,7 @@ class Finder:
                     try:
                         validate_path(str(abs_match))
                     except PathTraversalError:
-                        registry.counter("pathfinder_security_warnings").inc()
+                        counter("pathfinder_security_warnings").inc()
                         raise
 
                     # Skip symlinks unless explicitly following them
@@ -175,7 +174,7 @@ class Finder:
                         and self._violates_constraint(constraint, constraint_root, rel_path, abs_match)
                     ):
                         violation = PathTraversalError(f"Path {abs_match} violates constraint root {constraint_root}")
-                        registry.counter("pathfinder_security_warnings").inc()
+                        counter("pathfinder_security_warnings").inc()
 
                         enforcement_value = constraint.enforcement_level
 

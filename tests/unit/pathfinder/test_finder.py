@@ -519,16 +519,16 @@ class TestChecksumSupport:
 class TestTelemetry:
     """Test telemetry instrumentation.
 
-    Note: Current implementation creates independent MetricRegistry instances per call,
-    so telemetry emission cannot be directly tested without module-level singleton helpers
-    (per ADR-0008). These tests verify the code path executes without errors.
-
-    Full telemetry testing will be added when module-level helpers are implemented.
+    Metrics are emitted through the module-level helpers backed by the
+    global default registry (per ADR-0008), so emission is asserted by
+    draining the global registry.
     """
 
     def test_find_files_with_telemetry_enabled(self, temp_file_tree):
-        """Verify find_files executes with telemetry instrumentation without errors."""
-        # Execute find operation (telemetry is emitted but to independent registry instance)
+        """Verify find_files emits pathfinder_find_ms on the global registry."""
+        from pyfulmen import telemetry
+
+        telemetry.drain_events()
         finder = Finder()
         query = FindQuery(root=str(temp_file_tree), include=["*.py"])
         results = finder.find_files(query)
@@ -536,14 +536,15 @@ class TestTelemetry:
         # Verify operation succeeded and files were found
         assert len(results) > 0
 
-        # Telemetry is emitted to an internal registry instance.
-        # Full assertion testing requires module-level singleton helpers per ADR-0008.
-        # For now, we verify the instrumented code path executes without errors.
+        names = {e.name for e in telemetry.drain_events()}
+        assert "pathfinder_find_ms" in names
 
     def test_validation_errors_counter_on_invalid_query(self, temp_file_tree):
         """Verify validation_errors counter is emitted on invalid query."""
+        from pyfulmen import telemetry
         from pyfulmen.schema.validator import SchemaValidationError
 
+        telemetry.drain_events()
         finder = Finder(FinderConfig(validate_inputs=True))
 
         # Create an invalid query - root is required but empty string violates minLength
@@ -551,11 +552,14 @@ class TestTelemetry:
             # Empty root violates schema minLength: 1 requirement
             finder.find_files(FindQuery(root="", include=["*.py"]))
 
-        # Note: Counter is emitted but to independent registry instance.
-        # Full metric assertion requires module-level helpers per ADR-0008.
+        names = {e.name for e in telemetry.drain_events()}
+        assert "pathfinder_validation_errors" in names
 
     def test_security_warnings_counter_on_path_traversal(self, temp_file_tree):
         """Verify security_warnings counter is emitted on path traversal attempt."""
+        from pyfulmen import telemetry
+
+        telemetry.drain_events()
         finder = Finder()
 
         # Create file with ".." in the name to trigger path traversal during validation
@@ -568,5 +572,5 @@ class TestTelemetry:
         with pytest.raises(PathTraversalError):
             finder.find_files(query)
 
-        # Note: Counter is emitted but to independent registry instance.
-        # Full metric assertion requires module-level helpers per ADR-0008.
+        names = {e.name for e in telemetry.drain_events()}
+        assert "pathfinder_security_warnings" in names

@@ -15,22 +15,24 @@ import yaml
 from pyfulmen.pathfinder import Finder, FinderConfig, FindQuery
 
 
+@pytest.fixture(scope="module")
+def fulhash_fixtures():
+    """Load FulHash fixtures for parity validation."""
+    fixtures_path = (
+        Path(__file__).parent.parent.parent / "config" / "crucible-py" / "library" / "fulhash" / "fixtures.yaml"
+    )
+    with open(fixtures_path) as f:
+        return yaml.safe_load(f)
+
+
+@pytest.fixture(scope="module")
+def sample_files_dir():
+    """Path to sample files for testing."""
+    return Path(__file__).parent.parent / "fixtures" / "pathfinder" / "sample-files"
+
+
 class TestPathfinderChecksumParity:
     """Parity tests validating Pathfinder checksums against known fixtures."""
-
-    @pytest.fixture(scope="class")
-    def fulhash_fixtures(self):
-        """Load FulHash fixtures for parity validation."""
-        fixtures_path = (
-            Path(__file__).parent.parent.parent / "config" / "crucible-py" / "library" / "fulhash" / "fixtures.yaml"
-        )
-        with open(fixtures_path) as f:
-            return yaml.safe_load(f)
-
-    @pytest.fixture(scope="class")
-    def sample_files_dir(self):
-        """Path to sample files for testing."""
-        return Path(__file__).parent.parent / "fixtures" / "pathfinder" / "sample-files"
 
     def test_empty_file_xxh3_128_parity(self, sample_files_dir, fulhash_fixtures):
         """Verify empty file checksum matches FulHash empty-input fixture (xxh3-128)."""
@@ -199,11 +201,6 @@ class TestPathfinderChecksumParity:
 class TestPathfinderCaseInsensitiveAlgorithms:
     """Test case-insensitive algorithm handling per fixture spec."""
 
-    @pytest.fixture(scope="class")
-    def sample_files_dir(self):
-        """Path to sample files for testing."""
-        return Path(__file__).parent.parent / "fixtures" / "pathfinder" / "sample-files"
-
     def test_uppercase_xxh3_128_normalized(self, sample_files_dir):
         """Verify XXH3-128 (uppercase) is normalized to xxh3-128."""
         finder = Finder(FinderConfig(calculateChecksums=True, checksumAlgorithm="XXH3-128"))
@@ -248,11 +245,6 @@ class TestPathfinderCaseInsensitiveAlgorithms:
 
 class TestPathfinderChecksumConsistency:
     """Test checksum consistency across multiple runs and algorithms."""
-
-    @pytest.fixture(scope="class")
-    def sample_files_dir(self):
-        """Path to sample files for testing."""
-        return Path(__file__).parent.parent / "fixtures" / "pathfinder" / "sample-files"
 
     def test_deterministic_checksums_across_runs(self, sample_files_dir):
         """Verify checksums are deterministic across multiple runs."""

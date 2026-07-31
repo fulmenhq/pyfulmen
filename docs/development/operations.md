@@ -14,15 +14,15 @@ This document provides operational guidance for PyFulmen maintainers and contrib
 
 - **`README.md`**: Main project documentation with quick start guide
 - **`CHANGELOG.md`**: Version history and migration notes
-- **`CONTRIBUTING.md`**: Development guidelines and contribution process
+- **`MAINTAINERS.md`**: Governance and development guidelines
 - **`LICENSE`**: MIT License for open source use
 
 ### API Documentation
 
-- **`docs/api/`**: Detailed API reference with examples
 - **`docs/guides/`**: Usage guides and tutorials
-- **`docs/examples/`**: Code examples and patterns
-- **`docs/migration/`**: Upgrade guides between versions
+- **`docs/modules/`**: Module-level documentation
+- **`docs/releases/`**: Release notes by version
+- **`docs/development/`**: Development docs and ADRs
 
 ### Architecture Documentation
 

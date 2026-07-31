@@ -12,3 +12,6 @@ metadata:
   python:
     distribution_name: pyfulmen
     package_name: pyfulmen
+    console_scripts:
+      - name: pyfulmen
+        entry_point: pyfulmen.cli:main

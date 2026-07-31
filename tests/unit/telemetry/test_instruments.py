@@ -157,6 +157,63 @@ class TestHistogram:
         assert events[0].value.count == 1
         assert events[0].value.sum == 42.5
 
+    def test_histogram_sum_is_numerically_stable(self):
+        """Compensated summation matches fsum for realistic magnitudes."""
+        import math
+
+        registry = MetricRegistry()
+        hist = registry.histogram("test_hist")
+
+        values = [0.1] * 1000 + [1e6, -1e6] * 50
+        for value in values:
+            hist.observe(value)
+
+        summary = registry.get_events()[-1].value
+        assert summary.sum == pytest.approx(math.fsum(values), abs=0.0)
+
+    def test_histogram_sum_saturates_without_nan_poisoning(self):
+        """Overflow saturates to inf and never degrades to NaN.
+
+        Compensation is reset on overflow so subsequent finite
+        observations keep the sum at inf (documented saturation) instead
+        of NaN-poisoning every later summary.
+        """
+        import math
+
+        registry = MetricRegistry()
+        hist = registry.histogram("test_hist")
+
+        for value in [1e308, 1e308, -1e308, 5.0]:
+            hist.observe(value)
+
+        summary = registry.get_events()[-1].value
+        assert math.isinf(summary.sum)
+        assert not math.isnan(summary.sum)
+        assert summary.count == 4
+
+    def test_histogram_events_record_in_observation_order(self):
+        """Concurrent observes must emit events whose counts never regress.
+
+        Exporters read the latest event as current state, so recording must
+        happen under the instrument lock.
+        """
+        registry = MetricRegistry()
+        hist = registry.histogram("test_hist")
+
+        def worker():
+            for _ in range(200):
+                hist.observe(1.0)
+
+        threads = [threading.Thread(target=worker) for _ in range(4)]
+        for t in threads:
+            t.start()
+        for t in threads:
+            t.join()
+
+        counts = [e.value.count for e in registry.get_events()]
+        assert counts == sorted(counts)
+        assert counts[-1] == 800
+
     def test_histogram_multiple_observations(self):
         """Test histogram with multiple observations."""
         registry = MetricRegistry()

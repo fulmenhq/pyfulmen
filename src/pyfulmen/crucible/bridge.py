@@ -22,13 +22,11 @@ Example:
 
 from __future__ import annotations
 
-import time
 from collections.abc import Iterator
 from contextlib import contextmanager, suppress
 from typing import BinaryIO
 
 from .. import foundry
-from ..telemetry import MetricRegistry
 from . import config, docs, schemas
 from ._version import get_crucible_version as _get_version
 from .errors import AssetNotFoundError
@@ -72,18 +70,11 @@ def list_assets(category: str, prefix: str | None = None) -> list[AssetMetadata]
         ...     print(f"{asset.id}: {asset.path}")
         observability/logging/v1.0.0/logger-config: /path/to/schema.json
     """
-    start_time = time.perf_counter()
-    registry = MetricRegistry()
-
-    try:
-        return _list_assets_impl(category, prefix, registry)
-    finally:
-        duration_ms = (time.perf_counter() - start_time) * 1000
-        registry.histogram("crucible_list_assets_ms").observe(duration_ms)
+    return _list_assets_impl(category, prefix)
 
 
-def _list_assets_impl(category: str, prefix: str | None, registry: MetricRegistry) -> list[AssetMetadata]:
-    """Implementation of list_assets with telemetry support."""
+def _list_assets_impl(category: str, prefix: str | None) -> list[AssetMetadata]:
+    """Implementation of list_assets."""
     if category not in ["docs", "schemas", "config"]:
         valid_categories = ", ".join(list_categories())
         raise ValueError(f"Invalid category: {category}. Must be one of: {valid_categories}")
@@ -222,21 +213,11 @@ def find_schema(schema_id: str) -> tuple[dict, AssetMetadata]:
         >>> print(f"Schema format: {meta.format}, size: {meta.size} bytes")
         Schema format: json, size: 2048 bytes
     """
-    start_time = time.perf_counter()
-    registry = MetricRegistry()
-
-    try:
-        return _find_schema_impl(schema_id, registry)
-    except AssetNotFoundError:
-        registry.counter("crucible_asset_not_found_count").inc()
-        raise
-    finally:
-        duration_ms = (time.perf_counter() - start_time) * 1000
-        registry.histogram("crucible_find_schema_ms").observe(duration_ms)
+    return _find_schema_impl(schema_id)
 
 
-def _find_schema_impl(schema_id: str, registry: MetricRegistry) -> tuple[dict, AssetMetadata]:
-    """Implementation of find_schema with telemetry support."""
+def _find_schema_impl(schema_id: str) -> tuple[dict, AssetMetadata]:
+    """Implementation of find_schema."""
     from . import _metadata
 
     try:
@@ -265,7 +246,7 @@ def _find_schema_impl(schema_id: str, registry: MetricRegistry) -> tuple[dict, A
         return (schema_data, metadata)
 
     except FileNotFoundError as e:
-        all_schema_assets = _list_assets_impl("schemas", None, registry)
+        all_schema_assets = _list_assets_impl("schemas", None)
         all_schema_ids = [asset.id for asset in all_schema_assets]
         suggestions = _find_similar_assets(schema_id, all_schema_ids)
         raise AssetNotFoundError(schema_id, category="schemas", suggestions=suggestions) from e
@@ -293,21 +274,11 @@ def find_config(config_id: str) -> tuple[dict, AssetMetadata]:
         >>> print(f"Config format: {meta.format}, checksum: {meta.checksum[:8]}...")
         Config format: yaml, checksum: abc12345...
     """
-    start_time = time.perf_counter()
-    registry = MetricRegistry()
-
-    try:
-        return _find_config_impl(config_id, registry)
-    except AssetNotFoundError:
-        registry.counter("crucible_asset_not_found_count").inc()
-        raise
-    finally:
-        duration_ms = (time.perf_counter() - start_time) * 1000
-        registry.histogram("crucible_find_config_ms").observe(duration_ms)
+    return _find_config_impl(config_id)
 
 
-def _find_config_impl(config_id: str, registry: MetricRegistry) -> tuple[dict, AssetMetadata]:
-    """Implementation of find_config with telemetry support."""
+def _find_config_impl(config_id: str) -> tuple[dict, AssetMetadata]:
+    """Implementation of find_config."""
     from . import _metadata
 
     try:
@@ -372,21 +343,11 @@ def get_doc(doc_id: str) -> tuple[str, AssetMetadata]:
         >>> print(f"Doc size: {meta.size} bytes, format: {meta.format}")
         Doc size: 5120 bytes, format: md
     """
-    start_time = time.perf_counter()
-    registry = MetricRegistry()
-
-    try:
-        return _get_doc_impl(doc_id, registry)
-    except AssetNotFoundError:
-        registry.counter("crucible_asset_not_found_count").inc()
-        raise
-    finally:
-        duration_ms = (time.perf_counter() - start_time) * 1000
-        registry.histogram("crucible_get_doc_ms").observe(duration_ms)
+    return _get_doc_impl(doc_id)
 
 
-def _get_doc_impl(doc_id: str, registry: MetricRegistry) -> tuple[str, AssetMetadata]:
-    """Implementation of get_doc with telemetry support."""
+def _get_doc_impl(doc_id: str) -> tuple[str, AssetMetadata]:
+    """Implementation of get_doc."""
     from . import _metadata
 
     try:
@@ -409,7 +370,7 @@ def _get_doc_impl(doc_id: str, registry: MetricRegistry) -> tuple[str, AssetMeta
         return (raw_content, metadata)
 
     except FileNotFoundError as e:
-        all_doc_assets = _list_assets_impl("docs", None, registry)
+        all_doc_assets = _list_assets_impl("docs", None)
         all_doc_ids = [asset.id for asset in all_doc_assets]
         suggestions = _find_similar_assets(doc_id, all_doc_ids)
         raise AssetNotFoundError(doc_id, category="docs", suggestions=suggestions) from e

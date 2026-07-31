@@ -208,10 +208,10 @@ for slug, role in sorted(catalog.items()):
 
 ## Telemetry
 
-Role loading is instrumented automatically:
-
-- `crucible_load_role_ms` (histogram) — time to load and parse a role
-- `crucible_role_not_found_count` (counter) — slug-not-found events
+Role loading is not instrumented. The metric names previously emitted
+here (`crucible_load_role_ms`, `crucible_role_not_found_count`) were
+never registered in the Crucible metrics taxonomy and have been removed;
+taxonomy registration is a prerequisite for reinstating them.
 
 ## Important Notes
 

@@ -60,7 +60,7 @@ metadata:
     package_name: "myapp_core"
     console_scripts:
       - name: "myapp"
-        module: "myapp.cli:main"
+        entry_point: "myapp.cli:main"
 ```
 
 ## API Reference

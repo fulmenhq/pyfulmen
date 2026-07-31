@@ -7,7 +7,6 @@ import os
 import shutil
 import subprocess
 import tempfile
-import time
 from collections.abc import Iterable
 from dataclasses import asdict, dataclass
 from pathlib import Path
@@ -18,7 +17,7 @@ from jsonschema import validate as jsonschema_validate
 from referencing.exceptions import Unresolvable
 
 from .. import crucible
-from ..telemetry import MetricRegistry
+from ..telemetry import counter
 from . import catalog
 from .registry import OfflineSchemaResolutionError, crucible_registry
 
@@ -58,23 +57,8 @@ def validate_against_schema(data: dict[str, Any], category: str, version: str, n
     Validate data against a schema, raising on validation failure.
 
     Telemetry:
-        - Emits schema_validation_ms histogram (validation duration)
         - Emits schema_validation_errors counter (on validation failure)
     """
-    start_time = time.perf_counter()
-    registry = MetricRegistry()
-
-    try:
-        _validate_against_schema_impl(data, category, version, name, registry)
-    finally:
-        duration_ms = (time.perf_counter() - start_time) * 1000
-        registry.histogram("schema_validation_ms").observe(duration_ms)
-
-
-def _validate_against_schema_impl(
-    data: dict[str, Any], category: str, version: str, name: str, registry: MetricRegistry
-) -> None:
-    """Internal implementation of validate_against_schema without telemetry."""
     schema = crucible.schemas.load_schema(category, version, name)
 
     try:
@@ -82,7 +66,7 @@ def _validate_against_schema_impl(
     except Unresolvable as exc:
         raise _offline_resolution_error(exc) from exc
     except ValidationError as exc:
-        registry.counter("schema_validation_errors").inc()
+        counter("schema_validation_errors").inc()
         validator = Draft7Validator(schema, registry=crucible_registry())
         errors = [err.message for err in validator.iter_errors(data)]
 
@@ -173,7 +157,7 @@ def _diagnostics_from_errors(errors: Iterable[ValidationError]) -> list[Diagnost
             Diagnostic(
                 pointer=pointer,
                 message=err.message,
-                keyword=err.validator,
+                keyword=err.validator if isinstance(err.validator, str) else None,
                 severity="ERROR",
                 source="jsonschema",
             )

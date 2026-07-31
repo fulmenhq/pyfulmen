@@ -121,9 +121,8 @@ ADRs are **immutable** once accepted. Instead of editing:
 | [ADR-0007](ADR-0007-similarity-case-insensitive-tie-breaking.md) | Similarity Case-Insensitive Tie Breaking      | 2025-10-15 | Accepted |
 | [ADR-0008](ADR-0008-global-metric-registry-singleton.md)         | Global Metric Registry Singleton Pattern      | 2025-10-23 | Accepted |
 | [ADR-0009](ADR-0009-fulhash-independent-stream-instances.md)     | FulHash Independent Stream Instances          | 2025-10-23 | Accepted |
-
 | [ADR-0010](ADR-0010-pathfinder-checksum-performance-acceptable-delta.md) | Pathfinder Checksum Performance Acceptable Delta | 2025-10-24 | Accepted |
-| [ADR-0011](ADR-0011-appidentity-embedding-pattern.md) | App Identity Embedding Pattern for Python | 2025-12-18 | Accepted |
+| [ADR-0011](ADR-0011-appidentity-embedding-pattern.md)            | App Identity Embedding Pattern for Python     | 2025-12-18 | Accepted |
 
 ### Ecosystem ADRs (Reference)
 
@@ -138,6 +137,15 @@ PyFulmen implements these cross-language architectural decisions from Crucible. 
 | [ADR-0003](../../crucible-py/architecture/decisions/ADR-0003-progressive-logging-profiles.md)      | Progressive Logging Profiles      | Proposal | Verified          |
 | [ADR-0004](../../crucible-py/architecture/decisions/ADR-0004-schema-driven-config-hydration.md)    | Schema-Driven Config Hydration    | Proposal | Implemented       |
 | [ADR-0005](../../crucible-py/architecture/decisions/ADR-0005-camelcase-to-language-conventions.md) | CamelCase to Language Conventions | Proposal | Verified          |
+| [ADR-0006](../../crucible-py/architecture/decisions/ADR-0006-error-data-models.md)                 | Fulmen Errors as Schema-Backed Data Models | Accepted | Implemented |
+| [ADR-0007](../../crucible-py/architecture/decisions/ADR-0007-telemetry-default-histogram-buckets.md) | Default Histogram Buckets for Millisecond Metrics | Accepted | Verified |
+| [ADR-0008](../../crucible-py/architecture/decisions/ADR-0008-helper-library-instrumentation-patterns.md) | Helper Library Instrumentation Patterns | Accepted | Implemented |
+| [ADR-0009](../../crucible-py/architecture/decisions/ADR-0009-go-module-root-relocation.md)         | Go Module Root Relocation         | Accepted | N/A (Go-specific) |
+| [ADR-0010](../../crucible-py/architecture/decisions/ADR-0010-semantic-versioning-adoption.md)      | Semantic Versioning Adoption for Go Module Compatibility | Accepted | N/A (Go-specific) |
+| [ADR-0011](../../crucible-py/architecture/decisions/ADR-0011-lorage-devsecops-schemas-semver-experimental.md) | Temporary SemVer Flexibility for L'Orage DevSecOps Schemas | Experimental | N/A (schemas synced, no PyFulmen surface) |
+| [ADR-0012](../../crucible-py/architecture/decisions/ADR-0012-schema-ref-ids.md)                    | Absolute $id URLs for Cross-Schema $ref References | Approved | Implemented |
+| [ADR-0013](../../crucible-py/architecture/decisions/ADR-0013-rust-sync-pattern-validation.md)      | Rust Language Support Uses Sync Pattern | Accepted | N/A (Rust-specific) |
+| [ADR-0014](../../crucible-py/architecture/decisions/ADR-0014-openapi-spec-coverage.md)             | OpenAPI Spec Coverage Tests       | Accepted | N/A (library has no OpenAPI surface) |
 
 **Adoption Status Levels**:
 
@@ -145,6 +153,13 @@ PyFulmen implements these cross-language architectural decisions from Crucible. 
 - **Implemented** (30): Fully implemented, ready for validation
 - **In Progress** (20): Active implementation underway
 - **Planned** (10): Implementation planned but not started
+- **N/A**: Not applicable to PyFulmen (language- or repo-specific decision)
+
+**Ecosystem ADR-0008 note**: Instrumentation is routed through the
+module-level helpers on the global default registry, only
+taxonomy-registered metric names are emitted, and counters resolve
+units from the taxonomy. See the
+[Telemetry Instrumentation Pattern](../telemetry-instrumentation-pattern.md).
 
 **Note**: Ecosystem ADR-0002 was promoted from PyFulmen's original local ADR-0003 (Triple-Index Catalog Strategy). The local version has been removed as superseded by the ecosystem version.
 
@@ -253,4 +268,4 @@ Format: `ADR-XXXX-kebab-case-title.md`
 
 ---
 
-_This ADR index is maintained by the PyFulmen Architect team. Last updated: 2025-10-15_
+_This ADR index is maintained by the PyFulmen Architect team. Last updated: 2026-07-30_
