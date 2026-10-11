@@ -15,7 +15,7 @@ CURRENT_VERSION := $(shell cat VERSION 2>/dev/null || echo "0.0.0")
 # Tool installation (user-space bin dir; overridable with BINDIR=...)
 # Defaults to $HOME/.local/bin on macOS/Linux
 BINDIR ?= $(HOME)/.local/bin
-GONEAT_VERSION ?= v0.5.15
+GONEAT_VERSION ?= v0.6.2
 SFETCH_INSTALL_URL ?= https://github.com/3leaps/sfetch/releases/latest/download/install-sfetch.sh
 
 # Coverage thresholds by lifecycle phase
